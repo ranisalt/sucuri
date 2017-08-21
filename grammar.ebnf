@@ -1,0 +1,80 @@
+code ::= preamble program
+
+
+id ::= id '.' id | IDENTIFIER
+
+literal ::= '"' NO_DQUOTE_STRING_LITERAL '"' | INTEGER | FLOAT | '\'' NO_SQUOTE_STRING_LITERAL '\''
+
+
+condition ::= operator (('and' | 'or' | 'xor') operator)*
+
+operator ::= __operator__ | '(' __operator__ ')'
+
+__operator__ ::= literal | id | function_call | unary_operation | binary_operation
+
+unary_operation ::= 'not' operator | '-' operator
+
+binary_operation ::= relational_operation | math_operator
+
+math_operation ::= operator ('+' | '-' | '*' | '/' | '**') operator
+
+relational_operation ::= operator ('=' | '>' | '<' | '<=' | '>=' | '!=') operator
+
+
+
+preamble ::= imports+
+
+imports ::= module_import | feature_import
+
+module_import ::= 'import' id module_aliasing?
+
+feature_import ::= 'from' id 'import' feature_name (',' feature_name)*
+
+feature_name ::= id module_aliasing?
+
+module_aliasing ::= 'as' id
+
+
+
+program ::= (command | definition)*
+
+definition ::= function_definition | class_definition
+
+
+function_definition ::= 'let' id '(' function_params? ')' function_scope
+
+function_params ::= (id (',' id)* (',' variadic_params)?) | variadic_params
+
+variadic_params ::= '...' id
+
+function_scope ::= line_break indent inner_function_scope dedent
+
+inner_function_scope ::= command+
+
+
+class_definition ::= 'class' id class_scope
+
+class_scope ::= line_break indent inner_class_scope dedent
+
+inner_class_scope ::= (attr_decl | function_definition)+
+
+attr_decl ::= 'let' id ('=' operator)? line_break
+
+
+command ::= (('let'? assign) | function_call | statement | 'return' operator) line_break
+
+assign ::= id '=' operator
+
+function_call ::= id '(' function_args? ')'
+
+function_args ::= (id | literal) (',' function_args)?
+
+statement ::= if_statement | while_statement | for_statement
+
+if_statement ::= 'if' condition (command | function_scope) else_statement?
+
+else_statement ::= 'else' (command | function_scope)
+
+while_statement ::= 'while' condition (command | function_scope)
+
+for_statement ::= 'for' id 'in' operator (command | function_scope)

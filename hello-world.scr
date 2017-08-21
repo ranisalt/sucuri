@@ -34,7 +34,7 @@ else
 
 
 ==== For:
-for i in 0..9
+for i in range(0, 9)
   print(i)
 
 for elm in my_iter
@@ -45,20 +45,20 @@ let sum(x, ...xs)
   return x + sum(*xs) or 0
 
 let sum(xs)
-  if xs.empty? return 0 
+  if xs.empty?() return 0
 
   let x = xs.pop_front()
   return 0 (+ x for x in xs)
   return x + sum(xs)
 
-sum(*grades) / #grades
+sum(*grades) / len(grades)
 
 
 == Classes:
 class Point
   let new(self, x=0, y=0)
     self.x = 0
-    self.x = 0
+    self.y = 0
 
 class Fruits
   let APPLE = 0
