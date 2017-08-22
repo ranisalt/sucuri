@@ -5,17 +5,26 @@ NO_DQUOTE_STRING_LITERAL [^"]*
 
 %{
 
+#include <assert.h>
 #include <stdio.h>
 #include "sucuri.tab.h"
 
 void count();
-void indent_level();
+
+#define MAX_DEPTH 72
+unsigned nesting = 0;
+unsigned indent_stack[MAX_DEPTH] = {0};
+unsigned level = 0;
+void process_indent(unsigned leng);
 
 %}
 
 %%
 
-"#"[^\n\r]*[\n\r] { printf("\t--comment ignored\n"); }
+^[ ]*\n     { /* ignore empty lines */ }
+^[ ]*       { process_indent(yyleng); }
+
+"#"[^\n]*[\n] { /* ignore comments */ }
 
     /* literals */
 {D}+        { count(); return INTEGER_LITERAL; }
@@ -26,8 +35,8 @@ void indent_level();
 
     /* operators */
 "!="        { count(); return NE; }
-"("         { count(); return '('; }
-")"         { count(); return ')'; }
+"("         { count(); ++nesting; return '('; }
+")"         { count(); --nesting; return ')'; }
 "*"         { count(); return '*'; }
 "**"        { count(); return POW; }
 "+"         { count(); return '+'; }
@@ -69,7 +78,23 @@ int yywrap(void) {
     return 1;
 }
 
-void indent_level() {
+void process_indent(unsigned leng)
+{
+    if (nesting == 0) {
+        if (leng > indent_stack[level]) {
+            assert(indent_stack[level] + 1 < MAX_DEPTH);
+            indent_stack[++level] = leng;
+            unput(INDENT);
+        } else if (leng < indent_stack[level]) {
+            while (leng < indent_stack[level]) {
+                --level;
+                unput(DEDENT);
+            }
+        }
+    }
+
+    end:
+    printf("%u ", level);
 }
 
 int column = 0;
