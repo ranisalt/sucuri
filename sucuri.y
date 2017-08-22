@@ -156,7 +156,8 @@ command
 
 assignment_expr
     : LET IDENTIFIER '=' operator
-    | IDENTIFIER '=' operator;
+    | IDENTIFIER '=' operator
+    | IDENTIFIER '[' operator ']' '=' operator;
 
 function_call
     : IDENTIFIER '(' ')'
