@@ -23,6 +23,7 @@ condition
 
 operator
     : IDENTIFIER
+    | IDENTIFIER '[' operator ']'
     | literal
     | '(' logical_expr ')';
 
@@ -162,10 +163,8 @@ function_call
     | IDENTIFIER '(' function_args ')';
 
 function_args
-    : IDENTIFIER
-    | literal
-    | function_args ',' IDENTIFIER
-    | function_args ',' literal;
+    : operator
+    | function_args ',' operator;
 
 statement
     : if_statement
