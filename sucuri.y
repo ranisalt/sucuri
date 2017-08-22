@@ -98,7 +98,9 @@ program
 
 definition
     : function_definition
-    | class_definition;
+    | class_definition
+    | EXPORT function_definition
+    | EXPORT class_definition;
 
 
 function_definition

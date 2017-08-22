@@ -1,86 +1,173 @@
-code ::= preamble program
+
+code
+    ::= preamble program
+    | program
+
+literal
+    ::= INTEGER_LITERAL
+    | FLOAT_LITERAL
+    | STRING_LITERAL
 
 
-id ::= id '.' id | IDENTIFIER
+condition
+    ::= operator
 
-literal ::= '"' NO_DQUOTE_STRING_LITERAL '"' | INTEGER | FLOAT | '\'' NO_SQUOTE_STRING_LITERAL '\''
+operator
+    ::= IDENTIFIER
+    | literal
+    | '(' logical_expr ')'
+
+unary_operator::= NOT | '-'
+
+unary_expr
+    ::= unary_operator operator
+    | operator
+
+exponential_expr
+    ::= unary_expr
+    | exponential_expr POW unary_expr
+
+multiplicative_expr
+    ::= exponential_expr
+    | multiplicative_expr '*' exponential_expr
+    | multiplicative_expr '/' exponential_expr
+
+additive_expr
+    ::= multiplicative_expr
+    | additive_expr '+' multiplicative_expr
+    | additive_expr '-' multiplicative_expr
+
+REL_OP ::= '>' | '<' | LE | GE
+
+relational_expr
+    ::= additive_expr
+    | relational_expr REL_OP additive_expr
+
+equality_expr
+    ::= relational_expr
+    | equality_expr '=' relational_expr
+    | equality_expr NE relational_expr
+
+logical_expr
+    ::= equality_expr
+    | logical_expr AND equality_expr
+    | logical_expr OR equality_expr
+    | logical_expr XOR equality_expr
+
+preamble
+    ::= preamble imports
+    | imports
+
+imports
+    ::= module_import
+    | feature_import
+
+module_import
+    ::= IMPORT IDENTIFIER
+    | IMPORT IDENTIFIER module_aliasing
+
+feature_import
+    ::= FROM IDENTIFIER IMPORT feature_name_list
+
+feature_name_list
+    ::= feature_name
+    | feature_name_list ',' feature_name
+
+feature_name
+    ::= IDENTIFIER
+    | IDENTIFIER module_aliasing
+
+module_aliasing
+    ::= AS IDENTIFIER
 
 
-condition ::= operator (('and' | 'or' | 'xor') operator)*
+program
+    ::= command
+    | definition
+    | command program
+    | definition program
 
-operator ::= '(' __operator__ ')' | __operator__
-
-__operator__ ::= literal | id | function_call | unary_operation | binary_operation
-
-unary_operation ::= 'not' operator | '-' operator
-
-binary_operation ::= relational_operation | math_operation
-
-math_operation ::= math_operation_e
-
-math_operation_e ::= math_operation_e '**' math_operation_md | math_operation_md
-
-math_operation_md ::= math_operation_md ('*' | '/') math_operation_as | math_operation_as
-
-math_operation_as ::= math_operation_as ('+' | '-') operator | operator
-
-relational_operation ::= operator ('=' | '>' | '<' | '<=' | '>=' | '!=') operator
+definition
+    ::= function_definition
+    | class_definition
+    | EXPORT function_definition
+    | EXPORT class_definition
 
 
+function_definition
+    ::= LET IDENTIFIER '(' function_params_list ')' scope
+    | LET IDENTIFIER '(' ')' scope
 
-preamble ::= imports+
+function_params_list
+    ::= IDENTIFIERentifier_list
+    | IDENTIFIERentifier_list ',' variadic_param
+    | variadic_param
 
-imports ::= module_import | feature_import
+IDENTIFIERentifier_list
+    ::= IDENTIFIER
+    | IDENTIFIERentifier_list ',' IDENTIFIER
 
-module_import ::= 'import' id module_aliasing?
+variadic_param
+    ::= ELLIPSIS IDENTIFIER
 
-feature_import ::= 'from' id 'import' feature_name (',' feature_name)*
+scope
+    ::= LINE_BREAK INDENT inner_scope DEDENT
 
-feature_name ::= id module_aliasing?
-
-module_aliasing ::= 'as' id
-
-
-
-program ::= (command | definition)*
-
-definition ::= function_definition | class_definition
-
-
-function_definition ::= 'let' id '(' function_params? ')' function_scope
-
-function_params ::= (id (',' id)* (',' variadic_params)?) | variadic_params
-
-variadic_params ::= '...' id
-
-function_scope ::= line_break indent inner_function_scope dedent
-
-inner_function_scope ::= command+
+inner_scope
+    ::= command
+    | inner_scope command
 
 
-class_definition ::= 'class' id class_scope
+class_definition
+    ::= CLASS IDENTIFIER class_scope
 
-class_scope ::= line_break indent inner_class_scope dedent
+class_scope
+    ::= LINE_BREAK INDENT inner_class_scope DEDENT
 
-inner_class_scope ::= (attr_decl | function_definition)+
+inner_class_scope
+    ::= attr_decl
+    | function_definition
+    | inner_class_scope attr_decl
+    | inner_class_scope function_definition
 
-attr_decl ::= 'let' id ('=' operator)? line_break
+attr_decl
+    ::= LET IDENTIFIER '=' operator LINE_BREAK
+    | LET IDENTIFIER LINE_BREAK
 
 
-command ::= (('let'? assign) | function_call | statement | 'return' operator) line_break
+command
+    ::= assignment_expr LINE_BREAK
+    | function_call LINE_BREAK
+    | statement LINE_BREAK
+    | THROW operator LINE_BREAK
+    | RETURN operator LINE_BREAK
 
-assign ::= id '=' operator
+assignment_expr
+    ::= LET IDENTIFIER '=' operator
+    | IDENTIFIER '=' operator
 
-function_call ::= id '(' function_args? ')'
+function_call
+    ::= IDENTIFIER '(' ')'
+    | IDENTIFIER '(' function_args ')'
 
-function_args ::= (id | literal) (',' function_args)?
+function_args
+    ::= IDENTIFIER
+    | literal
+    | function_args ',' IDENTIFIER
+    | function_args ',' literal
 
-statement ::= if_statement | while_statement | for_statement
+statement
+    ::= if_statement
+    | while_statement
+    | for_statement
 
-if_statement ::= 'if' condition (command | function_scope) else_statement?
+if_statement
+    ::= IF condition scope
+    | IF condition scope ELSE scope
 
-else_statement ::= 'else' (command | function_scope)
+while_statement
+    ::= WHILE condition scope
 
-while_statement ::= 'while' condition (command | function_scope)
+for_statement
+    ::= FOR IDENTIFIER IN operator scope
 
-for_statement ::= 'for' id 'in' operator (command | function_scope)
