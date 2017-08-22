@@ -15,7 +15,7 @@ void indent_level();
 
 %%
 
-"#"[^\n\r]*[\n\r] { printf("comment :3\n"); }
+"#"[^\n\r]*[\n\r] { printf("\t--comment ignored\n"); }
 
     /* literals */
 {D}+        { count(); return INTEGER_LITERAL; }

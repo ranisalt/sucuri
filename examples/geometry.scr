@@ -1,5 +1,6 @@
 # Geometry example module.
 
+# Simple Point class
 export class Point
     let x = 0
     let y = 0
@@ -12,11 +13,14 @@ export class Point
         return Vector(b.x - self.x, b.y - self.y)
 
 
+# Alias example
 export let Vector = Point
 
+# Distance from a to b
 export let distance(a, b)
     return b - a
 
+# Simple Rectangle class
 export class Rectangle
     let top_left = Point(0, 0)
     let bottom_right = Point(0, 0)
