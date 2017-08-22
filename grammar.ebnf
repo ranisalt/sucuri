@@ -8,15 +8,21 @@ literal ::= '"' NO_DQUOTE_STRING_LITERAL '"' | INTEGER | FLOAT | '\'' NO_SQUOTE_
 
 condition ::= operator (('and' | 'or' | 'xor') operator)*
 
-operator ::= __operator__ | '(' __operator__ ')'
+operator ::= '(' __operator__ ')' | __operator__
 
 __operator__ ::= literal | id | function_call | unary_operation | binary_operation
 
 unary_operation ::= 'not' operator | '-' operator
 
-binary_operation ::= relational_operation | math_operator
+binary_operation ::= relational_operation | math_operation
 
-math_operation ::= operator ('+' | '-' | '*' | '/' | '**') operator
+math_operation ::= math_operation_e
+
+math_operation_e ::= math_operation_e '**' math_operation_md | math_operation_md
+
+math_operation_md ::= math_operation_md ('*' | '/') math_operation_as | math_operation_as
+
+math_operation_as ::= math_operation_as ('+' | '-') operator | operator
 
 relational_operation ::= operator ('=' | '>' | '<' | '<=' | '>=' | '!=') operator
 
