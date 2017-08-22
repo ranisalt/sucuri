@@ -1,0 +1,197 @@
+\documentclass[headings=standardclasses, headings=big]{scrreprt}
+
+\input{preamble}
+
+\usepackage[portuguese]{babel}
+\usepackage[a4paper,tmargin=1cm]{geometry}
+
+\usepackage{graphics}
+\usepackage{listings}
+
+\title{Sucuri}
+\subtitle{Uma linguagem baseada em Python}
+\author{João Paulo T. I. Z., Ranieri S. A., William K. A.}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\clearpage
+
+\section{A linguagem}
+
+A linguagem é planejada tendo como base algumas ideias de Python. Para geração
+do analisador léxico, foi utilizada as ferramentas FLEX (para especificação do
+léxico) e BISON (para gerar o código-fonte do analisador).
+
+Exemplo de código válido na linguagem Sucuri:
+
+\lstinputlisting{../examples/geometry.scr}
+
+\clearpage
+
+\section{Especificação Léxica}
+
+Inicialmente são definidas algumas regex de apoio:
+
+\begin{verbatim}
+D [0-9]                         % Reconhece dígitos
+
+L [a-zA-Z_!@$?]                 % Reconhece qualquer símbolo
+                                % possível em um identificador
+
+NO_SQUOTE_STRING_LITERAL [^']*  % Qualquer _string literal_
+                                % que não possua aspas simples
+
+NO_DQUOTE_STRING_LITERAL [^"]*  % Qualquer _string literal_
+                                % que não possua aspas duplas
+\end{verbatim}
+
+Além de duas funções, \texttt{count()}, que realiza contagem de colunas para
+gerar uma melhor mensagem de erro (caso ocorra), e \texttt{indent\_level()},
+que informa o nível de identação atual.
+
+\subsection{Identificadores}
+
+Identificadores são compostos por qualquer sequência de \texttt{L} ou
+\texttt{D} não separados por espaços, podendo conter ``.'' (não no início, no
+final nem sucedidos por dígitos).
+
+\subsection{Literais}
+
+\begin{minipage}{\textwidth}
+São assumidos como literais de inteiros qualquer construção de somente dígitos:
+
+\begin{verbatim}
+
+# Inteiros válidos:
+
+1
+10
+0
+0000  % Tratado como 0
+300
+-10   % É reconhecido o "10" como literal inteiro e o "-" como operador unário
+      % operado sobre o "10"
+
+\end{verbatim}
+
+Assim, sua \textit{regex} se torna \texttt{\{D\}+} (1 ou mais dígitos
+consecutivos).
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+São assumidos como ponto-flutuante todo literal composto por números e que
+tenha um ``.'' no início, meio ou fim do literal:
+
+\begin{verbatim}
+
+1   % Inteiro
+1.  % Float
+.1  % Float
+-1. % "1." reconhecido como literal float, unário "-" operado em "1."
+
+.   % Erro léxico
+
+\end{verbatim}
+
+Assim, sua \textit{regex} é separada em duas:
+
+\begin{itemize}
+    \item \texttt{"."\{D\}+} --- Reconhece \textit{floats} iniciados em ".";
+    \item \texttt{\{D\}+"."\{D\}*} --- Reconhece \textit{floats} com "." no
+        meio ou final;
+\end{itemize}
+\end{minipage}
+
+\vspace{1em}
+
+\begin{minipage}{\textwidth}
+    \textit{String literals} são compostos de qualquer sequência de caracteres que:
+    \begin{itemize}
+        \item Estão entre aspas simples (') e não possuem outra aspa simples no
+            meio (reconhecido pela \textit{regex}
+            \texttt{"'"\{NO\_SQUOTE\_STRING\_LITERAL\}"'"}).
+        \item Estão entre aspas dupla (") e não possuem outra aspa dupla no
+            meio (reconhecido pela \textit{regex}
+            \texttt{"\textbackslash\char`\""\{NO\_DQUOTE\_STRING\_LITERAL\}"\textbackslash\char`\""}).
+    \end{itemize}
+\end{minipage}
+
+Operadores:
+
+\begin{verbatim}
+% Unários
+not
+-
+
+% Comparativos
+!=
+=
+<
+<=
+>
+>=
+
+
+% Matemáticos
++
+-
+*
+**
+/
+
+% Lógicos
+and
+or
+xor
+
+% Outros
+(
+)
+
+\end{verbatim}
+
+Palavras reservadas:
+
+\begin{verbatim}
+
+% Estruturas de controle
+class  % Define um novo tipo
+if
+else
+for
+while
+
+% Retornos
+return
+throw
+
+as     % Serve para alias
+export % Define o elemento como público
+from   % Para importação parcial de um módulo
+import % Para importar um módulo
+in     % Para iteração (for i in set)
+let    % Definição
+\end{verbatim}
+
+Há também a definição de elipse (\texttt{...}) para parâmetros variádicos.
+
+\clearpage
+
+\section{Grafo de sintaxe e especificação EBNF}
+
+\input{sucuri-graph}
+
+\clearpage
+
+\section{Arquivos}
+
+Os arquivos FLEX e BISON são respectivamente \texttt{sucuri.l} e
+\texttt{sucuri.y}. Exemplos de programas válidos se encontram na pasta
+\texttt{examples/}. O código fonte do analisador é \texttt{sucuri.yy.c}.  Os
+logs de saída aplicados no exemplo \texttt{examples/geometry.scr} estão no
+arquivo \texttt{geometry-parse.ylog}.
+
+\end{document}

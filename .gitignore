@@ -1,4 +1,9 @@
 sucuri.tab.*
 sucuri.yy*
-**/*.log
 sucuri
+**/*.aux
+**/*.log
+**/*.toc
+**/*.out
+**/*.bbl
+**/*.zip

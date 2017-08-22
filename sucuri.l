@@ -19,7 +19,7 @@ void indent_level();
 
     /* literals */
 {D}+        { count(); return INTEGER_LITERAL; }
-{D}*"."{D}+ { count(); return FLOAT_LITERAL; }
+"."{D}+     { count(); return FLOAT_LITERAL; }
 {D}+"."{D}* { count(); return FLOAT_LITERAL; }
 "'"{NO_SQUOTE_STRING_LITERAL}"'" { count(); return STRING_LITERAL; }
 "\""{NO_DQUOTE_STRING_LITERAL}"\"" { count(); return STRING_LITERAL; }
