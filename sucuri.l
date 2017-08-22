@@ -1,11 +1,11 @@
 D [0-9]
 L [a-zA-Z_!@$?]
-NO_SQUOTE_STRING_LITERAL [^']
-NO_DQUOTE_STRING_LITERAL [^"]
+NO_SQUOTE_STRING_LITERAL [^']*
+NO_DQUOTE_STRING_LITERAL [^"]*
 
 %{
 
-#include <iostream>
+#include <stdio.h>
 #include "sucuri.tab.h"
 
 void count();
@@ -15,14 +15,14 @@ void indent_level();
 
 %%
 
-"#"[^\n\r]*[\n\r] { std::cout << "comment :3\n"; }
+"#"[^\n\r]*[\n\r] { printf("comment :3\n"); }
 
     /* literals */
 {D}+        { count(); return INTEGER_LITERAL; }
 {D}*"."{D}+ { count(); return FLOAT_LITERAL; }
 {D}+"."{D}* { count(); return FLOAT_LITERAL; }
-\'{NO_SQUOTE_STRING_LITERAL}\' { count(); return STRING_LITERAL; }
-\"{NO_DQUOTE_STRING_LITERAL}\" { count(); return STRING_LITERAL; }
+"'"{NO_SQUOTE_STRING_LITERAL}"'" { count(); return STRING_LITERAL; }
+"\""{NO_DQUOTE_STRING_LITERAL}"\"" { count(); return STRING_LITERAL; }
 
     /* operators */
 "!="        { count(); return NE; }
@@ -64,5 +64,28 @@ void indent_level();
 
 %%
 
+int yywrap(void) {
+    printf("~~~ end of parse ~~~\n");
+    return 1;
+}
+
+void indent_level() {
+}
+
+int column = 0;
+
 void count() {
+    for (int i = 0; yytext[i] != '\0'; i++) {
+        if (yytext[i] == '\n') {
+            column = 0;
+        } else if (yytext[i] == '\t') {
+            column += 8 - (column % 8);
+        } else {
+            column++;
+        }
+    }
+
+    printf("found ");
+    ECHO;
+    printf("\n");
 }

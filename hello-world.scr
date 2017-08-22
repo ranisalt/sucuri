@@ -1,20 +1,20 @@
-===============================================================================
-teremos:
+#===============================================================================
+# teremos:
 
-== Imports:
+# == Imports:
 import module as module
 from module import (thing, another_thing)
 from module import just_this
 
-== Commands:
+# == Commands:
 print('Hellossss, Worldsssss')
 
 let grades = [0.9, 0.7, 0.8]
 let avg = avg(grades)
 
-== Statements:
+# == Statements:
 
-==== If:
+# ==== If:
 if x
   return 1
 else
@@ -30,17 +30,17 @@ else if (avg > 5.75 and
 else
   print('You failed ({avg})')
 
-==== While:
+# ==== While:
 
 
-==== For:
+# ==== For:
 for i in range(0, 9)
   print(i)
 
 for elm in my_iter
   print(elm)
 
-== Functions:
+# == Functions:
 let sum(x, ...xs)
   return x + sum(*xs) or 0
 
@@ -54,7 +54,7 @@ let sum(xs)
 sum(*grades) / len(grades)
 
 
-== Classes:
+# == Classes:
 class Point
   let new(self, x=0, y=0)
     self.x = 0
@@ -65,8 +65,8 @@ class Fruits
   let STRAWB = 1
 
 
-===============================================================================
-não teremos:
+# ===============================================================================
+# não teremos:
 
 
 return 1 if x else 2

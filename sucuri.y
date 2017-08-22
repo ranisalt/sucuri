@@ -5,6 +5,7 @@
 %token IDENTIFIER ELLIPSIS
 
 %start code
+
 %%
 
 code
@@ -179,9 +180,13 @@ for_statement
 
 %%
 
-int yydebug = 1;
+#include <stdio.h>
+
+extern char yytext[];
+extern int column;
 
 int yyerror(char *s)
 {
-    fprintf(stderr, "error: %s\n", s);
+    fflush(stdout);
+    printf("\n%*s\n%*s\n", column, "^", column, s);
 }
