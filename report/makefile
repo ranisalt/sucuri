@@ -6,5 +6,5 @@ default:
 	$(LATEX) $(OUTPUT).tex
 
 clean:
-	rm -f *.{toc, aux, bbl}
+	rm -f *.{toc,aux,bbl,out}
 	rm -f $(OUTPUT).pdf

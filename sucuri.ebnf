@@ -1,4 +1,3 @@
-
 code
     ::= preamble program
     | program
@@ -14,6 +13,7 @@ condition
 
 operator
     ::= IDENTIFIER
+    | IDENTIFIER '[' operator ']'
     | literal
     | '(' logical_expr ')'
 
@@ -99,13 +99,15 @@ function_definition
     | LET IDENTIFIER '(' ')' scope
 
 function_params_list
-    ::= IDENTIFIERentifier_list
-    | IDENTIFIERentifier_list ',' variadic_param
+    ::= identifier_list
+    | identifier_list ',' variadic_param
     | variadic_param
 
-IDENTIFIERentifier_list
+identifier_list
     ::= IDENTIFIER
-    | IDENTIFIERentifier_list ',' IDENTIFIER
+    | identifier_list ',' IDENTIFIER
+    | IDENTIFIER '=' operator
+    | identifier_list ',' IDENTIFIER '=' operator
 
 variadic_param
     ::= ELLIPSIS IDENTIFIER
@@ -145,16 +147,15 @@ command
 assignment_expr
     ::= LET IDENTIFIER '=' operator
     | IDENTIFIER '=' operator
+    | IDENTIFIER '[' operator ']' '=' operator
 
 function_call
     ::= IDENTIFIER '(' ')'
     | IDENTIFIER '(' function_args ')'
 
 function_args
-    ::= IDENTIFIER
-    | literal
-    | function_args ',' IDENTIFIER
-    | function_args ',' literal
+    ::= operator
+    | function_args ',' operator
 
 statement
     ::= if_statement
@@ -170,4 +171,3 @@ while_statement
 
 for_statement
     ::= FOR IDENTIFIER IN operator scope
-

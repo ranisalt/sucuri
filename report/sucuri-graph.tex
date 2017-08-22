@@ -1,667 +1,671 @@
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{code}{}{code:}
+\protect\hypertarget{code}{}{code:}
 
-  \includegraphics[width=3.58333in,height=1.18750in]{diagram/code.png}
+\includegraphics[width=3.58333in,height=1.18750in]{diagram/code.png}
 
-  \begin{verbatim}
-  code     ::= imports* ( command | definition )+
-  \end{verbatim}
+\begin{verbatim}
+code     ::= imports* ( command | definition )+
+\end{verbatim}
 
-  Sem referências
+no references
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{literal}{}{literal:}
+\protect\hypertarget{literal}{}{literal:}
 
-  \includegraphics[width=2.33333in,height=1.29167in]{diagram/literal.png}
+\includegraphics[width=2.33333in,height=1.29167in]{diagram/literal.png}
 
-  \begin{verbatim}
-  literal  ::= INTEGER_LITERAL
+\begin{verbatim}
+literal  ::= INTEGER_LITERAL
            | FLOAT_LITERAL
            | STRING_LITERAL
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%%
-    \item
-      \protect\hyperlink{function_call}{function\_call}
-    \item
-      \protect\hyperlink{operator}{operator}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{operator}{operator}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{condition}{}{condition:}
+\protect\hypertarget{condition}{}{condition:}
 
-  \includegraphics[width=1.35417in,height=0.37500in]{diagram/condition.png}
+\includegraphics[width=1.35417in,height=0.37500in]{diagram/condition.png}
 
-  \begin{verbatim}
-  condition
+\begin{verbatim}
+condition
          ::= operator
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{if_statement}{if\_statement}
-    \item
-      \protect\hyperlink{while_statement}{while\_statement}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{if_statement}{if\_statement}
+\item
+  \protect\hyperlink{while_statement}{while\_statement}
+\end{itemize}
 
-  \clearpage
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{operator}{}{operator:}
+\protect\hypertarget{operator}{}{operator:}
 
-  \includegraphics[width=3.43750in,height=2.66667in]{diagram/operator.png}
+\includegraphics[width=4.25000in,height=3.00000in]{diagram/operator.png}
 
-  \begin{verbatim}
-  operator ::= IDENTIFIER
+\begin{verbatim}
+operator ::= IDENTIFIER ( '[' operator ']' )?
            | literal
            | '(' equality_expr ( ( AND | OR | XOR ) equality_expr )* ')'
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{assignment_expr}{assignment\_expr}
-    \item
-      \protect\hyperlink{attr_decl}{attr\_decl}
-    \item
-      \protect\hyperlink{command}{command}
-    \item
-      \protect\hyperlink{condition}{condition}
-    \item
-      \protect\hyperlink{for_statement}{for\_statement}
-    \item
-      \protect\hyperlink{unary_expr}{unary\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{assignment_expr}{assignment\_expr}
+\item
+  \protect\hyperlink{attr_decl}{attr\_decl}
+\item
+  \protect\hyperlink{command}{command}
+\item
+  \protect\hyperlink{condition}{condition}
+\item
+  \protect\hyperlink{for_statement}{for\_statement}
+\item
+  \protect\hyperlink{function_call}{function\_call}
+\item
+  \protect\hyperlink{function_params_list}{function\_params\_list}
+\item
+  \protect\hyperlink{operator}{operator}
+\item
+  \protect\hyperlink{unary_expr}{unary\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{unary_operator}{}{unary\_operator:}
+\protect\hypertarget{unary_operator}{}{unary\_operator:}
 
-  \includegraphics[width=1.47917in,height=0.83333in]{diagram/unary_operator.png}
+\includegraphics[width=1.47917in,height=0.83333in]{diagram/unary_operator.png}
 
-  \begin{verbatim}
-  unary_operator
+\begin{verbatim}
+unary_operator
          ::= NOT
            | '-'
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{unary_expr}{unary\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{unary_expr}{unary\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{unary_expr}{}{unary\_expr:}
+\protect\hypertarget{unary_expr}{}{unary\_expr:}
 
-  \includegraphics[width=3.16667in,height=0.70833in]{diagram/unary_expr.png}
+\includegraphics[width=3.16667in,height=0.70833in]{diagram/unary_expr.png}
 
-  \begin{verbatim}
-  unary_expr
+\begin{verbatim}
+unary_expr
          ::= unary_operator? operator
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{exponential_expr}{exponential\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{exponential_expr}{exponential\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{exponential_expr}{}{exponential\_expr:}
+\protect\hypertarget{exponential_expr}{}{exponential\_expr:}
 
-  \includegraphics[width=1.93750in,height=0.83333in]{diagram/exponential_expr.png}
+\includegraphics[width=1.93750in,height=0.83333in]{diagram/exponential_expr.png}
 
-  \begin{verbatim}
-  exponential_expr
+\begin{verbatim}
+exponential_expr
          ::= unary_expr ( POW unary_expr )*
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{multiplicative_expr}{multiplicative\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{multiplicative_expr}{multiplicative\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{multiplicative_expr}{}{multiplicative\_expr:}
+\protect\hypertarget{multiplicative_expr}{}{multiplicative\_expr:}
 
-  \includegraphics[width=2.29167in,height=1.29167in]{diagram/multiplicative_expr.png}
+\includegraphics[width=2.29167in,height=1.29167in]{diagram/multiplicative_expr.png}
 
-  \begin{verbatim}
-  multiplicative_expr
+\begin{verbatim}
+multiplicative_expr
          ::= exponential_expr ( ( '*' | '/' ) exponential_expr )*
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{additive_expr}{additive\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{additive_expr}{additive\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{additive_expr}{}{additive\_expr:}
+\protect\hypertarget{additive_expr}{}{additive\_expr:}
 
-  \includegraphics[width=2.37500in,height=1.29167in]{diagram/additive_expr.png}
+\includegraphics[width=2.37500in,height=1.29167in]{diagram/additive_expr.png}
 
-  \begin{verbatim}
-  additive_expr
+\begin{verbatim}
+additive_expr
          ::= multiplicative_expr ( ( '+' | '-' ) multiplicative_expr )*
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{relational_expr}{relational\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{relational_expr}{relational\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{REL_OP}{}{REL\_OP:}
+\protect\hypertarget{REL_OP}{}{REL\_OP:}
 
-  \includegraphics[width=1.39583in,height=1.75000in]{diagram/REL_OP.png}
+\includegraphics[width=1.39583in,height=1.75000in]{diagram/REL_OP.png}
 
-  \begin{verbatim}
-  REL_OP   ::= '>'
+\begin{verbatim}
+REL_OP   ::= '>'
            | '<'
            | LE
            | GE
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{relational_expr}{relational\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{relational_expr}{relational\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{relational_expr}{}{relational\_expr:}
+\protect\hypertarget{relational_expr}{}{relational\_expr:}
 
-  \includegraphics[width=2.06250in,height=0.83333in]{diagram/relational_expr.png}
+\includegraphics[width=2.06250in,height=0.83333in]{diagram/relational_expr.png}
 
-  \begin{verbatim}
-  relational_expr
+\begin{verbatim}
+relational_expr
          ::= additive_expr ( REL_OP additive_expr )*
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{equality_expr}{equality\_expr}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{equality_expr}{equality\_expr}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{equality_expr}{}{equality\_expr:}
+\protect\hypertarget{equality_expr}{}{equality\_expr:}
 
-  \includegraphics[width=2.14583in,height=1.29167in]{diagram/equality_expr.png}
+\includegraphics[width=2.14583in,height=1.29167in]{diagram/equality_expr.png}
 
-  \begin{verbatim}
-  equality_expr
+\begin{verbatim}
+equality_expr
          ::= relational_expr ( ( '=' | NE ) relational_expr )*
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{operator}{operator}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{operator}{operator}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{imports}{}{imports:}
+\protect\hypertarget{imports}{}{imports:}
 
-  \includegraphics[width=2.16667in,height=0.83333in]{diagram/imports.png}
+\includegraphics[width=2.16667in,height=0.83333in]{diagram/imports.png}
 
-  \begin{verbatim}
-  imports  ::= module_import
+\begin{verbatim}
+imports  ::= module_import
            | feature_import
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{code}{code}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{code}{code}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{module_import}{}{module\_import:}
+\protect\hypertarget{module_import}{}{module\_import:}
 
-  \includegraphics[width=4.20833in,height=0.70833in]{diagram/module_import.png}
+\includegraphics[width=4.20833in,height=0.70833in]{diagram/module_import.png}
 
-  \begin{verbatim}
-  module_import
+\begin{verbatim}
+module_import
          ::= IMPORT IDENTIFIER module_aliasing?
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{imports}{imports}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{imports}{imports}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{feature_import}{}{feature\_import:}
+\protect\hypertarget{feature_import}{}{feature\_import:}
 
-  \includegraphics[width=4.87500in,height=0.83333in]{diagram/feature_import.png}
+\includegraphics[width=4.87500in,height=0.83333in]{diagram/feature_import.png}
 
-  \begin{verbatim}
-  feature_import
+\begin{verbatim}
+feature_import
          ::= FROM IDENTIFIER IMPORT feature_name ( ',' feature_name )*
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{imports}{imports}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{imports}{imports}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{feature_name}{}{feature\_name:}
+\protect\hypertarget{feature_name}{}{feature\_name:}
 
-  \includegraphics[width=3.31250in,height=0.70833in]{diagram/feature_name.png}
+\includegraphics[width=3.31250in,height=0.70833in]{diagram/feature_name.png}
 
-  \begin{verbatim}
-  feature_name
+\begin{verbatim}
+feature_name
          ::= IDENTIFIER module_aliasing?
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{feature_import}{feature\_import}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{feature_import}{feature\_import}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{module_aliasing}{}{module\_aliasing:}
+\protect\hypertarget{module_aliasing}{}{module\_aliasing:}
 
-  \includegraphics[width=2.08333in,height=0.37500in]{diagram/module_aliasing.png}
+\includegraphics[width=2.08333in,height=0.37500in]{diagram/module_aliasing.png}
 
-  \begin{verbatim}
-  module_aliasing
+\begin{verbatim}
+module_aliasing
          ::= AS IDENTIFIER
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{feature_name}{feature\_name}
-    \item
-      \protect\hyperlink{module_import}{module\_import}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{feature_name}{feature\_name}
+\item
+  \protect\hyperlink{module_import}{module\_import}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{definition}{}{definition:}
+\protect\hypertarget{definition}{}{definition:}
 
-  \includegraphics[width=3.66667in,height=0.83333in]{diagram/definition.png}
+\includegraphics[width=3.66667in,height=0.83333in]{diagram/definition.png}
 
-  \begin{verbatim}
-  definition
+\begin{verbatim}
+definition
          ::= EXPORT? ( function_definition | class_definition )
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{code}{code}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{code}{code}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{function_definition}{}{function\_definition:}
+\protect\hypertarget{function_definition}{}{function\_definition:}
 
-  \includegraphics[width=5.97917in,height=0.70833in]{diagram/function_definition.png}
+\includegraphics[width=5.97917in,height=0.70833in]{diagram/function_definition.png}
 
-  \begin{verbatim}
-  function_definition
+\begin{verbatim}
+function_definition
          ::= LET IDENTIFIER '(' function_params_list? ')' scope
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{class_scope}{class\_scope}
-    \item
-      \protect\hyperlink{definition}{definition}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{class_scope}{class\_scope}
+\item
+  \protect\hyperlink{definition}{definition}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{function_params_list}{}{function\_params\_list:}
+\protect\hypertarget{function_params_list}{}{function\_params\_list:}
 
-  \includegraphics[width=4.56250in,height=1.62500in]{diagram/function_params_list.png}
+\includegraphics[width=6.45833in,height=1.62500in]{diagram/function_params_list.png}
 
-  \begin{verbatim}
-  function_params_list
-         ::= IDENTIFIER ( ',' IDENTIFIER )* ( ',' variadic_param )?
+\begin{verbatim}
+function_params_list
+         ::= IDENTIFIER ( '=' operator )? ( ',' IDENTIFIER ( '=' operator )? )* ( ',' variadic_param )?
            | variadic_param
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{function_definition}{function\_definition}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{function_definition}{function\_definition}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{variadic_param}{}{variadic\_param:}
+\protect\hypertarget{variadic_param}{}{variadic\_param:}
 
-  \includegraphics[width=2.43750in,height=0.37500in]{diagram/variadic_param.png}
+\includegraphics[width=2.43750in,height=0.37500in]{diagram/variadic_param.png}
 
-  \begin{verbatim}
-  variadic_param
+\begin{verbatim}
+variadic_param
          ::= ELLIPSIS IDENTIFIER
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{function_params_list}{function\_params\_list}
-  \end{itemize}
-
-\end{minipage}
-
-\begin{minipage}{\textwidth}
-  \protect\hypertarget{scope}{}{scope:}
-
-  \includegraphics[width=4.81250in,height=0.54167in]{diagram/scope.png}
-
-  \begin{verbatim}
-  scope    ::= LINE_BREAK INDENT command+ DEDENT
-  \end{verbatim}
-
-  Referenciado por:
-
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{for_statement}{for\_statement}
-    \item
-      \protect\hyperlink{function_definition}{function\_definition}
-    \item
-      \protect\hyperlink{if_statement}{if\_statement}
-    \item
-      \protect\hyperlink{while_statement}{while\_statement}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{function_params_list}{function\_params\_list}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{class_definition}{}{class\_definition:}
+\protect\hypertarget{scope}{}{scope:}
 
-  \includegraphics[width=3.47917in,height=0.37500in]{diagram/class_definition.png}
+\includegraphics[width=4.81250in,height=0.54167in]{diagram/scope.png}
 
-  \begin{verbatim}
-  class_definition
+\begin{verbatim}
+scope    ::= LINE_BREAK INDENT command+ DEDENT
+\end{verbatim}
+
+referenced by:
+
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{for_statement}{for\_statement}
+\item
+  \protect\hyperlink{function_definition}{function\_definition}
+\item
+  \protect\hyperlink{if_statement}{if\_statement}
+\item
+  \protect\hyperlink{while_statement}{while\_statement}
+\end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+\protect\hypertarget{class_definition}{}{class\_definition:}
+
+\includegraphics[width=3.47917in,height=0.37500in]{diagram/class_definition.png}
+
+\begin{verbatim}
+class_definition
          ::= CLASS IDENTIFIER class_scope
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{definition}{definition}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{definition}{definition}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{class_scope}{}{class\_scope:}
+\protect\hypertarget{class_scope}{}{class\_scope:}
 
-  \includegraphics[width=5.72917in,height=1.00000in]{diagram/class_scope.png}
+\includegraphics[width=5.72917in,height=1.00000in]{diagram/class_scope.png}
 
-  \begin{verbatim}
-  class_scope
+\begin{verbatim}
+class_scope
          ::= LINE_BREAK INDENT ( attr_decl | function_definition )+ DEDENT
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{class_definition}{class\_definition}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{class_definition}{class\_definition}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{attr_decl}{}{attr\_decl:}
+\protect\hypertarget{attr_decl}{}{attr\_decl:}
 
-  \includegraphics[width=5.20833in,height=0.70833in]{diagram/attr_decl.png}
+\includegraphics[width=5.20833in,height=0.70833in]{diagram/attr_decl.png}
 
-  \begin{verbatim}
-  attr_decl
+\begin{verbatim}
+attr_decl
          ::= LET IDENTIFIER ( '=' operator )? LINE_BREAK
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{class_scope}{class\_scope}
-  \end{itemize}
-
-\end{minipage}
-
-\begin{minipage}{\textwidth}
-  \protect\hypertarget{command}{}{command:}
-
-  \includegraphics[width=4.27083in,height=2.20833in]{diagram/command.png}
-
-  \begin{verbatim}
-  command  ::= ( assignment_expr | function_call | statement | ( THROW | RETURN ) operator ) LINE_BREAK
-  \end{verbatim}
-
-  Referenciado por:
-
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{code}{code}
-    \item
-      \protect\hyperlink{scope}{scope}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{class_scope}{class\_scope}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{assignment_expr}{}{assignment\_expr:}
+\protect\hypertarget{command}{}{command:}
 
-  \includegraphics[width=4.02083in,height=0.70833in]{diagram/assignment_expr.png}
+\includegraphics[width=4.27083in,height=2.20833in]{diagram/command.png}
 
-  \begin{verbatim}
-  assignment_expr
-         ::= LET? IDENTIFIER '=' operator
-  \end{verbatim}
+\begin{verbatim}
+command  ::= ( assignment_expr | function_call | statement | ( THROW | RETURN ) operator ) LINE_BREAK
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{command}{command}
-  \end{itemize}
-
-\end{minipage}
-
-\begin{minipage}{\textwidth}
-  \protect\hypertarget{function_call}{}{function\_call:}
-
-  \includegraphics[width=4.81250in,height=1.45833in]{diagram/function_call.png}
-
-  \begin{verbatim}
-  function_call
-         ::= IDENTIFIER '(' ( ( IDENTIFIER | literal ) ( ',' ( IDENTIFIER | literal ) )* )? ')'
-  \end{verbatim}
-
-  Referenciado por:
-
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{command}{command}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{code}{code}
+\item
+  \protect\hyperlink{scope}{scope}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{statement}{}{statement:}
+\protect\hypertarget{assignment_expr}{}{assignment\_expr:}
 
-  \includegraphics[width=2.25000in,height=1.29167in]{diagram/statement.png}
+\includegraphics[width=5.72917in,height=1.16667in]{diagram/assignment_expr.png}
 
-  \begin{verbatim}
-  statement
+\begin{verbatim}
+assignment_expr
+         ::= ( LET IDENTIFIER | IDENTIFIER ( '[' operator ']' )? ) '=' operator
+\end{verbatim}
+
+referenced by:
+
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{command}{command}
+\end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+\protect\hypertarget{function_call}{}{function\_call:}
+
+\includegraphics[width=4.25000in,height=1.00000in]{diagram/function_call.png}
+
+\begin{verbatim}
+function_call
+         ::= IDENTIFIER '(' ( operator ( ',' operator )* )? ')'
+\end{verbatim}
+
+referenced by:
+
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{command}{command}
+\end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+\protect\hypertarget{statement}{}{statement:}
+
+\includegraphics[width=2.25000in,height=1.29167in]{diagram/statement.png}
+
+\begin{verbatim}
+statement
          ::= if_statement
            | while_statement
            | for_statement
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{command}{command}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{command}{command}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{if_statement}{}{if\_statement:}
+\protect\hypertarget{if_statement}{}{if\_statement:}
 
-  \includegraphics[width=4.56250in,height=0.70833in]{diagram/if_statement.png}
+\includegraphics[width=4.56250in,height=0.70833in]{diagram/if_statement.png}
 
-  \begin{verbatim}
-  if_statement
+\begin{verbatim}
+if_statement
          ::= IF condition scope ( ELSE scope )?
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{statement}{statement}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{statement}{statement}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{while_statement}{}{while\_statement:}
+\protect\hypertarget{while_statement}{}{while\_statement:}
 
-  \includegraphics[width=2.95833in,height=0.37500in]{diagram/while_statement.png}
+\includegraphics[width=2.95833in,height=0.37500in]{diagram/while_statement.png}
 
-  \begin{verbatim}
-  while_statement
+\begin{verbatim}
+while_statement
          ::= WHILE condition scope
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{statement}{statement}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{statement}{statement}
+\end{itemize}
 
 \end{minipage}
 
 \begin{minipage}{\textwidth}
-  \protect\hypertarget{for_statement}{}{for\_statement:}
+\protect\hypertarget{for_statement}{}{for\_statement:}
 
-  \includegraphics[width=4.43750in,height=0.37500in]{diagram/for_statement.png}
+\includegraphics[width=4.43750in,height=0.37500in]{diagram/for_statement.png}
 
-  \begin{verbatim}
-  for_statement
+\begin{verbatim}
+for_statement
          ::= FOR IDENTIFIER IN operator scope
-  \end{verbatim}
+\end{verbatim}
 
-  Referenciado por:
+referenced by:
 
-  \begin{itemize}
-      \tightlist%
-    \item
-      \protect\hyperlink{statement}{statement}
-  \end{itemize}
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{statement}{statement}
+\end{itemize}
 
 \end{minipage}
 
 \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+
