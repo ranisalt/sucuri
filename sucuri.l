@@ -92,14 +92,11 @@ void process_indent(unsigned leng)
             }
         }
     }
-
-    end:
-    printf("%u ", level);
 }
 
 int column = 0;
 
-void count() {
+void count(void) {
     for (int i = 0; yytext[i] != '\0'; i++) {
         if (yytext[i] == '\n') {
             column = 0;
@@ -110,7 +107,5 @@ void count() {
         }
     }
 
-    printf("found ");
     ECHO;
-    printf("\n");
 }
