@@ -6,7 +6,7 @@ NO_DQUOTE_STRING_LITERAL [^"]
 %{
 
 #include <iostream>
-#include "y.tab.h"
+#include "sucuri.tab.h"
 
 void count();
 void indent_level();
@@ -15,7 +15,7 @@ void indent_level();
 
 %%
 
-"#"         { comment(); }
+"#"[^\n\r]*[\n\r] { std::cout << "comment :3\n"; }
 
     /* literals */
 {D}+        { count(); return INTEGER_LITERAL; }
@@ -61,3 +61,8 @@ void indent_level();
     /* extra */
 "..."                 { count(); return ELLIPSIS; }
 {L}((\.{L})|{L}|{D})* { count(); return IDENTIFIER; }
+
+%%
+
+void count() {
+}

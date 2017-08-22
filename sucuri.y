@@ -4,6 +4,7 @@
 %token AS CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW WHILE
 %token IDENTIFIER ELLIPSIS
 
+%start code
 %%
 
 code
@@ -44,7 +45,7 @@ additive_expr
     | additive_expr '+' multiplicative_expr
     | additive_expr '-' multiplicative_expr;
 
-REL_OP : '=' | '>' | '<' | LE | GE;
+REL_OP : '>' | '<' | LE | GE;
 
 relational_expr
     : additive_expr
@@ -179,11 +180,6 @@ for_statement
 %%
 
 int yydebug = 1;
-
-int main(int argc, char **argv)
-{
-    yyparse();
-}
 
 int yyerror(char *s)
 {
