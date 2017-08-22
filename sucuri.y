@@ -108,13 +108,15 @@ function_definition
     | LET IDENTIFIER '(' ')' scope;
 
 function_params_list
-    : IDENTIFIERentifier_list
-    | IDENTIFIERentifier_list ',' variadic_param
+    : identifier_list
+    | identifier_list ',' variadic_param
     | variadic_param;
 
-IDENTIFIERentifier_list
+identifier_list
     : IDENTIFIER
-    | IDENTIFIERentifier_list ',' IDENTIFIER;
+    | identifier_list ',' IDENTIFIER
+    | IDENTIFIER '=' operator
+    | identifier_list ',' IDENTIFIER '=' operator;
 
 variadic_param
     : ELLIPSIS IDENTIFIER;
