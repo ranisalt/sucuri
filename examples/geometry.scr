@@ -1,0 +1,32 @@
+# Geometry example module.
+
+export class Point
+    let x = 0
+    let y = 0
+
+    let new(self, x, y)
+        self.x = x
+        self.y = y
+
+    let __sub__(self, b)
+        return Vector(b.x - self.x, b.y - self.y)
+
+
+export let Vector = Point
+
+export let distance(a, b)
+    return b - a
+
+export class Rectangle
+    let top_left = Point(0, 0)
+    let bottom_right = Point(0, 0)
+
+    let new(self, top_left, bottom_right)
+        self.top_left = top_left
+        self.bottom_right = bottom_right
+
+    let width(self)
+        return (self.bottom_right - self.top_left).x
+
+    let height(self)
+        return (self.bottom_right - self.top_left).y

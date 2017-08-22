@@ -1,5 +1,5 @@
 #===============================================================================
-# teremos:
+# Valid examples:
 
 # == Imports:
 import module as module
@@ -31,7 +31,8 @@ else
   print('You failed ({avg})')
 
 # ==== While:
-
+while true
+    print('looping...')
 
 # ==== For:
 for i in range(0, 9)
@@ -55,18 +56,17 @@ sum(*grades) / len(grades)
 
 
 # == Classes:
-class Point
+class Point # Common class
   let new(self, x=0, y=0)
     self.x = 0
     self.y = 0
 
-class Fruits
+class Fruits # Enumerator
   let APPLE = 0
   let STRAWB = 1
 
 
 # ===============================================================================
-# não teremos:
-
+# Invalid examples:
 
 return 1 if x else 2
