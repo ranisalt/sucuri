@@ -1,0 +1,9 @@
+try
+    let x = something()
+catch InvalidArgument
+    print('Broken!')
+
+try
+    let x = http.get('https://github.com')
+catch FileNotFound as err
+    print('Error: {}'.format(err.message))
