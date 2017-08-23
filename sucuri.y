@@ -9,8 +9,8 @@
 %%
 
 code
-    : preamble program
-    | program;
+    : program
+    | imports program;
 
 literal
     : INTEGER_LITERAL
@@ -64,32 +64,35 @@ logical_expr
     | logical_expr OR equality_expr
     | logical_expr XOR equality_expr;
 
-preamble
-    : preamble imports
-    | imports;
-
 imports
-    : module_import
-    | feature_import;
+    : import_stmt NEWLINE
+    | imports import_stmt NEWLINE;
 
-module_import
-    : IMPORT IDENTIFIER
-    | IMPORT IDENTIFIER module_aliasing;
+import_stmt
+    : IMPORT dotted_as_names
+    | FROM dotted_name IMPORT import_as_names;
 
-feature_import
-    : FROM IDENTIFIER IMPORT feature_name_list;
+dotted_as_names
+    : dotted_as_name
+    | dotted_as_names ',' dotted_as_name;
 
-feature_name_list
-    : feature_name
-    | feature_name_list ',' feature_name;
+dotted_as_name
+    : dotted_name
+    | dotted_name AS IDENTIFIER;
 
-feature_name
+import_as_names
+    : import_as_name
+    | import_as_name ','
+    | import_as_names ',' import_as_name
+    | import_as_names ',' import_as_name ',';
+
+import_as_name
+    : dotted_name
+    | dotted_name AS IDENTIFIER;
+
+dotted_name
     : IDENTIFIER
-    | IDENTIFIER module_aliasing;
-
-module_aliasing
-    : AS IDENTIFIER;
-
+    | dotted_name '.' IDENTIFIER;
 
 program
     : command
