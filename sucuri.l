@@ -56,6 +56,7 @@ void process_newline(void);
 
     /* keywords */
 "as"        { count(); return AS; }
+"catch"     { count(); return CATCH; }
 "class"     { count(); return CLASS; }
 "else"      { count(); return ELSE; }
 "export"    { count(); return EXPORT; }
@@ -67,6 +68,7 @@ void process_newline(void);
 "let"       { count(); return LET; }
 "return"    { count(); return RETURN; }
 "throw"     { count(); return THROW; }
+"try"       { count(); return TRY; }
 "while"     { count(); return WHILE; }
 
     /* extra */

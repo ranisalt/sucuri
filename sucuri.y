@@ -1,7 +1,7 @@
 %token NEWLINE INDENT DEDENT
 %token INTEGER_LITERAL FLOAT_LITERAL STRING_LITERAL
 %token NOT POW MUL DIV ADD SUB LT LE GT GE EQ NE AND OR XOR
-%token AS CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW WHILE
+%token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token IDENTIFIER ELLIPSIS
 
 %start code
@@ -181,7 +181,8 @@ arglist
 compound_stmt
     : if_stmt
     | while_stmt
-    | for_stmt;
+    | for_stmt
+    | try_stmt;
 
 if_stmt
     : IF expr scope
@@ -192,6 +193,11 @@ while_stmt
 
 for_stmt
     : FOR exprlist IN expr scope;
+
+try_stmt
+    : TRY scope
+    | TRY scope CATCH expr
+    | TRY scope CATCH expr AS IDENTIFIER;
 
 %%
 
