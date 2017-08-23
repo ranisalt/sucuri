@@ -1,6 +1,6 @@
 %token NEWLINE INDENT DEDENT
 %token INTEGER_LITERAL FLOAT_LITERAL STRING_LITERAL
-%token NE POW LE GE AND NOT OR XOR
+%token NOT POW MUL DIV ADD SUB LT LE GT GE EQ NE AND OR XOR
 %token AS CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW WHILE
 %token IDENTIFIER ELLIPSIS
 
@@ -27,10 +27,9 @@ operator
     | literal
     | '(' logical_expr ')';
 
-unary_operator: NOT | '-';
-
 unary_expr
-    : unary_operator operator
+    : NOT operator
+    | SUB operator
     | operator;
 
 exponential_expr
@@ -39,23 +38,24 @@ exponential_expr
 
 multiplicative_expr
     : exponential_expr
-    | multiplicative_expr '*' exponential_expr
-    | multiplicative_expr '/' exponential_expr;
+    | multiplicative_expr MUL exponential_expr
+    | multiplicative_expr DIV exponential_expr;
 
 additive_expr
     : multiplicative_expr
-    | additive_expr '+' multiplicative_expr
-    | additive_expr '-' multiplicative_expr;
-
-REL_OP : '>' | '<' | LE | GE;
+    | additive_expr ADD multiplicative_expr
+    | additive_expr SUB multiplicative_expr;
 
 relational_expr
     : additive_expr
-    | relational_expr REL_OP additive_expr;
+    | relational_expr LT additive_expr
+    | relational_expr LE additive_expr
+    | relational_expr GT additive_expr
+    | relational_expr GE additive_expr;
 
 equality_expr
     : relational_expr
-    | equality_expr '=' relational_expr
+    | equality_expr EQ relational_expr
     | equality_expr NE relational_expr;
 
 logical_expr
@@ -155,9 +155,9 @@ command
     | RETURN operator LINE_BREAK;
 
 assignment_expr
-    : LET IDENTIFIER '=' operator
-    | IDENTIFIER '=' operator
-    | IDENTIFIER '[' operator ']' '=' operator;
+    : LET IDENTIFIER EQ operator
+    | IDENTIFIER EQ operator
+    | IDENTIFIER '[' operator ']' EQ operator;
 
 function_call
     : IDENTIFIER '(' ')'

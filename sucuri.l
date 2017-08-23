@@ -39,15 +39,15 @@ void process_newline(void);
 "!="        { count(); return NE; }
 "("         { count(); ++nesting; return '('; }
 ")"         { count(); --nesting; return ')'; }
-"*"         { count(); return '*'; }
+"*"         { count(); return MUL; }
 "**"        { count(); return POW; }
-"+"         { count(); return '+'; }
-"-"         { count(); return '-'; }
-"/"         { count(); return '/'; }
-"<"         { count(); return '<'; }
+"+"         { count(); return ADD; }
+"-"         { count(); return SUB; }
+"/"         { count(); return DIV; }
+"<"         { count(); return LT; }
 "<="        { count(); return LE; }
-"="         { count(); return '='; }
-">"         { count(); return '>'; }
+"="         { count(); return EQ; }
+">"         { count(); return GT; }
 ">="        { count(); return GE; }
 "and"       { count(); return AND; }
 "not"       { count(); return NOT; }
