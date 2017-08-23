@@ -16,6 +16,7 @@ unsigned nesting = 0;
 unsigned indent_stack[MAX_DEPTH] = {0};
 unsigned level = 0;
 void process_indent(unsigned leng);
+void process_newline(void);
 
 %}
 
@@ -23,6 +24,7 @@ void process_indent(unsigned leng);
 
 ^[ ]*\n     { /* ignore empty lines */ }
 ^[ ]*       { process_indent(yyleng); }
+\n          { process_newline(); }
 
 "#"[^\n]*[\n] { /* ignore comments */ }
 
@@ -91,6 +93,14 @@ void process_indent(unsigned leng)
                 unput(DEDENT);
             }
         }
+    }
+}
+
+void process_newline(void)
+{
+    if (nesting == 0) {
+        unput(NEWLINE);
+        printf("\n");
     }
 }
 
