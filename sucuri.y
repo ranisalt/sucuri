@@ -23,6 +23,7 @@ operator
     | literal
     | '(' logical_expr ')';
 
+/* expressions */
 unary_expr
     : NOT operator
     | SUB operator
@@ -60,6 +61,11 @@ logical_expr
     | logical_expr OR equality_expr
     | logical_expr XOR equality_expr;
 
+exprlist
+    : logical_expr
+    | exprlist ',' logical_expr;
+
+/* module system */
 imports
     : import_stmt NEWLINE
     | imports import_stmt NEWLINE;
@@ -70,6 +76,7 @@ import_stmt
     | FROM dotted_name IMPORT import_as_names
     | FROM dotted_name IMPORT import_as_names ',';
 
+/* import a.b.c */
 dotted_as_names
     : dotted_as_name
     | dotted_as_names ',' dotted_as_name;
@@ -78,6 +85,7 @@ dotted_as_name
     : dotted_name
     | dotted_name AS IDENTIFIER;
 
+/* from a.b import c */
 import_as_names
     : import_as_name
     | import_as_names ',' import_as_name;
@@ -91,9 +99,9 @@ dotted_name
     | dotted_name '.' IDENTIFIER;
 
 program
-    : command
+    : stmt
     | definition
-    | command program
+    | stmt program
     | definition program;
 
 definition
@@ -125,8 +133,8 @@ scope
     : NEWLINE INDENT inner_scope DEDENT;
 
 inner_scope
-    : command
-    | inner_scope command;
+    : stmt
+    | inner_scope stmt;
 
 
 class_definition
@@ -139,10 +147,10 @@ inner_class_scope
     : function_definition
     | inner_class_scope function_definition;
 
-command
+stmt
     : assignment_expr NEWLINE
     | function_call NEWLINE
-    | statement NEWLINE
+    | compound_stmt NEWLINE
     | THROW operator NEWLINE
     | RETURN operator NEWLINE;
 
@@ -159,20 +167,21 @@ function_args
     : operator
     | function_args ',' operator;
 
-statement
-    : if_statement
-    | while_statement
-    | for_statement;
+/* flow control */
+compound_stmt
+    : if_stmt
+    | while_stmt
+    | for_stmt;
 
-if_statement
-    : IF operator scope
-    | IF operator scope ELSE scope;
+if_stmt
+    : IF logical_expr scope
+    | IF logical_expr scope ELSE scope;
 
-while_statement
-    : WHILE operator scope;
+while_stmt
+    : WHILE logical_expr scope;
 
-for_statement
-    : FOR IDENTIFIER IN operator scope;
+for_stmt
+    : FOR exprlist IN logical_expr scope;
 
 %%
 
