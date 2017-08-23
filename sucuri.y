@@ -66,7 +66,9 @@ imports
 
 import_stmt
     : IMPORT dotted_as_names
-    | FROM dotted_name IMPORT import_as_names;
+    | IMPORT dotted_as_names ','
+    | FROM dotted_name IMPORT import_as_names
+    | FROM dotted_name IMPORT import_as_names ',';
 
 dotted_as_names
     : dotted_as_name
@@ -78,9 +80,7 @@ dotted_as_name
 
 import_as_names
     : import_as_name
-    | import_as_name ','
-    | import_as_names ',' import_as_name
-    | import_as_names ',' import_as_name ',';
+    | import_as_names ',' import_as_name;
 
 import_as_name
     : dotted_name
