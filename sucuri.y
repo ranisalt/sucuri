@@ -83,8 +83,8 @@ import_as_names
     | import_as_names ',' import_as_name;
 
 import_as_name
-    : dotted_name
-    | dotted_name AS IDENTIFIER;
+    : IDENTIFIER
+    | IDENTIFIER AS IDENTIFIER;
 
 dotted_name
     : IDENTIFIER
