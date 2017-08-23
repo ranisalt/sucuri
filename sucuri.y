@@ -17,23 +17,33 @@ atom
     | INTEGER_LITERAL
     | FLOAT_LITERAL
     | STRING_LITERAL
-    | '(' logical_expr ')'
-    | '[' logical_expr ']';
+    | '(' expr ')'
+    | '[' expr ']';
 
 /* expressions */
-unary_expr
-    : NOT atom
-    | SUB atom
-    | atom;
+atom_expr
+    : atom
+    | atom trailer;
+
+trailer
+    : '(' ')'
+    | '(' arglist ')'
+    | '[' expr ']'
+    | '.' IDENTIFIER;
 
 exponential_expr
-    : unary_expr
-    | exponential_expr POW unary_expr;
+    : atom_expr
+    | exponential_expr POW atom_expr;
+
+unary_expr
+    : NOT unary_expr
+    | SUB unary_expr
+    | exponential_expr;
 
 multiplicative_expr
-    : exponential_expr
-    | multiplicative_expr MUL exponential_expr
-    | multiplicative_expr DIV exponential_expr;
+    : unary_expr
+    | multiplicative_expr MUL unary_expr
+    | multiplicative_expr DIV unary_expr;
 
 additive_expr
     : multiplicative_expr
@@ -58,9 +68,12 @@ logical_expr
     | logical_expr OR equality_expr
     | logical_expr XOR equality_expr;
 
+expr
+    : logical_expr;
+
 exprlist
-    : logical_expr
-    | exprlist ',' logical_expr;
+    : expr
+    | exprlist ',' expr;
 
 /* module system */
 imports
@@ -130,8 +143,8 @@ scope
     : NEWLINE INDENT inner_scope DEDENT;
 
 inner_scope
-    : stmt
-    | inner_scope stmt;
+    : stmt NEWLINE
+    | inner_scope stmt NEWLINE;
 
 
 class_definition
@@ -145,11 +158,11 @@ inner_class_scope
     | inner_class_scope function_definition;
 
 stmt
-    : assignment_expr NEWLINE
-    | function_call NEWLINE
-    | compound_stmt NEWLINE
-    | THROW atom NEWLINE
-    | RETURN atom NEWLINE;
+    : assignment_expr
+    | function_call
+    | compound_stmt
+    | THROW expr
+    | RETURN exprlist;
 
 assignment_expr
     : LET IDENTIFIER EQ atom
@@ -158,11 +171,11 @@ assignment_expr
 
 function_call
     : IDENTIFIER '(' ')'
-    | IDENTIFIER '(' function_args ')';
+    | IDENTIFIER '(' arglist ')';
 
-function_args
+arglist
     : atom
-    | function_args ',' atom;
+    | arglist ',' atom;
 
 /* flow control */
 compound_stmt
@@ -171,14 +184,14 @@ compound_stmt
     | for_stmt;
 
 if_stmt
-    : IF logical_expr scope
-    | IF logical_expr scope ELSE scope;
+    : IF expr scope
+    | IF expr scope ELSE scope;
 
 while_stmt
-    : WHILE logical_expr scope;
+    : WHILE expr scope;
 
 for_stmt
-    : FOR exprlist IN logical_expr scope;
+    : FOR exprlist IN expr scope;
 
 %%
 
