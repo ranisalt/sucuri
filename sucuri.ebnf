@@ -1,51 +1,55 @@
 code
-    ::= preamble program
-    | program
+    ::= program
+    | imports program
 
-literal
-    ::= INTEGER_LITERAL
+atom
+    ::= IDENTIFIER
+    | INTEGER_LITERAL
     | FLOAT_LITERAL
     | STRING_LITERAL
+    | '(' expr ')'
+    | '[' expr ']'
 
+/* expressions */
+atom_expr
+    ::= atom
+    | atom trailer
 
-condition
-    ::= operator
-
-operator
-    ::= IDENTIFIER
-    | IDENTIFIER '[' operator ']'
-    | literal
-    | '(' logical_expr ')'
-
-unary_operator::= NOT | '-'
-
-unary_expr
-    ::= unary_operator operator
-    | operator
+trailer
+    ::= '(' ')'
+    | '(' arglist ')'
+    | '[' expr ']'
+    | '.' IDENTIFIER
 
 exponential_expr
-    ::= unary_expr
-    | exponential_expr POW unary_expr
+    ::= atom_expr
+    | exponential_expr POW atom_expr
+
+unary_expr
+    ::= NOT unary_expr
+    | SUB unary_expr
+    | exponential_expr
 
 multiplicative_expr
-    ::= exponential_expr
-    | multiplicative_expr '*' exponential_expr
-    | multiplicative_expr '/' exponential_expr
+    ::= unary_expr
+    | multiplicative_expr MUL unary_expr
+    | multiplicative_expr DIV unary_expr
 
 additive_expr
     ::= multiplicative_expr
-    | additive_expr '+' multiplicative_expr
-    | additive_expr '-' multiplicative_expr
-
-REL_OP ::= '>' | '<' | LE | GE
+    | additive_expr ADD multiplicative_expr
+    | additive_expr SUB multiplicative_expr
 
 relational_expr
     ::= additive_expr
-    | relational_expr REL_OP additive_expr
+    | relational_expr LT additive_expr
+    | relational_expr LE additive_expr
+    | relational_expr GT additive_expr
+    | relational_expr GE additive_expr
 
 equality_expr
     ::= relational_expr
-    | equality_expr '=' relational_expr
+    | equality_expr EQ relational_expr
     | equality_expr NE relational_expr
 
 logical_expr
@@ -54,37 +58,50 @@ logical_expr
     | logical_expr OR equality_expr
     | logical_expr XOR equality_expr
 
-preamble
-    ::= preamble imports
-    | imports
+expr
+    ::= logical_expr
 
+exprlist
+    ::= expr
+    | exprlist ',' expr
+
+/* module system */
 imports
-    ::= module_import
-    | feature_import
+    ::= import_stmt NEWLINE
+    | imports import_stmt NEWLINE
 
-module_import
-    ::= IMPORT IDENTIFIER
-    | IMPORT IDENTIFIER module_aliasing
+import_stmt
+    ::= IMPORT dotted_as_names
+    | IMPORT dotted_as_names ','
+    | FROM dotted_name IMPORT import_as_names
+    | FROM dotted_name IMPORT import_as_names ','
 
-feature_import
-    ::= FROM IDENTIFIER IMPORT feature_name_list
+/* import a.b.c */
+dotted_as_names
+    ::= dotted_as_name
+    | dotted_as_names ',' dotted_as_name
 
-feature_name_list
-    ::= feature_name
-    | feature_name_list ',' feature_name
+dotted_as_name
+    ::= dotted_name
+    | dotted_name AS IDENTIFIER
 
-feature_name
+/* from a.b import c */
+import_as_names
+    ::= import_as_name
+    | import_as_names ',' import_as_name
+
+import_as_name
     ::= IDENTIFIER
-    | IDENTIFIER module_aliasing
+    | IDENTIFIER AS IDENTIFIER
 
-module_aliasing
-    ::= AS IDENTIFIER
-
+dotted_name
+    ::= IDENTIFIER
+    | dotted_name '.' IDENTIFIER
 
 program
-    ::= command
+    ::= stmt
     | definition
-    | command program
+    | stmt program
     | definition program
 
 definition
@@ -95,8 +112,8 @@ definition
 
 
 function_definition
-    ::= LET IDENTIFIER '(' function_params_list ')' scope
-    | LET IDENTIFIER '(' ')' scope
+    ::= LET IDENTIFIER '(' ')' scope
+    | LET IDENTIFIER '(' function_params_list ')' scope
 
 function_params_list
     ::= identifier_list
@@ -105,69 +122,63 @@ function_params_list
 
 identifier_list
     ::= IDENTIFIER
+    | IDENTIFIER EQ atom
     | identifier_list ',' IDENTIFIER
-    | IDENTIFIER '=' operator
-    | identifier_list ',' IDENTIFIER '=' operator
+    | identifier_list ',' IDENTIFIER EQ atom
 
 variadic_param
     ::= ELLIPSIS IDENTIFIER
 
 scope
-    ::= LINE_BREAK INDENT inner_scope DEDENT
+    ::= NEWLINE INDENT inner_scope DEDENT
 
 inner_scope
-    ::= command
-    | inner_scope command
+    ::= stmt NEWLINE
+    | inner_scope stmt NEWLINE
 
 
 class_definition
     ::= CLASS IDENTIFIER class_scope
 
 class_scope
-    ::= LINE_BREAK INDENT inner_class_scope DEDENT
+    ::= NEWLINE INDENT inner_class_scope DEDENT
 
 inner_class_scope
-    ::= attr_decl
-    | function_definition
-    | inner_class_scope attr_decl
+    ::= function_definition
     | inner_class_scope function_definition
 
-attr_decl
-    ::= LET IDENTIFIER '=' operator LINE_BREAK
-    | LET IDENTIFIER LINE_BREAK
-
-
-command
-    ::= assignment_expr LINE_BREAK
-    | function_call LINE_BREAK
-    | statement LINE_BREAK
-    | THROW operator LINE_BREAK
-    | RETURN operator LINE_BREAK
+stmt
+    ::= assignment_expr
+    | function_call
+    | compound_stmt
+    | THROW expr
+    | RETURN exprlist
 
 assignment_expr
-    ::= LET IDENTIFIER '=' operator
-    | IDENTIFIER '=' operator
-    | IDENTIFIER '[' operator ']' '=' operator
+    ::= LET IDENTIFIER EQ atom
+    | IDENTIFIER EQ atom
+    | IDENTIFIER '[' atom ']' EQ atom
 
 function_call
     ::= IDENTIFIER '(' ')'
-    | IDENTIFIER '(' function_args ')'
+    | IDENTIFIER '(' arglist ')'
 
-function_args
-    ::= operator
-    | function_args ',' operator
+arglist
+    ::= atom
+    | arglist ',' atom
 
-statement
-    ::= if_statement
-    | while_statement
-    | for_statement
+/* flow control */
+compound_stmt
+    ::= if_stmt
+    | while_stmt
+    | for_stmt
 
-if_statement
-    ::= IF condition scope
-    | IF condition scope ELSE scope
+if_stmt
+    ::= IF expr scope
+    | IF expr scope ELSE scope
 
-while_statement
-    ::= WHILE condition scope
+while_stmt
+    ::= WHILE expr scope
 
-for_statement
-    ::= FOR IDENTIFIER IN operator scope
+for_stmt
+    ::= FOR exprlist IN expr scope

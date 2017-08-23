@@ -173,111 +173,61 @@
 }</style><body>
       
       <p style="font-size: 14px; font-weight:bold"><a name="code">code:</a></p>
-      <img border="0" src="diagram/code.png" height="114" width="344" usemap="#code.map"><map name="code.map">
-         <area shape="rect" coords="49,1,115,33" href="#imports" title="imports">
-         <area shape="rect" coords="195,35,275,67" href="#command" title="command">
-         <area shape="rect" coords="195,79,267,111" href="#definition" title="definition"></map>
+      <img border="0" src="diagram/code.png" height="96" width="498" usemap="#code.map"><map name="code.map">
+         <area shape="rect" coords="69,17,163,49" href="#import_stmt" title="import_stmt">
+         <area shape="rect" coords="183,17,257,49" href="#NEWLINE" title="NEWLINE">
+         <area shape="rect" coords="357,17,405,49" href="#stmt" title="stmt">
+         <area shape="rect" coords="357,61,429,93" href="#definition" title="definition"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#code" title="code" shape="rect">code</a>     ::= <a href="#imports" title="imports" shape="rect">imports</a>* ( <a href="#command" title="command" shape="rect">command</a> | <a href="#definition" title="definition" shape="rect">definition</a> )+</pre></div>
+         <div class="ebnf"><pre><a href="#code" title="code" shape="rect">code</a>     ::= ( <a href="#import_stmt" title="import_stmt" shape="rect">import_stmt</a> <a href="#NEWLINE" title="NEWLINE" shape="rect">NEWLINE</a> )* ( <a href="#stmt" title="stmt" shape="rect">stmt</a> | <a href="#definition" title="definition" shape="rect">definition</a> )+</pre></div>
          
       </p>
       
-      <p>no references</p><br><p style="font-size: 14px; font-weight:bold"><a name="literal">literal:</a></p>
-      <img border="0" src="diagram/literal.png" height="124" width="224" usemap="#literal.map"><map name="literal.map">
-         <area shape="rect" coords="49,1,175,33" href="#INTEGER_LITERAL" title="INTEGER_LITERAL">
-         <area shape="rect" coords="49,45,161,77" href="#FLOAT_LITERAL" title="FLOAT_LITERAL">
-         <area shape="rect" coords="49,89,167,121" href="#STRING_LITERAL" title="STRING_LITERAL"></map>
-      
-      <p>
-         
-         <div class="ebnf"><pre><a href="#literal" title="literal" shape="rect">literal</a>  ::= <a href="#INTEGER_LITERAL" title="INTEGER_LITERAL" shape="rect">INTEGER_LITERAL</a>
-           | <a href="#FLOAT_LITERAL" title="FLOAT_LITERAL" shape="rect">FLOAT_LITERAL</a>
-           | <a href="#STRING_LITERAL" title="STRING_LITERAL" shape="rect">STRING_LITERAL</a></pre></div>
-         
-      </p>
-      
-      <p>referenced by:
-         
-         <ul>
-            
-            <li><a href="#operator" title="operator">operator</a></li>
-            
-         </ul>
-         
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="condition">condition:</a></p>
-      <img border="0" src="diagram/condition.png" height="36" width="130" usemap="#condition.map"><map name="condition.map">
-         <area shape="rect" coords="29,1,101,33" href="#operator" title="operator"></map>
-      
-      <p>
-         
-         <div class="ebnf"><pre><a href="#condition" title="condition" shape="rect">condition</a>
-         ::= <a href="#operator" title="operator" shape="rect">operator</a></pre></div>
-         
-      </p>
-      
-      <p>referenced by:
-         
-         <ul>
-            
-            <li><a href="#if_statement" title="if_statement">if_statement</a></li>
-            
-            <li><a href="#while_statement" title="while_statement">while_statement</a></li>
-            
-         </ul>
-         
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="operator">operator:</a></p>
-      <img border="0" src="diagram/operator.png" height="288" width="408" usemap="#operator.map"><map name="operator.map">
+      <p>no references</p><br><p style="font-size: 14px; font-weight:bold"><a name="atom">atom:</a></p>
+      <img border="0" src="diagram/atom.png" height="256" width="236" usemap="#atom.map"><map name="atom.map">
          <area shape="rect" coords="49,1,135,33" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="221,33,293,65" href="#operator" title="operator">
-         <area shape="rect" coords="49,77,99,109" href="#literal" title="literal">
-         <area shape="rect" coords="115,253,215,285" href="#equality_expr" title="equality_expr">
-         <area shape="rect" coords="115,209,161,241" href="#AND" title="AND">
-         <area shape="rect" coords="115,165,153,197" href="#OR" title="OR">
-         <area shape="rect" coords="115,121,161,153" href="#XOR" title="XOR"></map>
+         <area shape="rect" coords="49,45,175,77" href="#INTEGER_LITERAL" title="INTEGER_LITERAL">
+         <area shape="rect" coords="49,89,161,121" href="#FLOAT_LITERAL" title="FLOAT_LITERAL">
+         <area shape="rect" coords="49,133,167,165" href="#STRING_LITERAL" title="STRING_LITERAL">
+         <area shape="rect" coords="95,177,141,209" href="#expr" title="expr">
+         <area shape="rect" coords="95,221,141,253" href="#expr" title="expr"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#operator" title="operator" shape="rect">operator</a> ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( '[' <a href="#operator" title="operator" shape="rect">operator</a> ']' )?
-           | <a href="#literal" title="literal" shape="rect">literal</a>
-           | '(' <a href="#equality_expr" title="equality_expr" shape="rect">equality_expr</a> ( ( <a href="#AND" title="AND" shape="rect">AND</a> | <a href="#OR" title="OR" shape="rect">OR</a> | <a href="#XOR" title="XOR" shape="rect">XOR</a> ) <a href="#equality_expr" title="equality_expr" shape="rect">equality_expr</a> )* ')'</pre></div>
+         <div class="ebnf"><pre><a href="#atom" title="atom" shape="rect">atom</a>     ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a>
+           | <a href="#INTEGER_LITERAL" title="INTEGER_LITERAL" shape="rect">INTEGER_LITERAL</a>
+           | <a href="#FLOAT_LITERAL" title="FLOAT_LITERAL" shape="rect">FLOAT_LITERAL</a>
+           | <a href="#STRING_LITERAL" title="STRING_LITERAL" shape="rect">STRING_LITERAL</a>
+           | '(' <a href="#expr" title="expr" shape="rect">expr</a> ')'
+           | '[' <a href="#expr" title="expr" shape="rect">expr</a> ']'</pre></div>
          
       </p>
       
       <p>referenced by:
          
          <ul>
+            
+            <li><a href="#arglist" title="arglist">arglist</a></li>
             
             <li><a href="#assignment_expr" title="assignment_expr">assignment_expr</a></li>
             
-            <li><a href="#attr_decl" title="attr_decl">attr_decl</a></li>
-            
-            <li><a href="#command" title="command">command</a></li>
-            
-            <li><a href="#condition" title="condition">condition</a></li>
-            
-            <li><a href="#for_statement" title="for_statement">for_statement</a></li>
-            
-            <li><a href="#function_call" title="function_call">function_call</a></li>
+            <li><a href="#atom_expr" title="atom_expr">atom_expr</a></li>
             
             <li><a href="#function_params_list" title="function_params_list">function_params_list</a></li>
             
-            <li><a href="#operator" title="operator">operator</a></li>
-            
-            <li><a href="#unary_expr" title="unary_expr">unary_expr</a></li>
-            
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="unary_operator">unary_operator:</a></p>
-      <img border="0" src="diagram/unary_operator.png" height="80" width="142" usemap="#unary_operator.map"><map name="unary_operator.map">
-         <area shape="rect" coords="49,1,93,33" href="#NOT" title="NOT"></map>
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="atom_expr">atom_expr:</a></p>
+      <img border="0" src="diagram/atom_expr.png" height="68" width="224" usemap="#atom_expr.map"><map name="atom_expr.map">
+         <area shape="rect" coords="29,1,81,33" href="#atom" title="atom">
+         <area shape="rect" coords="121,33,175,65" href="#trailer" title="trailer"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#unary_operator" title="unary_operator" shape="rect">unary_operator</a>
-         ::= <a href="#NOT" title="NOT" shape="rect">NOT</a>
-           | '-'</pre></div>
+         <div class="ebnf"><pre><a href="#atom_expr" title="atom_expr" shape="rect">atom_expr</a>
+         ::= <a href="#atom" title="atom" shape="rect">atom</a> <a href="#trailer" title="trailer" shape="rect">trailer</a>?</pre></div>
          
       </p>
       
@@ -286,38 +236,42 @@
          <ul>
             
             <li><a href="#unary_expr" title="unary_expr">unary_expr</a></li>
+            
+         </ul>
+         
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="trailer">trailer:</a></p>
+      <img border="0" src="diagram/trailer.png" height="156" width="284" usemap="#trailer.map"><map name="trailer.map">
+         <area shape="rect" coords="115,33,169,65" href="#arglist" title="arglist">
+         <area shape="rect" coords="95,77,141,109" href="#expr" title="expr">
+         <area shape="rect" coords="93,121,179,153" href="#IDENTIFIER" title="IDENTIFIER"></map>
+      
+      <p>
+         
+         <div class="ebnf"><pre><a href="#trailer" title="trailer" shape="rect">trailer</a>  ::= '(' <a href="#arglist" title="arglist" shape="rect">arglist</a>? ')'
+           | '[' <a href="#expr" title="expr" shape="rect">expr</a> ']'
+           | '.' <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a></pre></div>
+         
+      </p>
+      
+      <p>referenced by:
+         
+         <ul>
+            
+            <li><a href="#atom_expr" title="atom_expr">atom_expr</a></li>
             
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="unary_expr">unary_expr:</a></p>
-      <img border="0" src="diagram/unary_expr.png" height="68" width="304" usemap="#unary_expr.map"><map name="unary_expr.map">
-         <area shape="rect" coords="49,33,163,65" href="#unary_operator" title="unary_operator">
-         <area shape="rect" coords="203,1,275,33" href="#operator" title="operator"></map>
+      <img border="0" src="diagram/unary_expr.png" height="114" width="288" usemap="#unary_expr.map"><map name="unary_expr.map">
+         <area shape="rect" coords="49,45,93,77" href="#NOT" title="NOT">
+         <area shape="rect" coords="49,1,93,33" href="#SUB" title="SUB">
+         <area shape="rect" coords="153,79,239,111" href="#atom_expr" title="atom_expr">
+         <area shape="rect" coords="153,35,201,67" href="#POW" title="POW"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#unary_expr" title="unary_expr" shape="rect">unary_expr</a>
-         ::= <a href="#unary_operator" title="unary_operator" shape="rect">unary_operator</a>? <a href="#operator" title="operator" shape="rect">operator</a></pre></div>
-         
-      </p>
-      
-      <p>referenced by:
-         
-         <ul>
-            
-            <li><a href="#exponential_expr" title="exponential_expr">exponential_expr</a></li>
-            
-         </ul>
-         
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="exponential_expr">exponential_expr:</a></p>
-      <img border="0" src="diagram/exponential_expr.png" height="80" width="186" usemap="#exponential_expr.map"><map name="exponential_expr.map">
-         <area shape="rect" coords="49,45,137,77" href="#unary_expr" title="unary_expr">
-         <area shape="rect" coords="49,1,97,33" href="#POW" title="POW"></map>
-      
-      <p>
-         
-         <div class="ebnf"><pre><a href="#exponential_expr" title="exponential_expr" shape="rect">exponential_expr</a>
-         ::= <a href="#unary_expr" title="unary_expr" shape="rect">unary_expr</a> ( <a href="#POW" title="POW" shape="rect">POW</a> <a href="#unary_expr" title="unary_expr" shape="rect">unary_expr</a> )*</pre></div>
+         ::= ( <a href="#NOT" title="NOT" shape="rect">NOT</a> | <a href="#SUB" title="SUB" shape="rect">SUB</a> )* <a href="#atom_expr" title="atom_expr" shape="rect">atom_expr</a> ( <a href="#POW" title="POW" shape="rect">POW</a> <a href="#atom_expr" title="atom_expr" shape="rect">atom_expr</a> )*</pre></div>
          
       </p>
       
@@ -330,13 +284,15 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="multiplicative_expr">multiplicative_expr:</a></p>
-      <img border="0" src="diagram/multiplicative_expr.png" height="124" width="220" usemap="#multiplicative_expr.map"><map name="multiplicative_expr.map">
-         <area shape="rect" coords="49,89,171,121" href="#exponential_expr" title="exponential_expr"></map>
+      <img border="0" src="diagram/multiplicative_expr.png" height="124" width="186" usemap="#multiplicative_expr.map"><map name="multiplicative_expr.map">
+         <area shape="rect" coords="49,89,137,121" href="#unary_expr" title="unary_expr">
+         <area shape="rect" coords="49,45,95,77" href="#MUL" title="MUL">
+         <area shape="rect" coords="49,1,89,33" href="#DIV" title="DIV"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#multiplicative_expr" title="multiplicative_expr" shape="rect">multiplicative_expr</a>
-         ::= <a href="#exponential_expr" title="exponential_expr" shape="rect">exponential_expr</a> ( ( '*' | '/' ) <a href="#exponential_expr" title="exponential_expr" shape="rect">exponential_expr</a> )*</pre></div>
+         ::= <a href="#unary_expr" title="unary_expr" shape="rect">unary_expr</a> ( ( <a href="#MUL" title="MUL" shape="rect">MUL</a> | <a href="#DIV" title="DIV" shape="rect">DIV</a> ) <a href="#unary_expr" title="unary_expr" shape="rect">unary_expr</a> )*</pre></div>
          
       </p>
       
@@ -350,34 +306,14 @@
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="additive_expr">additive_expr:</a></p>
       <img border="0" src="diagram/additive_expr.png" height="124" width="228" usemap="#additive_expr.map"><map name="additive_expr.map">
-         <area shape="rect" coords="49,89,179,121" href="#multiplicative_expr" title="multiplicative_expr"></map>
+         <area shape="rect" coords="49,89,179,121" href="#multiplicative_expr" title="multiplicative_expr">
+         <area shape="rect" coords="49,45,95,77" href="#ADD" title="ADD">
+         <area shape="rect" coords="49,1,93,33" href="#SUB" title="SUB"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#additive_expr" title="additive_expr" shape="rect">additive_expr</a>
-         ::= <a href="#multiplicative_expr" title="multiplicative_expr" shape="rect">multiplicative_expr</a> ( ( '+' | '-' ) <a href="#multiplicative_expr" title="multiplicative_expr" shape="rect">multiplicative_expr</a> )*</pre></div>
-         
-      </p>
-      
-      <p>referenced by:
-         
-         <ul>
-            
-            <li><a href="#relational_expr" title="relational_expr">relational_expr</a></li>
-            
-         </ul>
-         
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="REL_OP">REL_OP:</a></p>
-      <img border="0" src="diagram/REL_OP.png" height="168" width="134" usemap="#REL_OP.map"><map name="REL_OP.map">
-         <area shape="rect" coords="49,89,83,121" href="#LE" title="LE">
-         <area shape="rect" coords="49,133,85,165" href="#GE" title="GE"></map>
-      
-      <p>
-         
-         <div class="ebnf"><pre><a href="#REL_OP" title="REL_OP" shape="rect">REL_OP</a>   ::= '&gt;'
-           | '&lt;'
-           | <a href="#LE" title="LE" shape="rect">LE</a>
-           | <a href="#GE" title="GE" shape="rect">GE</a></pre></div>
+         ::= <a href="#multiplicative_expr" title="multiplicative_expr" shape="rect">multiplicative_expr</a> ( ( <a href="#ADD" title="ADD" shape="rect">ADD</a> | <a href="#SUB" title="SUB" shape="rect">SUB</a> ) <a href="#multiplicative_expr" title="multiplicative_expr" shape="rect">multiplicative_expr</a> )*</pre></div>
          
       </p>
       
@@ -390,14 +326,17 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="relational_expr">relational_expr:</a></p>
-      <img border="0" src="diagram/relational_expr.png" height="80" width="198" usemap="#relational_expr.map"><map name="relational_expr.map">
-         <area shape="rect" coords="49,45,149,77" href="#additive_expr" title="additive_expr">
-         <area shape="rect" coords="49,1,115,33" href="#REL_OP" title="REL_OP"></map>
+      <img border="0" src="diagram/relational_expr.png" height="212" width="198" usemap="#relational_expr.map"><map name="relational_expr.map">
+         <area shape="rect" coords="49,177,149,209" href="#additive_expr" title="additive_expr">
+         <area shape="rect" coords="49,133,81,165" href="#LT" title="LT">
+         <area shape="rect" coords="49,89,83,121" href="#LE" title="LE">
+         <area shape="rect" coords="49,45,85,77" href="#GT" title="GT">
+         <area shape="rect" coords="49,1,85,33" href="#GE" title="GE"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#relational_expr" title="relational_expr" shape="rect">relational_expr</a>
-         ::= <a href="#additive_expr" title="additive_expr" shape="rect">additive_expr</a> ( <a href="#REL_OP" title="REL_OP" shape="rect">REL_OP</a> <a href="#additive_expr" title="additive_expr" shape="rect">additive_expr</a> )*</pre></div>
+         ::= <a href="#additive_expr" title="additive_expr" shape="rect">additive_expr</a> ( ( <a href="#LT" title="LT" shape="rect">LT</a> | <a href="#LE" title="LE" shape="rect">LE</a> | <a href="#GT" title="GT" shape="rect">GT</a> | <a href="#GE" title="GE" shape="rect">GE</a> ) <a href="#additive_expr" title="additive_expr" shape="rect">additive_expr</a> )*</pre></div>
          
       </p>
       
@@ -412,12 +351,13 @@
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="equality_expr">equality_expr:</a></p>
       <img border="0" src="diagram/equality_expr.png" height="124" width="206" usemap="#equality_expr.map"><map name="equality_expr.map">
          <area shape="rect" coords="49,89,157,121" href="#relational_expr" title="relational_expr">
+         <area shape="rect" coords="49,45,85,77" href="#EQ" title="EQ">
          <area shape="rect" coords="49,1,85,33" href="#NE" title="NE"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#equality_expr" title="equality_expr" shape="rect">equality_expr</a>
-         ::= <a href="#relational_expr" title="relational_expr" shape="rect">relational_expr</a> ( ( '=' | <a href="#NE" title="NE" shape="rect">NE</a> ) <a href="#relational_expr" title="relational_expr" shape="rect">relational_expr</a> )*</pre></div>
+         ::= <a href="#relational_expr" title="relational_expr" shape="rect">relational_expr</a> ( ( <a href="#EQ" title="EQ" shape="rect">EQ</a> | <a href="#NE" title="NE" shape="rect">NE</a> ) <a href="#relational_expr" title="relational_expr" shape="rect">relational_expr</a> )*</pre></div>
          
       </p>
       
@@ -425,19 +365,76 @@
          
          <ul>
             
-            <li><a href="#operator" title="operator">operator</a></li>
+            <li><a href="#expr" title="expr">expr</a></li>
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="imports">imports:</a></p>
-      <img border="0" src="diagram/imports.png" height="80" width="208" usemap="#imports.map"><map name="imports.map">
-         <area shape="rect" coords="49,1,159,33" href="#module_import" title="module_import">
-         <area shape="rect" coords="49,45,159,77" href="#feature_import" title="feature_import"></map>
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="expr">expr:</a></p>
+      <img border="0" src="diagram/expr.png" height="168" width="198" usemap="#expr.map"><map name="expr.map">
+         <area shape="rect" coords="49,133,149,165" href="#equality_expr" title="equality_expr">
+         <area shape="rect" coords="49,89,95,121" href="#AND" title="AND">
+         <area shape="rect" coords="49,45,87,77" href="#OR" title="OR">
+         <area shape="rect" coords="49,1,95,33" href="#XOR" title="XOR"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#imports" title="imports" shape="rect">imports</a>  ::= <a href="#module_import" title="module_import" shape="rect">module_import</a>
-           | <a href="#feature_import" title="feature_import" shape="rect">feature_import</a></pre></div>
+         <div class="ebnf"><pre><a href="#expr" title="expr" shape="rect">expr</a>     ::= <a href="#equality_expr" title="equality_expr" shape="rect">equality_expr</a> ( ( <a href="#AND" title="AND" shape="rect">AND</a> | <a href="#OR" title="OR" shape="rect">OR</a> | <a href="#XOR" title="XOR" shape="rect">XOR</a> ) <a href="#equality_expr" title="equality_expr" shape="rect">equality_expr</a> )*</pre></div>
+         
+      </p>
+      
+      <p>referenced by:
+         
+         <ul>
+            
+            <li><a href="#atom" title="atom">atom</a></li>
+            
+            <li><a href="#exprlist" title="exprlist">exprlist</a></li>
+            
+            <li><a href="#for_stmt" title="for_stmt">for_stmt</a></li>
+            
+            <li><a href="#if_stmt" title="if_stmt">if_stmt</a></li>
+            
+            <li><a href="#stmt" title="stmt">stmt</a></li>
+            
+            <li><a href="#trailer" title="trailer">trailer</a></li>
+            
+            <li><a href="#while_stmt" title="while_stmt">while_stmt</a></li>
+            
+         </ul>
+         
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="exprlist">exprlist:</a></p>
+      <img border="0" src="diagram/exprlist.png" height="80" width="144" usemap="#exprlist.map"><map name="exprlist.map">
+         <area shape="rect" coords="49,45,95,77" href="#expr" title="expr"></map>
+      
+      <p>
+         
+         <div class="ebnf"><pre><a href="#exprlist" title="exprlist" shape="rect">exprlist</a> ::= <a href="#expr" title="expr" shape="rect">expr</a> ( ',' <a href="#expr" title="expr" shape="rect">expr</a> )*</pre></div>
+         
+      </p>
+      
+      <p>referenced by:
+         
+         <ul>
+            
+            <li><a href="#for_stmt" title="for_stmt">for_stmt</a></li>
+            
+            <li><a href="#stmt" title="stmt">stmt</a></li>
+            
+         </ul>
+         
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="import_stmt">import_stmt:</a></p>
+      <img border="0" src="diagram/import_stmt.png" height="168" width="624" usemap="#import_stmt.map"><map name="import_stmt.map">
+         <area shape="rect" coords="49,45,115,77" href="#IMPORT" title="IMPORT">
+         <area shape="rect" coords="155,45,277,77" href="#dotted_as_name" title="dotted_as_name">
+         <area shape="rect" coords="49,133,103,165" href="#FROM" title="FROM">
+         <area shape="rect" coords="123,133,223,165" href="#dotted_name" title="dotted_name">
+         <area shape="rect" coords="243,133,309,165" href="#IMPORT" title="IMPORT">
+         <area shape="rect" coords="349,133,471,165" href="#import_as_name" title="import_as_name"></map>
+      
+      <p>
+         
+         <div class="ebnf"><pre><a href="#import_stmt" title="import_stmt" shape="rect">import_stmt</a>
+         ::= ( <a href="#IMPORT" title="IMPORT" shape="rect">IMPORT</a> <a href="#dotted_as_name" title="dotted_as_name" shape="rect">dotted_as_name</a> ( ',' <a href="#dotted_as_name" title="dotted_as_name" shape="rect">dotted_as_name</a> )* | <a href="#FROM" title="FROM" shape="rect">FROM</a> <a href="#dotted_name" title="dotted_name" shape="rect">dotted_name</a> <a href="#IMPORT" title="IMPORT" shape="rect">IMPORT</a> <a href="#import_as_name" title="import_as_name" shape="rect">import_as_name</a> ( ',' <a href="#import_as_name" title="import_as_name" shape="rect">import_as_name</a> )* ) ','?</pre></div>
          
       </p>
       
@@ -449,16 +446,16 @@
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="module_import">module_import:</a></p>
-      <img border="0" src="diagram/module_import.png" height="68" width="404" usemap="#module_import.map"><map name="module_import.map">
-         <area shape="rect" coords="29,1,95,33" href="#IMPORT" title="IMPORT">
-         <area shape="rect" coords="115,1,201,33" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="241,33,355,65" href="#module_aliasing" title="module_aliasing"></map>
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="dotted_as_name">dotted_as_name:</a></p>
+      <img border="0" src="diagram/dotted_as_name.png" height="68" width="360" usemap="#dotted_as_name.map"><map name="dotted_as_name.map">
+         <area shape="rect" coords="29,1,129,33" href="#dotted_name" title="dotted_name">
+         <area shape="rect" coords="169,33,205,65" href="#AS" title="AS">
+         <area shape="rect" coords="225,33,311,65" href="#IDENTIFIER" title="IDENTIFIER"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#module_import" title="module_import" shape="rect">module_import</a>
-         ::= <a href="#IMPORT" title="IMPORT" shape="rect">IMPORT</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> <a href="#module_aliasing" title="module_aliasing" shape="rect">module_aliasing</a>?</pre></div>
+         <div class="ebnf"><pre><a href="#dotted_as_name" title="dotted_as_name" shape="rect">dotted_as_name</a>
+         ::= <a href="#dotted_name" title="dotted_name" shape="rect">dotted_name</a> ( <a href="#AS" title="AS" shape="rect">AS</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> )?</pre></div>
          
       </p>
       
@@ -466,41 +463,20 @@
          
          <ul>
             
-            <li><a href="#imports" title="imports">imports</a></li>
+            <li><a href="#import_stmt" title="import_stmt">import_stmt</a></li>
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="feature_import">feature_import:</a></p>
-      <img border="0" src="diagram/feature_import.png" height="80" width="468" usemap="#feature_import.map"><map name="feature_import.map">
-         <area shape="rect" coords="29,45,83,77" href="#FROM" title="FROM">
-         <area shape="rect" coords="103,45,189,77" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="209,45,275,77" href="#IMPORT" title="IMPORT">
-         <area shape="rect" coords="315,45,419,77" href="#feature_name" title="feature_name"></map>
-      
-      <p>
-         
-         <div class="ebnf"><pre><a href="#feature_import" title="feature_import" shape="rect">feature_import</a>
-         ::= <a href="#FROM" title="FROM" shape="rect">FROM</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> <a href="#IMPORT" title="IMPORT" shape="rect">IMPORT</a> <a href="#feature_name" title="feature_name" shape="rect">feature_name</a> ( ',' <a href="#feature_name" title="feature_name" shape="rect">feature_name</a> )*</pre></div>
-         
-      </p>
-      
-      <p>referenced by:
-         
-         <ul>
-            
-            <li><a href="#imports" title="imports">imports</a></li>
-            
-         </ul>
-         
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="feature_name">feature_name:</a></p>
-      <img border="0" src="diagram/feature_name.png" height="68" width="318" usemap="#feature_name.map"><map name="feature_name.map">
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="import_as_name">import_as_name:</a></p>
+      <img border="0" src="diagram/import_as_name.png" height="68" width="346" usemap="#import_as_name.map"><map name="import_as_name.map">
          <area shape="rect" coords="29,1,115,33" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="155,33,269,65" href="#module_aliasing" title="module_aliasing"></map>
+         <area shape="rect" coords="155,33,191,65" href="#AS" title="AS">
+         <area shape="rect" coords="211,33,297,65" href="#IDENTIFIER" title="IDENTIFIER"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#feature_name" title="feature_name" shape="rect">feature_name</a>
-         ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> <a href="#module_aliasing" title="module_aliasing" shape="rect">module_aliasing</a>?</pre></div>
+         <div class="ebnf"><pre><a href="#import_as_name" title="import_as_name" shape="rect">import_as_name</a>
+         ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( <a href="#AS" title="AS" shape="rect">AS</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> )?</pre></div>
          
       </p>
       
@@ -508,19 +484,18 @@
          
          <ul>
             
-            <li><a href="#feature_import" title="feature_import">feature_import</a></li>
+            <li><a href="#import_stmt" title="import_stmt">import_stmt</a></li>
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="module_aliasing">module_aliasing:</a></p>
-      <img border="0" src="diagram/module_aliasing.png" height="36" width="200" usemap="#module_aliasing.map"><map name="module_aliasing.map">
-         <area shape="rect" coords="29,1,65,33" href="#AS" title="AS">
-         <area shape="rect" coords="85,1,171,33" href="#IDENTIFIER" title="IDENTIFIER"></map>
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="dotted_name">dotted_name:</a></p>
+      <img border="0" src="diagram/dotted_name.png" height="80" width="184" usemap="#dotted_name.map"><map name="dotted_name.map">
+         <area shape="rect" coords="49,45,135,77" href="#IDENTIFIER" title="IDENTIFIER"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#module_aliasing" title="module_aliasing" shape="rect">module_aliasing</a>
-         ::= <a href="#AS" title="AS" shape="rect">AS</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a></pre></div>
+         <div class="ebnf"><pre><a href="#dotted_name" title="dotted_name" shape="rect">dotted_name</a>
+         ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( '.' <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> )*</pre></div>
          
       </p>
       
@@ -528,9 +503,9 @@
          
          <ul>
             
-            <li><a href="#feature_name" title="feature_name">feature_name</a></li>
+            <li><a href="#dotted_as_name" title="dotted_as_name">dotted_as_name</a></li>
             
-            <li><a href="#module_import" title="module_import">module_import</a></li>
+            <li><a href="#import_stmt" title="import_stmt">import_stmt</a></li>
             
          </ul>
          
@@ -580,16 +555,17 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="function_params_list">function_params_list:</a></p>
-      <img border="0" src="diagram/function_params_list.png" height="156" width="620" usemap="#function_params_list.map"><map name="function_params_list.map">
+      <img border="0" src="diagram/function_params_list.png" height="156" width="606" usemap="#function_params_list.map"><map name="function_params_list.map">
          <area shape="rect" coords="69,45,155,77" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="245,77,317,109" href="#operator" title="operator">
-         <area shape="rect" coords="441,77,551,109" href="#variadic_param" title="variadic_param">
+         <area shape="rect" coords="195,77,231,109" href="#EQ" title="EQ">
+         <area shape="rect" coords="251,77,303,109" href="#atom" title="atom">
+         <area shape="rect" coords="427,77,537,109" href="#variadic_param" title="variadic_param">
          <area shape="rect" coords="49,121,159,153" href="#variadic_param" title="variadic_param"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#function_params_list" title="function_params_list" shape="rect">function_params_list</a>
-         ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( '=' <a href="#operator" title="operator" shape="rect">operator</a> )? ( ',' <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( '=' <a href="#operator" title="operator" shape="rect">operator</a> )? )* ( ',' <a href="#variadic_param" title="variadic_param" shape="rect">variadic_param</a> )?
+         ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( <a href="#EQ" title="EQ" shape="rect">EQ</a> <a href="#atom" title="atom" shape="rect">atom</a> )? ( ',' <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( <a href="#EQ" title="EQ" shape="rect">EQ</a> <a href="#atom" title="atom" shape="rect">atom</a> )? )* ( ',' <a href="#variadic_param" title="variadic_param" shape="rect">variadic_param</a> )?
            | <a href="#variadic_param" title="variadic_param" shape="rect">variadic_param</a></pre></div>
          
       </p>
@@ -623,15 +599,16 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="scope">scope:</a></p>
-      <img border="0" src="diagram/scope.png" height="52" width="462" usemap="#scope.map"><map name="scope.map">
-         <area shape="rect" coords="29,17,123,49" href="#LINE_BREAK" title="LINE_BREAK">
-         <area shape="rect" coords="143,17,207,49" href="#INDENT" title="INDENT">
-         <area shape="rect" coords="247,17,327,49" href="#command" title="command">
-         <area shape="rect" coords="367,17,433,49" href="#DEDENT" title="DEDENT"></map>
+      <img border="0" src="diagram/scope.png" height="52" width="504" usemap="#scope.map"><map name="scope.map">
+         <area shape="rect" coords="29,17,103,49" href="#NEWLINE" title="NEWLINE">
+         <area shape="rect" coords="123,17,187,49" href="#INDENT" title="INDENT">
+         <area shape="rect" coords="227,17,275,49" href="#stmt" title="stmt">
+         <area shape="rect" coords="295,17,369,49" href="#NEWLINE" title="NEWLINE">
+         <area shape="rect" coords="409,17,475,49" href="#DEDENT" title="DEDENT"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#scope" title="scope" shape="rect">scope</a>    ::= <a href="#LINE_BREAK" title="LINE_BREAK" shape="rect">LINE_BREAK</a> <a href="#INDENT" title="INDENT" shape="rect">INDENT</a> <a href="#command" title="command" shape="rect">command</a>+ <a href="#DEDENT" title="DEDENT" shape="rect">DEDENT</a></pre></div>
+         <div class="ebnf"><pre><a href="#scope" title="scope" shape="rect">scope</a>    ::= <a href="#NEWLINE" title="NEWLINE" shape="rect">NEWLINE</a> <a href="#INDENT" title="INDENT" shape="rect">INDENT</a> ( <a href="#stmt" title="stmt" shape="rect">stmt</a> <a href="#NEWLINE" title="NEWLINE" shape="rect">NEWLINE</a> )+ <a href="#DEDENT" title="DEDENT" shape="rect">DEDENT</a></pre></div>
          
       </p>
       
@@ -639,13 +616,13 @@
          
          <ul>
             
-            <li><a href="#for_statement" title="for_statement">for_statement</a></li>
+            <li><a href="#for_stmt" title="for_stmt">for_stmt</a></li>
             
             <li><a href="#function_definition" title="function_definition">function_definition</a></li>
             
-            <li><a href="#if_statement" title="if_statement">if_statement</a></li>
+            <li><a href="#if_stmt" title="if_stmt">if_stmt</a></li>
             
-            <li><a href="#while_statement" title="while_statement">while_statement</a></li>
+            <li><a href="#while_stmt" title="while_stmt">while_stmt</a></li>
             
          </ul>
          
@@ -671,17 +648,16 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="class_scope">class_scope:</a></p>
-      <img border="0" src="diagram/class_scope.png" height="96" width="550" usemap="#class_scope.map"><map name="class_scope.map">
-         <area shape="rect" coords="29,17,123,49" href="#LINE_BREAK" title="LINE_BREAK">
-         <area shape="rect" coords="143,17,207,49" href="#INDENT" title="INDENT">
-         <area shape="rect" coords="267,17,339,49" href="#attr_decl" title="attr_decl">
-         <area shape="rect" coords="267,61,395,93" href="#function_definition" title="function_definition">
-         <area shape="rect" coords="455,17,521,49" href="#DEDENT" title="DEDENT"></map>
+      <img border="0" src="diagram/class_scope.png" height="52" width="490" usemap="#class_scope.map"><map name="class_scope.map">
+         <area shape="rect" coords="29,17,103,49" href="#NEWLINE" title="NEWLINE">
+         <area shape="rect" coords="123,17,187,49" href="#INDENT" title="INDENT">
+         <area shape="rect" coords="227,17,355,49" href="#function_definition" title="function_definition">
+         <area shape="rect" coords="395,17,461,49" href="#DEDENT" title="DEDENT"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#class_scope" title="class_scope" shape="rect">class_scope</a>
-         ::= <a href="#LINE_BREAK" title="LINE_BREAK" shape="rect">LINE_BREAK</a> <a href="#INDENT" title="INDENT" shape="rect">INDENT</a> ( <a href="#attr_decl" title="attr_decl" shape="rect">attr_decl</a> | <a href="#function_definition" title="function_definition" shape="rect">function_definition</a> )+ <a href="#DEDENT" title="DEDENT" shape="rect">DEDENT</a></pre></div>
+         ::= <a href="#NEWLINE" title="NEWLINE" shape="rect">NEWLINE</a> <a href="#INDENT" title="INDENT" shape="rect">INDENT</a> <a href="#function_definition" title="function_definition" shape="rect">function_definition</a>+ <a href="#DEDENT" title="DEDENT" shape="rect">DEDENT</a></pre></div>
          
       </p>
       
@@ -693,41 +669,23 @@
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="attr_decl">attr_decl:</a></p>
-      <img border="0" src="diagram/attr_decl.png" height="68" width="500" usemap="#attr_decl.map"><map name="attr_decl.map">
-         <area shape="rect" coords="29,1,69,33" href="#LET" title="LET">
-         <area shape="rect" coords="89,1,175,33" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="265,33,337,65" href="#operator" title="operator">
-         <area shape="rect" coords="377,1,471,33" href="#LINE_BREAK" title="LINE_BREAK"></map>
-      
-      <p>
-         
-         <div class="ebnf"><pre><a href="#attr_decl" title="attr_decl" shape="rect">attr_decl</a>
-         ::= <a href="#LET" title="LET" shape="rect">LET</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( '=' <a href="#operator" title="operator" shape="rect">operator</a> )? <a href="#LINE_BREAK" title="LINE_BREAK" shape="rect">LINE_BREAK</a></pre></div>
-         
-      </p>
-      
-      <p>referenced by:
-         
-         <ul>
-            
-            <li><a href="#class_scope" title="class_scope">class_scope</a></li>
-            
-         </ul>
-         
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="command">command:</a></p>
-      <img border="0" src="diagram/command.png" height="212" width="410" usemap="#command.map"><map name="command.map">
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="stmt">stmt:</a></p>
+      <img border="0" src="diagram/stmt.png" height="212" width="246" usemap="#stmt.map"><map name="stmt.map">
          <area shape="rect" coords="49,1,171,33" href="#assignment_expr" title="assignment_expr">
          <area shape="rect" coords="49,45,143,77" href="#function_call" title="function_call">
-         <area shape="rect" coords="49,89,131,121" href="#statement" title="statement">
-         <area shape="rect" coords="69,133,133,165" href="#THROW" title="THROW">
-         <area shape="rect" coords="69,177,135,209" href="#RETURN" title="RETURN">
-         <area shape="rect" coords="175,133,247,165" href="#operator" title="operator">
-         <area shape="rect" coords="287,1,381,33" href="#LINE_BREAK" title="LINE_BREAK"></map>
+         <area shape="rect" coords="49,89,167,121" href="#compound_stmt" title="compound_stmt">
+         <area shape="rect" coords="49,133,113,165" href="#THROW" title="THROW">
+         <area shape="rect" coords="133,133,179,165" href="#expr" title="expr">
+         <area shape="rect" coords="49,177,115,209" href="#RETURN" title="RETURN">
+         <area shape="rect" coords="135,177,197,209" href="#exprlist" title="exprlist"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#command" title="command" shape="rect">command</a>  ::= ( <a href="#assignment_expr" title="assignment_expr" shape="rect">assignment_expr</a> | <a href="#function_call" title="function_call" shape="rect">function_call</a> | <a href="#statement" title="statement" shape="rect">statement</a> | ( <a href="#THROW" title="THROW" shape="rect">THROW</a> | <a href="#RETURN" title="RETURN" shape="rect">RETURN</a> ) <a href="#operator" title="operator" shape="rect">operator</a> ) <a href="#LINE_BREAK" title="LINE_BREAK" shape="rect">LINE_BREAK</a></pre></div>
+         <div class="ebnf"><pre><a href="#stmt" title="stmt" shape="rect">stmt</a>     ::= <a href="#assignment_expr" title="assignment_expr" shape="rect">assignment_expr</a>
+           | <a href="#function_call" title="function_call" shape="rect">function_call</a>
+           | <a href="#compound_stmt" title="compound_stmt" shape="rect">compound_stmt</a>
+           | <a href="#THROW" title="THROW" shape="rect">THROW</a> <a href="#expr" title="expr" shape="rect">expr</a>
+           | <a href="#RETURN" title="RETURN" shape="rect">RETURN</a> <a href="#exprlist" title="exprlist" shape="rect">exprlist</a></pre></div>
          
       </p>
       
@@ -742,17 +700,18 @@
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="assignment_expr">assignment_expr:</a></p>
-      <img border="0" src="diagram/assignment_expr.png" height="112" width="550" usemap="#assignment_expr.map"><map name="assignment_expr.map">
+      <img border="0" src="diagram/assignment_expr.png" height="112" width="516" usemap="#assignment_expr.map"><map name="assignment_expr.map">
          <area shape="rect" coords="49,1,89,33" href="#LET" title="LET">
          <area shape="rect" coords="109,1,195,33" href="#IDENTIFIER" title="IDENTIFIER">
          <area shape="rect" coords="49,45,135,77" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="221,77,293,109" href="#operator" title="operator">
-         <area shape="rect" coords="449,1,521,33" href="#operator" title="operator"></map>
+         <area shape="rect" coords="221,77,273,109" href="#atom" title="atom">
+         <area shape="rect" coords="379,1,415,33" href="#EQ" title="EQ">
+         <area shape="rect" coords="435,1,487,33" href="#atom" title="atom"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#assignment_expr" title="assignment_expr" shape="rect">assignment_expr</a>
-         ::= ( <a href="#LET" title="LET" shape="rect">LET</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> | <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( '[' <a href="#operator" title="operator" shape="rect">operator</a> ']' )? ) '=' <a href="#operator" title="operator" shape="rect">operator</a></pre></div>
+         ::= ( <a href="#LET" title="LET" shape="rect">LET</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> | <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> ( '[' <a href="#atom" title="atom" shape="rect">atom</a> ']' )? ) <a href="#EQ" title="EQ" shape="rect">EQ</a> <a href="#atom" title="atom" shape="rect">atom</a></pre></div>
          
       </p>
       
@@ -760,19 +719,19 @@
          
          <ul>
             
-            <li><a href="#command" title="command">command</a></li>
+            <li><a href="#stmt" title="stmt">stmt</a></li>
             
          </ul>
          
       </p><br><p style="font-size: 14px; font-weight:bold"><a name="function_call">function_call:</a></p>
-      <img border="0" src="diagram/function_call.png" height="96" width="408" usemap="#function_call.map"><map name="function_call.map">
-         <area shape="rect" coords="29,45,115,77" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="221,45,293,77" href="#operator" title="operator"></map>
+      <img border="0" src="diagram/function_call.png" height="68" width="350" usemap="#function_call.map"><map name="function_call.map">
+         <area shape="rect" coords="29,1,115,33" href="#IDENTIFIER" title="IDENTIFIER">
+         <area shape="rect" coords="201,33,255,65" href="#arglist" title="arglist"></map>
       
       <p>
          
          <div class="ebnf"><pre><a href="#function_call" title="function_call" shape="rect">function_call</a>
-         ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> '(' ( <a href="#operator" title="operator" shape="rect">operator</a> ( ',' <a href="#operator" title="operator" shape="rect">operator</a> )* )? ')'</pre></div>
+         ::= <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> '(' <a href="#arglist" title="arglist" shape="rect">arglist</a>? ')'</pre></div>
          
       </p>
       
@@ -780,22 +739,17 @@
          
          <ul>
             
-            <li><a href="#command" title="command">command</a></li>
+            <li><a href="#stmt" title="stmt">stmt</a></li>
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="statement">statement:</a></p>
-      <img border="0" src="diagram/statement.png" height="124" width="216" usemap="#statement.map"><map name="statement.map">
-         <area shape="rect" coords="49,1,145,33" href="#if_statement" title="if_statement">
-         <area shape="rect" coords="49,45,167,77" href="#while_statement" title="while_statement">
-         <area shape="rect" coords="49,89,155,121" href="#for_statement" title="for_statement"></map>
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="arglist">arglist:</a></p>
+      <img border="0" src="diagram/arglist.png" height="80" width="150" usemap="#arglist.map"><map name="arglist.map">
+         <area shape="rect" coords="49,45,101,77" href="#atom" title="atom"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#statement" title="statement" shape="rect">statement</a>
-         ::= <a href="#if_statement" title="if_statement" shape="rect">if_statement</a>
-           | <a href="#while_statement" title="while_statement" shape="rect">while_statement</a>
-           | <a href="#for_statement" title="for_statement" shape="rect">for_statement</a></pre></div>
+         <div class="ebnf"><pre><a href="#arglist" title="arglist" shape="rect">arglist</a>  ::= <a href="#atom" title="atom" shape="rect">atom</a> ( ',' <a href="#atom" title="atom" shape="rect">atom</a> )*</pre></div>
          
       </p>
       
@@ -803,22 +757,46 @@
          
          <ul>
             
-            <li><a href="#command" title="command">command</a></li>
+            <li><a href="#function_call" title="function_call">function_call</a></li>
+            
+            <li><a href="#trailer" title="trailer">trailer</a></li>
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="if_statement">if_statement:</a></p>
-      <img border="0" src="diagram/if_statement.png" height="68" width="438" usemap="#if_statement.map"><map name="if_statement.map">
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="compound_stmt">compound_stmt:</a></p>
+      <img border="0" src="diagram/compound_stmt.png" height="124" width="184" usemap="#compound_stmt.map"><map name="compound_stmt.map">
+         <area shape="rect" coords="49,1,111,33" href="#if_stmt" title="if_stmt">
+         <area shape="rect" coords="49,45,135,77" href="#while_stmt" title="while_stmt">
+         <area shape="rect" coords="49,89,121,121" href="#for_stmt" title="for_stmt"></map>
+      
+      <p>
+         
+         <div class="ebnf"><pre><a href="#compound_stmt" title="compound_stmt" shape="rect">compound_stmt</a>
+         ::= <a href="#if_stmt" title="if_stmt" shape="rect">if_stmt</a>
+           | <a href="#while_stmt" title="while_stmt" shape="rect">while_stmt</a>
+           | <a href="#for_stmt" title="for_stmt" shape="rect">for_stmt</a></pre></div>
+         
+      </p>
+      
+      <p>referenced by:
+         
+         <ul>
+            
+            <li><a href="#stmt" title="stmt">stmt</a></li>
+            
+         </ul>
+         
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="if_stmt">if_stmt:</a></p>
+      <img border="0" src="diagram/if_stmt.png" height="68" width="410" usemap="#if_stmt.map"><map name="if_stmt.map">
          <area shape="rect" coords="29,1,59,33" href="#IF" title="IF">
-         <area shape="rect" coords="79,1,153,33" href="#condition" title="condition">
-         <area shape="rect" coords="173,1,227,33" href="#scope" title="scope">
-         <area shape="rect" coords="267,33,315,65" href="#ELSE" title="ELSE">
-         <area shape="rect" coords="335,33,389,65" href="#scope" title="scope"></map>
+         <area shape="rect" coords="79,1,125,33" href="#expr" title="expr">
+         <area shape="rect" coords="145,1,199,33" href="#scope" title="scope">
+         <area shape="rect" coords="239,33,287,65" href="#ELSE" title="ELSE">
+         <area shape="rect" coords="307,33,361,65" href="#scope" title="scope"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#if_statement" title="if_statement" shape="rect">if_statement</a>
-         ::= <a href="#IF" title="IF" shape="rect">IF</a> <a href="#condition" title="condition" shape="rect">condition</a> <a href="#scope" title="scope" shape="rect">scope</a> ( <a href="#ELSE" title="ELSE" shape="rect">ELSE</a> <a href="#scope" title="scope" shape="rect">scope</a> )?</pre></div>
+         <div class="ebnf"><pre><a href="#if_stmt" title="if_stmt" shape="rect">if_stmt</a>  ::= <a href="#IF" title="IF" shape="rect">IF</a> <a href="#expr" title="expr" shape="rect">expr</a> <a href="#scope" title="scope" shape="rect">scope</a> ( <a href="#ELSE" title="ELSE" shape="rect">ELSE</a> <a href="#scope" title="scope" shape="rect">scope</a> )?</pre></div>
          
       </p>
       
@@ -826,20 +804,20 @@
          
          <ul>
             
-            <li><a href="#statement" title="statement">statement</a></li>
+            <li><a href="#compound_stmt" title="compound_stmt">compound_stmt</a></li>
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="while_statement">while_statement:</a></p>
-      <img border="0" src="diagram/while_statement.png" height="36" width="284" usemap="#while_statement.map"><map name="while_statement.map">
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="while_stmt">while_stmt:</a></p>
+      <img border="0" src="diagram/while_stmt.png" height="36" width="256" usemap="#while_stmt.map"><map name="while_stmt.map">
          <area shape="rect" coords="29,1,87,33" href="#WHILE" title="WHILE">
-         <area shape="rect" coords="107,1,181,33" href="#condition" title="condition">
-         <area shape="rect" coords="201,1,255,33" href="#scope" title="scope"></map>
+         <area shape="rect" coords="107,1,153,33" href="#expr" title="expr">
+         <area shape="rect" coords="173,1,227,33" href="#scope" title="scope"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#while_statement" title="while_statement" shape="rect">while_statement</a>
-         ::= <a href="#WHILE" title="WHILE" shape="rect">WHILE</a> <a href="#condition" title="condition" shape="rect">condition</a> <a href="#scope" title="scope" shape="rect">scope</a></pre></div>
+         <div class="ebnf"><pre><a href="#while_stmt" title="while_stmt" shape="rect">while_stmt</a>
+         ::= <a href="#WHILE" title="WHILE" shape="rect">WHILE</a> <a href="#expr" title="expr" shape="rect">expr</a> <a href="#scope" title="scope" shape="rect">scope</a></pre></div>
          
       </p>
       
@@ -847,22 +825,21 @@
          
          <ul>
             
-            <li><a href="#statement" title="statement">statement</a></li>
+            <li><a href="#compound_stmt" title="compound_stmt">compound_stmt</a></li>
             
          </ul>
          
-      </p><br><p style="font-size: 14px; font-weight:bold"><a name="for_statement">for_statement:</a></p>
-      <img border="0" src="diagram/for_statement.png" height="36" width="426" usemap="#for_statement.map"><map name="for_statement.map">
+      </p><br><p style="font-size: 14px; font-weight:bold"><a name="for_stmt">for_stmt:</a></p>
+      <img border="0" src="diagram/for_stmt.png" height="36" width="376" usemap="#for_stmt.map"><map name="for_stmt.map">
          <area shape="rect" coords="29,1,73,33" href="#FOR" title="FOR">
-         <area shape="rect" coords="93,1,179,33" href="#IDENTIFIER" title="IDENTIFIER">
-         <area shape="rect" coords="199,1,231,33" href="#IN" title="IN">
-         <area shape="rect" coords="251,1,323,33" href="#operator" title="operator">
-         <area shape="rect" coords="343,1,397,33" href="#scope" title="scope"></map>
+         <area shape="rect" coords="93,1,155,33" href="#exprlist" title="exprlist">
+         <area shape="rect" coords="175,1,207,33" href="#IN" title="IN">
+         <area shape="rect" coords="227,1,273,33" href="#expr" title="expr">
+         <area shape="rect" coords="293,1,347,33" href="#scope" title="scope"></map>
       
       <p>
          
-         <div class="ebnf"><pre><a href="#for_statement" title="for_statement" shape="rect">for_statement</a>
-         ::= <a href="#FOR" title="FOR" shape="rect">FOR</a> <a href="#IDENTIFIER" title="IDENTIFIER" shape="rect">IDENTIFIER</a> <a href="#IN" title="IN" shape="rect">IN</a> <a href="#operator" title="operator" shape="rect">operator</a> <a href="#scope" title="scope" shape="rect">scope</a></pre></div>
+         <div class="ebnf"><pre><a href="#for_stmt" title="for_stmt" shape="rect">for_stmt</a> ::= <a href="#FOR" title="FOR" shape="rect">FOR</a> <a href="#exprlist" title="exprlist" shape="rect">exprlist</a> <a href="#IN" title="IN" shape="rect">IN</a> <a href="#expr" title="expr" shape="rect">expr</a> <a href="#scope" title="scope" shape="rect">scope</a></pre></div>
          
       </p>
       
@@ -870,7 +847,7 @@
          
          <ul>
             
-            <li><a href="#statement" title="statement">statement</a></li>
+            <li><a href="#compound_stmt" title="compound_stmt">compound_stmt</a></li>
             
          </ul>
          

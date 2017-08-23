@@ -6,4 +6,6 @@ sucuri
 **/*.toc
 **/*.out
 **/*.bbl
+
 **/*.zip
+**/*.tar.gz
