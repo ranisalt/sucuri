@@ -12,22 +12,19 @@ code
     : program
     | imports program;
 
-literal
-    : INTEGER_LITERAL
-    | FLOAT_LITERAL
-    | STRING_LITERAL;
-
-operator
+atom
     : IDENTIFIER
-    | IDENTIFIER '[' operator ']'
-    | literal
-    | '(' logical_expr ')';
+    | INTEGER_LITERAL
+    | FLOAT_LITERAL
+    | STRING_LITERAL
+    | '(' logical_expr ')'
+    | '[' logical_expr ']';
 
 /* expressions */
 unary_expr
-    : NOT operator
-    | SUB operator
-    | operator;
+    : NOT atom
+    | SUB atom
+    | atom;
 
 exponential_expr
     : unary_expr
@@ -122,9 +119,9 @@ function_params_list
 
 identifier_list
     : IDENTIFIER
-    | IDENTIFIER EQ operator
+    | IDENTIFIER EQ atom
     | identifier_list ',' IDENTIFIER
-    | identifier_list ',' IDENTIFIER EQ operator;
+    | identifier_list ',' IDENTIFIER EQ atom;
 
 variadic_param
     : ELLIPSIS IDENTIFIER;
@@ -151,21 +148,21 @@ stmt
     : assignment_expr NEWLINE
     | function_call NEWLINE
     | compound_stmt NEWLINE
-    | THROW operator NEWLINE
-    | RETURN operator NEWLINE;
+    | THROW atom NEWLINE
+    | RETURN atom NEWLINE;
 
 assignment_expr
-    : LET IDENTIFIER EQ operator
-    | IDENTIFIER EQ operator
-    | IDENTIFIER '[' operator ']' EQ operator;
+    : LET IDENTIFIER EQ atom
+    | IDENTIFIER EQ atom
+    | IDENTIFIER '[' atom ']' EQ atom;
 
 function_call
     : IDENTIFIER '(' ')'
     | IDENTIFIER '(' function_args ')';
 
 function_args
-    : operator
-    | function_args ',' operator;
+    : atom
+    | function_args ',' atom;
 
 /* flow control */
 compound_stmt
