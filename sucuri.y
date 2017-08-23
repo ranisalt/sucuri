@@ -17,10 +17,6 @@ literal
     | FLOAT_LITERAL
     | STRING_LITERAL;
 
-
-condition
-    : operator;
-
 operator
     : IDENTIFIER
     | IDENTIFIER '[' operator ']'
@@ -176,11 +172,11 @@ statement
     | for_statement;
 
 if_statement
-    : IF condition scope
-    | IF condition scope ELSE scope;
+    : IF operator scope
+    | IF operator scope ELSE scope;
 
 while_statement
-    : WHILE condition scope;
+    : WHILE operator scope;
 
 for_statement
     : FOR IDENTIFIER IN operator scope;
