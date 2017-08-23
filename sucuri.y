@@ -104,8 +104,8 @@ definition
 
 
 function_definition
-    : LET IDENTIFIER '(' function_params_list ')' scope
-    | LET IDENTIFIER '(' ')' scope;
+    : LET IDENTIFIER '(' ')' scope
+    | LET IDENTIFIER '(' function_params_list ')' scope;
 
 function_params_list
     : identifier_list
@@ -114,15 +114,15 @@ function_params_list
 
 identifier_list
     : IDENTIFIER
+    | IDENTIFIER EQ operator
     | identifier_list ',' IDENTIFIER
-    | IDENTIFIER '=' operator
-    | identifier_list ',' IDENTIFIER '=' operator;
+    | identifier_list ',' IDENTIFIER EQ operator;
 
 variadic_param
     : ELLIPSIS IDENTIFIER;
 
 scope
-    : LINE_BREAK INDENT inner_scope DEDENT;
+    : NEWLINE INDENT inner_scope DEDENT;
 
 inner_scope
     : command
@@ -133,25 +133,18 @@ class_definition
     : CLASS IDENTIFIER class_scope;
 
 class_scope
-    : LINE_BREAK INDENT inner_class_scope DEDENT;
+    : NEWLINE INDENT inner_class_scope DEDENT;
 
 inner_class_scope
-    : attr_decl
-    | function_definition
-    | inner_class_scope attr_decl
+    : function_definition
     | inner_class_scope function_definition;
 
-attr_decl
-    : LET IDENTIFIER '=' operator LINE_BREAK
-    | LET IDENTIFIER LINE_BREAK;
-
-
 command
-    : assignment_expr LINE_BREAK
-    | function_call LINE_BREAK
-    | statement LINE_BREAK
-    | THROW operator LINE_BREAK
-    | RETURN operator LINE_BREAK;
+    : assignment_expr NEWLINE
+    | function_call NEWLINE
+    | statement NEWLINE
+    | THROW operator NEWLINE
+    | RETURN operator NEWLINE;
 
 assignment_expr
     : LET IDENTIFIER EQ operator
