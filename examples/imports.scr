@@ -1,0 +1,12 @@
+import itertools
+from collections import deque
+import numscr as ns
+from functions import partial as curry
+import foo, bar
+from baz import qux
+import foo, bar as baz
+from baz import qux as foo, bar
+from foo import (
+    bar,
+    baz,
+    )
