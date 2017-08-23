@@ -1,11 +1,19 @@
 BISON ?= bison
 CC ?= gcc
+CFLAGS += -lfl
 FLEX ?= flex
+LANG = sucuri
 
-main: sucuri.l sucuri.y
-	$(FLEX) -o sucuri.yy.c sucuri.l
-	$(BISON) -d -v -o sucuri.tab.c sucuri.y
-	$(CC) sucuri.tab.c sucuri.yy.c -o sucuri -lfl
+all: $(LANG)
+
+$(LANG).tab.c $(LANG).tab.h: $(LANG).y
+	$(BISON) -d -o $(LANG).tab.c $<
+
+$(LANG).yy.c: $(LANG).l $(LANG).tab.h
+	$(FLEX) -o $(LANG).yy.c $<
+
+$(LANG): $(LANG).yy.c $(LANG).tab.c
+	$(CC) $(CFLAGS) $(LANG).tab.c $(LANG).yy.c -o $(LANG)
 
 clean:
-	$(RM) sucuri.tab.h sucuri.tab.c sucuri.yy.c sucuri.output
+	$(RM) -f $(LANG).tab.h $(LANG).tab.c $(LANG).yy.c $(LANG)
