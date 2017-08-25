@@ -6,6 +6,12 @@
 
 %start code
 
+%{
+
+void yyerror(const char*);
+
+%}
+
 %%
 
 code
@@ -206,7 +212,7 @@ try_stmt
 extern char yytext[];
 extern int column;
 
-int yyerror(char *s)
+void yyerror(const char *s)
 {
     fflush(stdout);
     printf("\n%*s\n%*s\n", column, "^", column, s);
