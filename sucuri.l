@@ -20,6 +20,8 @@ void process_newline(void);
 
 %}
 
+%option noyywrap
+
 %%
 
 ^[ ]*\n     { /* ignore empty lines */ }
@@ -75,12 +77,9 @@ void process_newline(void);
 "..."                 { count(); return ELLIPSIS; }
 {L}((\.{L})|{L}|{D})* { count(); return IDENTIFIER; }
 
-%%
+.           { /* ignore extraneous characters */ }
 
-int yywrap(void) {
-    printf("~~~ end of parse ~~~\n");
-    return 1;
-}
+%%
 
 void process_indent(unsigned leng)
 {
