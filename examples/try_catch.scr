@@ -5,5 +5,6 @@ catch InvalidArgument
 
 try
     let x = http.get('https://github.com')
+# alias exception to identifier
 catch FileNotFound as err
     print('Error: {}'.format(err.message))
