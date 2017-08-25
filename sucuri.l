@@ -26,9 +26,8 @@ void process_newline(void);
 
 ^[ ]*\n     { /* ignore empty lines */ }
 ^[ ]*       { process_indent(yyleng); }
-\n          { process_newline(); }
 
-"#"[^\n]*[\n] { /* ignore comments */ }
+"#"[^\n]*\n { /* ignore comments */ }
 
     /* literals */
 {D}+        { count(); return INTEGER_LITERAL; }
@@ -110,6 +109,7 @@ int column = 0;
 void count(void) {
     for (int i = 0; yytext[i] != '\0'; i++) {
         if (yytext[i] == '\n') {
+            process_newline();
             column = 0;
         } else if (yytext[i] == '\t') {
             column += 8 - (column % 8);
