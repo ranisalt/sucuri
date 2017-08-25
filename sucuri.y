@@ -1,6 +1,6 @@
 %token NEWLINE INDENT DEDENT
 %token INTEGER_LITERAL FLOAT_LITERAL STRING_LITERAL
-%token NOT POW MUL DIV ADD SUB LT LE GT GE EQ NE AND OR XOR
+%token NOT POW MUL DIV PLUS MINUS LT LE GT GE EQ NE AND OR XOR
 %token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token IDENTIFIER ELLIPSIS
 
@@ -37,7 +37,7 @@ exponential_expr
 
 unary_expr
     : NOT unary_expr
-    | SUB unary_expr
+    | MINUS unary_expr
     | exponential_expr;
 
 multiplicative_expr
@@ -47,8 +47,8 @@ multiplicative_expr
 
 additive_expr
     : multiplicative_expr
-    | additive_expr ADD multiplicative_expr
-    | additive_expr SUB multiplicative_expr;
+    | additive_expr PLUS multiplicative_expr
+    | additive_expr MINUS multiplicative_expr;
 
 relational_expr
     : additive_expr

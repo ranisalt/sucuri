@@ -42,8 +42,8 @@ void process_newline(void);
 ")"         { count(); --nesting; return ')'; }
 "*"         { count(); return MUL; }
 "**"        { count(); return POW; }
-"+"         { count(); return ADD; }
-"-"         { count(); return SUB; }
+"+"         { count(); return PLUS; }
+"-"         { count(); return MINUS; }
 "/"         { count(); return DIV; }
 "<"         { count(); return LT; }
 "<="        { count(); return LE; }
