@@ -30,7 +30,7 @@ void process_newline(void);
 "#"[^\n]*\n { /* ignore comments */ }
 
     /* literals */
-{D}+        { count(); return INTEGER_LITERAL; }
+[+-]?{D}+   { count(); return INTEGER_LITERAL; }
 "."{D}+     { count(); return FLOAT_LITERAL; }
 {D}+"."{D}* { count(); return FLOAT_LITERAL; }
 "'"{NO_SQUOTE_STRING_LITERAL}"'" { count(); return STRING_LITERAL; }
