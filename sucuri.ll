@@ -1,3 +1,6 @@
+%option c++
+%option yyclass="Scanner"
+
 D [0-9]
 L [a-zA-Z_!@$?]
 NO_SQUOTE_STRING_LITERAL [^']*
