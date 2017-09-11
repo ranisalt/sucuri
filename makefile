@@ -1,19 +1,25 @@
 BISON ?= bison
-CC ?= gcc
-CFLAGS += -lfl
+CXX ?= g++
+CFLAGS += -O2 -Wall -Wextra -lfl
 FLEX ?= flex
 LANG = sucuri
 
 all: $(LANG)
 
-$(LANG).tab.c $(LANG).tab.h: $(LANG).y
-	$(BISON) -d -o $(LANG).tab.c $<
+.PHONY: parser scanner clean
 
-$(LANG).yy.c: $(LANG).l $(LANG).tab.h
-	$(FLEX) -o $(LANG).yy.c $<
+parser: $(LANG).y
+	$(BISON) $<
 
-$(LANG): $(LANG).yy.c $(LANG).tab.c
-	$(CC) $(CFLAGS) $(LANG).tab.c $(LANG).yy.c -o $(LANG)
+parser.cxx parser.hxx: parser
+
+scanner: $(LANG).l
+	$(FLEX) $<
+
+scanner.cxx scanner.hxx: scanner
+
+$(LANG): parser scanner
+	$(CXX) $(CFLAGS) parser.cxx scanner.cxx -o $(LANG)
 
 clean:
-	$(RM) -f $(LANG).tab.h $(LANG).tab.c $(LANG).yy.c $(LANG)
+	$(RM) *.hh *.cxx *.hxx $(LANG)

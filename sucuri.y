@@ -1,16 +1,38 @@
-%token NEWLINE INDENT DEDENT
+%require "3.0"
+
+%language "c++"
+%skeleton "lalr1.cc"
+
+%token NEWLINE INDENT DEDENT LPAREN RPAREN
 %token INTEGER_LITERAL FLOAT_LITERAL STRING_LITERAL
 %token NOT POW MUL DIV PLUS MINUS LT LE GT GE EQ NE AND OR XOR
 %token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token IDENTIFIER ELLIPSIS
+%token END 0
+
+%defines "parser.hxx"
+%output "parser.cxx"
 
 %start code
 
-%{
+%define api.token.constructor
+%define api.value.type variant
+%define parse.assert
+%define parse.error verbose
+%define parse.trace
 
-void yyerror(const char*);
+%token <int> NUMBER
+%token <std::string> STRING
 
-%}
+%locations
+%param {parser::semantic_type* yylval}
+%param {parser::location_type* yylloc}
+
+%code {
+#include "scanner.h"
+#undef yylex
+#define yylex scanner.yylex
+}
 
 %%
 
@@ -23,7 +45,7 @@ atom
     | INTEGER_LITERAL
     | FLOAT_LITERAL
     | STRING_LITERAL
-    | '(' expr ')'
+    | LPAREN expr RPAREN
     | '[' expr ']';
 
 /* expressions */
@@ -32,8 +54,8 @@ atom_expr
     | atom trailer;
 
 trailer
-    : '(' ')'
-    | '(' arglist ')'
+    : LPAREN RPAREN
+    | LPAREN arglist RPAREN
     | '[' expr ']'
     | '.' IDENTIFIER;
 
@@ -128,8 +150,8 @@ definition
 
 
 function_definition
-    : LET IDENTIFIER '(' ')' scope
-    | LET IDENTIFIER '(' function_params_list ')' scope;
+    : LET IDENTIFIER LPAREN RPAREN scope
+    | LET IDENTIFIER LPAREN function_params_list RPAREN scope;
 
 function_params_list
     : identifier_list
@@ -176,8 +198,8 @@ assignment_expr
     | IDENTIFIER '[' atom ']' EQ atom;
 
 function_call
-    : IDENTIFIER '(' ')'
-    | IDENTIFIER '(' arglist ')';
+    : IDENTIFIER LPAREN RPAREN
+    | IDENTIFIER LPAREN arglist RPAREN;
 
 arglist
     : atom
@@ -207,13 +229,4 @@ try_stmt
 
 %%
 
-#include <stdio.h>
-
-extern char yytext[];
-extern int column;
-
-void yyerror(const char *s)
-{
-    fflush(stdout);
-    printf("\n%*s\n%*s\n", column, "^", column, s);
-}
+/* vim: set ft=yacc: */

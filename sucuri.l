@@ -1,122 +1,145 @@
+%{
+
+#include "parser.hxx"
+#include "scanner.h"
+#include <stack>
+
+unsigned nesting = 0;
+std::stack<int> indent_stack{{0}};
+
+void count(const char*);
+#define yyterminate() return yy::parser::make_END(loc)
+
+static yy::location loc;
+
+%}
+
+%option c++
+
+%option header-file="scanner.hxx"
+%option outfile="scanner.cxx"
+%option yyclass="yy::scanner"
+
+%option yylineno
+%option noinput nounput noyywrap
+
+%x indent
+%s normal
+
 D [0-9]
 L [a-zA-Z_!@$?]
 NO_SQUOTE_STRING_LITERAL [^']*
 NO_DQUOTE_STRING_LITERAL [^"]*
 
-%{
-
-#include <assert.h>
-#include <stdio.h>
-#include "sucuri.tab.h"
-
-void count();
-
-#define MAX_DEPTH 72
-unsigned nesting = 0;
-unsigned indent_stack[MAX_DEPTH] = {0};
-unsigned level = 0;
-void process_indent(unsigned leng);
-void process_newline(void);
-
-%}
-
-%option noyywrap
-
 %%
 
-^[ ]*\n     { /* ignore empty lines */ }
-^[ ]*       { process_indent(yyleng); }
+%{
+BEGIN indent;
+%}
 
-"#"[^\n]*\n { /* ignore comments */ }
+<indent>[ \t]*/[^ \n\r\t] {
+    BEGIN normal;
+    if (yyleng > indent_stack.top()) {
+        indent_stack.push(yyleng);
+        std::cout << "INDENT\n";
+        return yy::parser::make_INDENT(loc);
+    } else if (yyleng < indent_stack.top()) {
+        while (yyleng < indent_stack.top()) {
+            indent_stack.pop();
+            std::cout << "DEDENT\n";
+            return yy::parser::make_DEDENT(loc);
+        }
+    }
+}
+
+[\n\r] {
+    if (nesting == 0) {
+        BEGIN indent;
+        std::cout << "Back to indent.\n";
+        return yy::parser::make_NEWLINE(loc);
+    }
+}
+
+"#"[^\n]*\n { count("COMMENT"); /* ignore comments */ }
 
     /* literals */
-[+-]?{D}+   { count(); return INTEGER_LITERAL; }
-"."{D}+     { count(); return FLOAT_LITERAL; }
-{D}+"."{D}* { count(); return FLOAT_LITERAL; }
-"'"{NO_SQUOTE_STRING_LITERAL}"'" { count(); return STRING_LITERAL; }
-"\""{NO_DQUOTE_STRING_LITERAL}"\"" { count(); return STRING_LITERAL; }
+[+-]?{D}+   {
+    /* yylval->build(atoll(yytext)); */
+    count("INTEGER_LITERAL");
+    return yy::parser::make_INTEGER_LITERAL(loc);
+}
+
+[+-]"."{D}+     {
+    /* yylval->build(atof(yytext)); */
+    count("FLOAT_LITERAL");
+    return yy::parser::make_FLOAT_LITERAL(loc);
+}
+
+[+-]{D}+"."{D}* {
+    /* yylval->build(atof(yytext)); */
+    count("FLOAT_LITERAL");
+    return yy::parser::make_FLOAT_LITERAL(loc);
+}
+
+"'"{NO_SQUOTE_STRING_LITERAL}"'" {
+    count("STRING_LITERAL");
+    return yy::parser::make_STRING_LITERAL(loc);
+}
+
+"\""{NO_DQUOTE_STRING_LITERAL}"\"" {
+    count("STRING_LITERAL");
+    return yy::parser::make_STRING_LITERAL(loc);
+}
 
     /* operators */
-"!="        { count(); return NE; }
-"("         { count(); ++nesting; return '('; }
-")"         { count(); --nesting; return ')'; }
-"*"         { count(); return MUL; }
-"**"        { count(); return POW; }
-"+"         { count(); return PLUS; }
-"-"         { count(); return MINUS; }
-"/"         { count(); return DIV; }
-"<"         { count(); return LT; }
-"<="        { count(); return LE; }
-"="         { count(); return EQ; }
-">"         { count(); return GT; }
-">="        { count(); return GE; }
-"and"       { count(); return AND; }
-"not"       { count(); return NOT; }
-"or"        { count(); return OR; }
-"xor"       { count(); return XOR; }
+"!="        { count("NE"); return yy::parser::make_NE(loc); }
+"("         { count("LPAREN"); ++nesting; return yy::parser::make_LPAREN(loc); }
+")"         { count("RPAREN"); --nesting; return yy::parser::make_RPAREN(loc); }
+"*"         { count("MUL"); return yy::parser::make_MUL(loc); }
+"**"        { count("POW"); return yy::parser::make_POW(loc); }
+"+"         { count("PLUS"); return yy::parser::make_PLUS(loc); }
+"-"         { count("MINUS"); return yy::parser::make_MINUS(loc); }
+"/"         { count("DIV"); return yy::parser::make_DIV(loc); }
+"<"         { count("LT"); return yy::parser::make_LT(loc); }
+"<="        { count("LE"); return yy::parser::make_LE(loc); }
+"="         { count("EQ"); return yy::parser::make_EQ(loc); }
+">"         { count("GT"); return yy::parser::make_GT(loc); }
+">="        { count("GE"); return yy::parser::make_GE(loc); }
+"and"       { count("AND"); return yy::parser::make_AND(loc); }
+"not"       { count("NOT"); return yy::parser::make_NOT(loc); }
+"or"        { count("OR"); return yy::parser::make_OR(loc); }
+"xor"       { count("XOR"); return yy::parser::make_XOR(loc); }
 
     /* keywords */
-"as"        { count(); return AS; }
-"catch"     { count(); return CATCH; }
-"class"     { count(); return CLASS; }
-"else"      { count(); return ELSE; }
-"export"    { count(); return EXPORT; }
-"for"       { count(); return FOR; }
-"from"      { count(); return FROM; }
-"if"        { count(); return IF; }
-"import"    { count(); return IMPORT; }
-"in"        { count(); return IN; }
-"let"       { count(); return LET; }
-"return"    { count(); return RETURN; }
-"throw"     { count(); return THROW; }
-"try"       { count(); return TRY; }
-"while"     { count(); return WHILE; }
+"as"        { count("AS"); return yy::parser::make_AS(loc); }
+"catch"     { count("CATCH"); return yy::parser::make_CATCH(loc); }
+"class"     { count("CLASS"); return yy::parser::make_CLASS(loc); }
+"else"      { count("ELSE"); return yy::parser::make_ELSE(loc); }
+"export"    { count("EXPORT"); return yy::parser::make_EXPORT(loc); }
+"for"       { count("FOR"); return yy::parser::make_FOR(loc); }
+"from"      { count("FROM"); return yy::parser::make_FROM(loc); }
+"if"        { count("IF"); return yy::parser::make_IF(loc); }
+"import"    { count("IMPORT"); return yy::parser::make_IMPORT(loc); }
+"in"        { count("IN"); return yy::parser::make_IN(loc); }
+"let"       { count("LET"); return yy::parser::make_LET(loc); }
+"return"    { count("RETURN"); return yy::parser::make_RETURN(loc); }
+"throw"     { count("THROW"); return yy::parser::make_THROW(loc); }
+"try"       { count("TRY"); return yy::parser::make_TRY(loc); }
+"while"     { count("WHILE"); return yy::parser::make_WHILE(loc); }
 
     /* extra */
-"..."                 { count(); return ELLIPSIS; }
-{L}((\.{L})|{L}|{D})* { count(); return IDENTIFIER; }
+"..."                 { count("ELLIPSIS"); return yy::parser::make_ELLIPSIS(loc); }
+{L}((\.{L})|{L}|{D})* { count("IDENTIFIER"); return yy::parser::make_IDENTIFIER(loc); }
 
 .           { /* ignore extraneous characters */ }
 
 %%
 
-void process_indent(unsigned leng)
-{
-    if (nesting == 0) {
-        if (leng > indent_stack[level]) {
-            assert(indent_stack[level] + 1 < MAX_DEPTH);
-            indent_stack[++level] = leng;
-            unput(INDENT);
-        } else if (leng < indent_stack[level]) {
-            while (leng < indent_stack[level]) {
-                --level;
-                unput(DEDENT);
-            }
-        }
-    }
-}
-
-void process_newline(void)
-{
-    if (nesting == 0) {
-        unput(NEWLINE);
-        printf("\n");
-    }
-}
-
 int column = 0;
 
-void count(void) {
-    for (int i = 0; yytext[i] != '\0'; i++) {
-        if (yytext[i] == '\n') {
-            process_newline();
-            column = 0;
-        } else if (yytext[i] == '\t') {
-            column += 8 - (column % 8);
-        } else {
-            column++;
-        }
-    }
-
-    ECHO;
+void count(const char* token)
+{
+    /* std::cout << token << ": " << yytext << "\n"; */
 }
+
+/* vim: set ft=lex: */
