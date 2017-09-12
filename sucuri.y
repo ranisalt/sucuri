@@ -3,7 +3,7 @@
 %language "c++"
 %skeleton "lalr1.cc"
 
-%token NEWLINE INDENT DEDENT
+%token INDENT DEDENT
 %token NOT POW MUL DIV PLUS MINUS LT LE GT GE EQ NE AND OR XOR
 %token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token IDENTIFIER ELLIPSIS
@@ -59,7 +59,7 @@ atom_expr
 
 trailer
     : LPAREN RPAREN
-    | LPAREN arglist RPAREN
+    | LPAREN args_list RPAREN
     | LBRACK expr RBRACK;
 
 list_expr
@@ -116,10 +116,10 @@ imports
     | imports import_stmt;
 
 import_stmt
-    : IMPORT dotted_as_names NEWLINE
-    | IMPORT LPAREN dotted_as_names RPAREN NEWLINE
-    | FROM dotted_name IMPORT import_as_names NEWLINE
-    | FROM dotted_name IMPORT LPAREN import_as_names RPAREN NEWLINE;
+    : IMPORT dotted_as_names
+    | IMPORT LPAREN dotted_as_names RPAREN
+    | FROM dotted_name IMPORT import_as_names
+    | FROM dotted_name IMPORT LPAREN import_as_names RPAREN;
 
 /* import a.b.c */
 dotted_as_names
@@ -171,7 +171,7 @@ scope
     : INDENT stmt_list DEDENT;
 
 class_definition
-    : CLASS IDENTIFIER class_scope NEWLINE;
+    : CLASS IDENTIFIER class_scope;
 
 class_scope
     : INDENT inner_class_scope DEDENT;
@@ -182,7 +182,7 @@ inner_class_scope
 
 stmt_list
     : stmt
-    | stmt_list NEWLINE stmt;
+    | stmt_list stmt;
 
 stmt
     : assignment_expr
@@ -199,11 +199,18 @@ assignment_expr
 
 function_call
     : IDENTIFIER LPAREN RPAREN
-    | IDENTIFIER LPAREN arglist RPAREN;
+    | IDENTIFIER LPAREN args_list RPAREN;
 
-arglist
-    : atom
-    | arglist COMMA atom;
+args_list
+    : atom_list
+    | atom_list COMMA variadic_param
+    | variadic_param;
+
+atom_list
+    : atom_expr
+    | atom EQ atom_expr
+    | atom_list COMMA atom_expr
+    | atom_list COMMA atom EQ atom_expr;
 
 /* flow control */
 compound_stmt
@@ -213,12 +220,12 @@ compound_stmt
     | try_stmt;
 
 if_stmt
-    : IF expr NEWLINE scope
-    | IF expr NEWLINE scope else_stmt;
+    : IF expr scope
+    | IF expr scope else_stmt;
 
 else_stmt
     : ELSE if_stmt
-    | ELSE NEWLINE scope;
+    | ELSE scope;
 
 while_stmt
     : WHILE expr scope;
@@ -227,7 +234,7 @@ for_stmt
     : FOR exprlist IN expr scope;
 
 try_stmt
-    : TRY NEWLINE scope CATCH dotted_as_name NEWLINE scope;
+    : TRY scope CATCH dotted_as_name scope;
 
 %%
 

@@ -44,13 +44,13 @@ for elm in my_iter
 
 # == Functions:
 let sum(x, ...xs)
-  return x + sum(*xs) or 0
+  return x + sum(...xs) or 0
 
 let sum(xs)
-  if xs.empty?() return 0
+  if xs.empty?()
+    return 0
 
   let x = xs.pop_front()
-  return 0 (+ x for x in xs)
   return x + sum(xs)
 
 sum(*grades) / len(grades)
@@ -70,4 +70,4 @@ class Fruits # Enumerator
 # ===============================================================================
 # Invalid examples:
 
-return 1 if x else 2
+#return 1 if x else 2

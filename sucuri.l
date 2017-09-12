@@ -69,11 +69,11 @@ if (!called) {
 
 <INITIAL>#[^\n\r]*
 <INITIAL>[\n\r] {
-    count("NEWLINE");
+    /* count("NEWLINE"); */
     yylloc.lines(1);
     if (nesting == 0) {
         BEGIN INDENT;
-        return yy::parser::make_NEWLINE(yylloc);
+        /* return yy::parser::make_NEWLINE(yylloc); */
     }
 }
 
@@ -160,7 +160,7 @@ if (!called) {
         indent_stack.pop();
         return yy::parser::make_DEDENT(yylloc);
     } else {
-        yyterminate();
+        BEGIN INITIAL;
     }
 }
 
@@ -168,6 +168,7 @@ if (!called) {
     if (indent_stack.top() != 0) {
         BEGIN INDENT;
     } else {
+        count("END");
         yyterminate();
     }
 }
