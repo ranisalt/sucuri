@@ -3,17 +3,21 @@
 %language "c++"
 %skeleton "lalr1.cc"
 
-%token NEWLINE INDENT DEDENT LPAREN RPAREN
-%token INTEGER_LITERAL FLOAT_LITERAL STRING_LITERAL
+%token NEWLINE INDENT DEDENT
 %token NOT POW MUL DIV PLUS MINUS LT LE GT GE EQ NE AND OR XOR
 %token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token IDENTIFIER ELLIPSIS
+
+%token COMMA ","
 %token END 0
+%token LPAREN "("
+%token RPAREN ")"
+%token LBRACK "["
+%token RBRACK "]"
 
 %defines "parser.hxx"
 %output "parser.cxx"
-
-%start code
+%verbose
 
 %define api.token.constructor
 %define api.value.type variant
@@ -21,32 +25,32 @@
 %define parse.error verbose
 %define parse.trace
 
-%token <int> NUMBER
+%token <long double> FLOAT
+%token <long long> INTEGER
 %token <std::string> STRING
 
 %locations
-%param {parser::semantic_type* yylval}
-%param {parser::location_type* yylloc}
+%param {parser::semantic_type& yylval} {parser::location_type& yylloc}
 
 %code {
-#include "scanner.h"
-#undef yylex
-#define yylex scanner.yylex
+yy::parser::symbol_type yylex(yy::parser::semantic_type& yylval, yy::parser::location_type& yylloc);
 }
+
+%start code
 
 %%
 
 code
-    : program
-    | imports program;
+    : program NEWLINE
+    | imports program NEWLINE;
 
 atom
     : IDENTIFIER
-    | INTEGER_LITERAL
-    | FLOAT_LITERAL
-    | STRING_LITERAL
+    | INTEGER
+    | FLOAT
+    | STRING
     | LPAREN expr RPAREN
-    | '[' expr ']';
+    | LBRACK list_expr RBRACK
 
 /* expressions */
 atom_expr
@@ -56,8 +60,12 @@ atom_expr
 trailer
     : LPAREN RPAREN
     | LPAREN arglist RPAREN
-    | '[' expr ']'
+    | LBRACK expr RBRACK
     | '.' IDENTIFIER;
+
+list_expr
+    : atom
+    | list_expr COMMA atom;
 
 exponential_expr
     : atom_expr
@@ -101,7 +109,7 @@ expr
 
 exprlist
     : expr
-    | exprlist ',' expr;
+    | exprlist COMMA expr;
 
 /* module system */
 imports
@@ -110,14 +118,14 @@ imports
 
 import_stmt
     : IMPORT dotted_as_names
-    | IMPORT dotted_as_names ','
+    | IMPORT LPAREN dotted_as_names RPAREN
     | FROM dotted_name IMPORT import_as_names
-    | FROM dotted_name IMPORT import_as_names ',';
+    | FROM dotted_name IMPORT LPAREN import_as_names RPAREN;
 
 /* import a.b.c */
 dotted_as_names
     : dotted_as_name
-    | dotted_as_names ',' dotted_as_name;
+    | dotted_as_names COMMA dotted_as_name;
 
 dotted_as_name
     : dotted_name
@@ -126,7 +134,7 @@ dotted_as_name
 /* from a.b import c */
 import_as_names
     : import_as_name
-    | import_as_names ',' import_as_name;
+    | import_as_names COMMA import_as_name;
 
 import_as_name
     : IDENTIFIER
@@ -137,10 +145,10 @@ dotted_name
     | dotted_name '.' IDENTIFIER;
 
 program
-    : stmt
-    | definition
-    | stmt program
-    | definition program;
+    : stmt NEWLINE
+    | definition NEWLINE
+    | stmt NEWLINE program
+    | definition NEWLINE program;
 
 definition
     : function_definition
@@ -155,14 +163,14 @@ function_definition
 
 function_params_list
     : identifier_list
-    | identifier_list ',' variadic_param
+    | identifier_list COMMA variadic_param
     | variadic_param;
 
 identifier_list
     : IDENTIFIER
     | IDENTIFIER EQ atom
-    | identifier_list ',' IDENTIFIER
-    | identifier_list ',' IDENTIFIER EQ atom;
+    | identifier_list COMMA IDENTIFIER
+    | identifier_list COMMA IDENTIFIER EQ atom;
 
 variadic_param
     : ELLIPSIS IDENTIFIER;
@@ -193,9 +201,9 @@ stmt
     | RETURN exprlist;
 
 assignment_expr
-    : LET IDENTIFIER EQ atom
-    | IDENTIFIER EQ atom
-    | IDENTIFIER '[' atom ']' EQ atom;
+    : LET IDENTIFIER EQ atom_expr
+    | IDENTIFIER EQ atom_expr
+    | IDENTIFIER LBRACK atom RBRACK EQ atom_expr;
 
 function_call
     : IDENTIFIER LPAREN RPAREN
@@ -203,7 +211,7 @@ function_call
 
 arglist
     : atom
-    | arglist ',' atom;
+    | arglist COMMA atom;
 
 /* flow control */
 compound_stmt
@@ -228,5 +236,16 @@ try_stmt
     | TRY scope CATCH expr AS IDENTIFIER;
 
 %%
+
+void yy::parser::error(const yy::location& loc, const std::string& message)
+{
+    std::cout << "Error: " << message << "\nLocation: " << loc << '\n';
+}
+
+/* int yylex(void) */
+/* { */
+/*     std::cout << "Enfia essa função no cu" << std::endl; */
+/*     return 0; */
+/* } */
 
 /* vim: set ft=yacc: */
