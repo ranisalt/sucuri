@@ -1,7 +1,6 @@
 %{
 
 #include "parser.hxx"
-/* #include "scanner.h" */
 #include <stack>
 
 unsigned nesting = 0;
@@ -18,14 +17,13 @@ long long text_to_integer(const char* s) { return std::strtoll(s, nullptr, 10); 
 
 %}
 
-/* %option c++ */
 %option verbose
 
 %option header-file="scanner.hxx"
 %option outfile="scanner.cxx"
-/* %option yyclass="yy::scanner" */
 
 %option yylineno
+
 %option nodefault noinput nounput noyywrap
 
 %x INDENT
@@ -43,69 +41,69 @@ static bool called = false;
 if (!called) {
     called = true;
     BEGIN INDENT;
-    std::cout << "Sua mãe\n";
 }
 %}
 
 <INDENT>[ \t]*/[^ \t\n\r#] {
-    BEGIN INITIAL;
     if (yyleng > indent_stack.top()) {
         count("INDENT");
         indent_stack.push(yyleng);
+        BEGIN INITIAL;
         return yy::parser::make_INDENT(yylloc);
     } else if (yyleng < indent_stack.top()) {
-        while (yyleng < indent_stack.top()) {
-            count("DEDENT");
-            indent_stack.pop();
+        count("DEDENT");
+        indent_stack.pop();
+        if (yyleng == indent_stack.top()) {
+            BEGIN INITIAL;
+            return yy::parser::make_DEDENT(yylloc);
+        } else {
             return yy::parser::make_DEDENT(yylloc);
         }
+    } else {
+        BEGIN INITIAL;
     }
 }
 
-<INDENT>[\n\r]
+<INDENT>#[^\n\r]*
+<INDENT>[\n\r] { yylloc.lines(1); }
 
-[\n\r] {
+<INITIAL>#[^\n\r]*
+<INITIAL>[\n\r] {
+    count("NEWLINE");
+    yylloc.lines(1);
     if (nesting == 0) {
-        count("NEWLINE");
         BEGIN INDENT;
         return yy::parser::make_NEWLINE(yylloc);
     }
 }
 
-"#"[^\n\r]*
-
     /* literals */
 [+-]?"."{D}+ {
     auto val = text_to_float(yytext);
-    /* yylval.build<long double>(val); */
     count("FLOAT");
     return yy::parser::make_FLOAT(val, yylloc);
 }
 
 [+-]?{D}+"."{D}* {
     auto val = text_to_float(yytext);
-    /* yylval.build<long double>(text_to_float(yytext)); */
     count("FLOAT");
     return yy::parser::make_FLOAT(val, yylloc);
 }
 
 [+-]?{D}+ {
     auto val = text_to_integer(yytext);
-    /* yylval.build<long long>(text_to_integer(yytext)); */
     count("INTEGER");
     return yy::parser::make_INTEGER(val, yylloc);
 }
 
 "'"{NO_SQUOTE_STRING}"'" {
     auto val = std::string{yytext+1u, yyleng-2u};
-    /* yylval.build<std::string>({yytext+1u, yyleng-2u}); */
     count("STRING");
     return yy::parser::make_STRING(val, yylloc);
 }
 
 "\""{NO_DQUOTE_STRING}"\"" {
     auto val = std::string{yytext+1u, yyleng-2u};
-    /* yylval.build<std::string>({yytext+1u, yyleng-2u}); */
     count("STRING");
     return yy::parser::make_STRING(val, yylloc);
 }
@@ -154,13 +152,33 @@ if (!called) {
 
 ","   { return yy::parser::make_COMMA(yylloc); }
 " "+
-.     { count("UNMATCHED"); }
+<INDENT><<EOF>> {
+    std::cout << indent_stack.top() << '\n';
+    // pop remaining indent levels
+    if (indent_stack.top() != 0) {
+        count("DEDENT");
+        indent_stack.pop();
+        return yy::parser::make_DEDENT(yylloc);
+    } else {
+        yyterminate();
+    }
+}
+
+<<EOF>> {
+    if (indent_stack.top() != 0) {
+        BEGIN INDENT;
+    } else {
+        yyterminate();
+    }
+}
+
+. { count("UNMATCHED"); }
 
 %%
 
 void count(const char* token)
 {
-    std::cout << std::string(">>", 2*indent_stack.size()) << ' ' << token << ": '" << yytext << "'\n";
+    std::cout << std::string(indent_stack.size() * 2, '>') << ' ' << token << ": '" << yytext << "'\n";
 }
 
 /* vim: set ft=lex: */

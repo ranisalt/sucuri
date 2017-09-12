@@ -20,7 +20,8 @@ if x
 else
   return 0
 
-if expr return x
+if expr
+  return x
 
 if avg = 10
   print('Você gabaritou!')

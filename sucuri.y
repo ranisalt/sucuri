@@ -8,8 +8,8 @@
 %token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token IDENTIFIER ELLIPSIS
 
-%token COMMA ","
 %token END 0
+%token COMMA ","
 %token LPAREN "("
 %token RPAREN ")"
 %token LBRACK "["
@@ -36,21 +36,21 @@
 yy::parser::symbol_type yylex(yy::parser::semantic_type& yylval, yy::parser::location_type& yylloc);
 }
 
-%start code
+%start program
 
 %%
 
-code
-    : program NEWLINE
-    | imports program NEWLINE;
+program
+    : stmt_list END
+    | imports stmt_list END;
 
 atom
-    : IDENTIFIER
+    : dotted_name
     | INTEGER
     | FLOAT
     | STRING
     | LPAREN expr RPAREN
-    | LBRACK list_expr RBRACK
+    | LBRACK list_expr RBRACK;
 
 /* expressions */
 atom_expr
@@ -60,8 +60,7 @@ atom_expr
 trailer
     : LPAREN RPAREN
     | LPAREN arglist RPAREN
-    | LBRACK expr RBRACK
-    | '.' IDENTIFIER;
+    | LBRACK expr RBRACK;
 
 list_expr
     : atom
@@ -113,14 +112,14 @@ exprlist
 
 /* module system */
 imports
-    : import_stmt NEWLINE
-    | imports import_stmt NEWLINE;
+    : import_stmt
+    | imports import_stmt;
 
 import_stmt
-    : IMPORT dotted_as_names
-    | IMPORT LPAREN dotted_as_names RPAREN
-    | FROM dotted_name IMPORT import_as_names
-    | FROM dotted_name IMPORT LPAREN import_as_names RPAREN;
+    : IMPORT dotted_as_names NEWLINE
+    | IMPORT LPAREN dotted_as_names RPAREN NEWLINE
+    | FROM dotted_name IMPORT import_as_names NEWLINE
+    | FROM dotted_name IMPORT LPAREN import_as_names RPAREN NEWLINE;
 
 /* import a.b.c */
 dotted_as_names
@@ -144,22 +143,15 @@ dotted_name
     : IDENTIFIER
     | dotted_name '.' IDENTIFIER;
 
-program
-    : stmt NEWLINE
-    | definition NEWLINE
-    | stmt NEWLINE program
-    | definition NEWLINE program;
-
 definition
     : function_definition
     | class_definition
     | EXPORT function_definition
     | EXPORT class_definition;
 
-
 function_definition
-    : LET IDENTIFIER LPAREN RPAREN scope
-    | LET IDENTIFIER LPAREN function_params_list RPAREN scope;
+    : LET dotted_name LPAREN RPAREN scope
+    | LET dotted_name LPAREN function_params_list RPAREN scope;
 
 function_params_list
     : identifier_list
@@ -176,25 +168,25 @@ variadic_param
     : ELLIPSIS IDENTIFIER;
 
 scope
-    : NEWLINE INDENT inner_scope DEDENT;
-
-inner_scope
-    : stmt NEWLINE
-    | inner_scope stmt NEWLINE;
-
+    : INDENT stmt_list DEDENT;
 
 class_definition
-    : CLASS IDENTIFIER class_scope;
+    : CLASS IDENTIFIER class_scope NEWLINE;
 
 class_scope
-    : NEWLINE INDENT inner_class_scope DEDENT;
+    : INDENT inner_class_scope DEDENT;
 
 inner_class_scope
     : function_definition
     | inner_class_scope function_definition;
 
+stmt_list
+    : stmt
+    | stmt_list NEWLINE stmt;
+
 stmt
     : assignment_expr
+    | definition
     | function_call
     | compound_stmt
     | THROW expr
@@ -221,8 +213,12 @@ compound_stmt
     | try_stmt;
 
 if_stmt
-    : IF expr scope
-    | IF expr scope ELSE scope;
+    : IF expr NEWLINE scope
+    | IF expr NEWLINE scope else_stmt;
+
+else_stmt
+    : ELSE if_stmt
+    | ELSE NEWLINE scope;
 
 while_stmt
     : WHILE expr scope;
@@ -231,9 +227,7 @@ for_stmt
     : FOR exprlist IN expr scope;
 
 try_stmt
-    : TRY scope
-    | TRY scope CATCH expr
-    | TRY scope CATCH expr AS IDENTIFIER;
+    : TRY NEWLINE scope CATCH dotted_as_name NEWLINE scope;
 
 %%
 
