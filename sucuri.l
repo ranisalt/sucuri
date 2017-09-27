@@ -98,12 +98,14 @@ if (!called) {
 
 "'"{NO_SQUOTE_STRING}"'" {
     auto val = std::string{yytext+1u, yyleng-2u};
+    std::cout << val << std::endl;
     count("STRING");
     return yy::parser::make_STRING(val, yylloc);
 }
 
 "\""{NO_DQUOTE_STRING}"\"" {
     auto val = std::string{yytext+1u, yyleng-2u};
+    std::cout << val << std::endl;
     count("STRING");
     return yy::parser::make_STRING(val, yylloc);
 }
@@ -179,7 +181,7 @@ if (!called) {
 
 void count(const char* token)
 {
-    std::cout << std::string(indent_stack.size() * 2, '>') << ' ' << token << ": '" << yytext << "'\n";
+    /* std::cout << std::string(indent_stack.size() * 2, '>') << ' ' << token << ": '" << yytext << "'\n"; */
 }
 
 /* vim: set ft=lex: */

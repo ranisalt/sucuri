@@ -53,7 +53,7 @@ let sum(xs)
   let x = xs.pop_front()
   return x + sum(xs)
 
-sum(*grades) / len(grades)
+let avg_grade = sum(...grades) / len(grades)
 
 
 # == Classes:

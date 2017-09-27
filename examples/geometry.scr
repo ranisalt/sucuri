@@ -14,7 +14,7 @@ export class Point
 
 
 # Alias example
-export let Vector = Point
+# export let Vector = Point
 
 # Distance from a to b
 export let distance(a, b)
@@ -30,7 +30,9 @@ export class Rectangle
         self.bottom_right = bottom_right
 
     let width(self)
-        return (self.bottom_right - self.top_left).x
+        let ret = self.bottom_right - self.top_left
+        return ret.x
 
     let height(self)
-        return (self.bottom_right - self.top_left).y
+        let ret = self.bottom_right - self.top_left
+        return ret.y

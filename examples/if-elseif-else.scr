@@ -1,0 +1,8 @@
+let answer = 42
+
+if answer > 42
+    print("Too much!")
+else if answer < 42
+    print("Too low!")
+else
+    print("Just right :)")

@@ -1,6 +1,6 @@
 BISON ?= bison
 CXX ?= g++
-CFLAGS += -Wall -Wextra -g
+CFLAGS += -std=c++14 -Wall -Wextra -g
 FLEX ?= flex
 LANG = sucuri
 

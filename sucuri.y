@@ -15,6 +15,20 @@
 %token LBRACK "["
 %token RBRACK "]"
 
+%left MUL
+%left DIV
+%left PLUS
+%left MINUS
+%left LT
+%left LE
+%left GT
+%left GE
+%left EQ
+%left NE
+%left AND
+%left OR
+%left XOR
+
 %defines "parser.hxx"
 %output "parser.cxx"
 %verbose
@@ -32,9 +46,25 @@
 %locations
 %param {parser::semantic_type& yylval} {parser::location_type& yylloc}
 
+%code requires {
+#include "ast.h"
+
+using namespace AST;
+}
+
 %code {
 yy::parser::symbol_type yylex(yy::parser::semantic_type& yylval, yy::parser::location_type& yylloc);
 }
+
+/* %type <ExponentialExpr> exponential_expr */
+%type <UnaryExpr> unary_expr
+%type <MultiplicativeExpr> multiplicative_expr
+/* %type <AdditiveExpr> additive_expr */
+/* %type <RelationalExpr> relational_expr */
+/* %type <EqualityExpr> equality_expr */
+/* %type <LogicalExpr> logical_expr */
+/* %type <Expr> expr */
+%type <Literal> literal
 
 %start program
 
@@ -44,11 +74,15 @@ program
     : stmt_list END
     | imports stmt_list END;
 
+literal
+    : INTEGER { $$ = Integer($1); }
+    | FLOAT   { $$ = Float($1); }
+    | STRING  { $$ = String($1); }
+    ;
+
 atom
     : dotted_name
-    | INTEGER
-    | FLOAT
-    | STRING
+    | literal
     | LPAREN expr RPAREN
     | LBRACK list_expr RBRACK;
 
@@ -71,37 +105,58 @@ exponential_expr
     | exponential_expr POW atom_expr;
 
 unary_expr
-    : NOT unary_expr
-    | MINUS unary_expr
-    | exponential_expr;
+    : exponential_expr
+    /* | NOT unary_expr[RHS] */
+    /* | MINUS unary_expr[RHS] */
+    | NOT unary_expr[RHS]   { $$ = UnaryExpr(UnaryExpr::NOT, $RHS.shared_from_this()); }
+    | MINUS unary_expr[RHS] { $$ = UnaryExpr(UnaryExpr::MINUS, $RHS.shared_from_this()); }
+    ;
 
 multiplicative_expr
     : unary_expr
-    | multiplicative_expr MUL unary_expr
-    | multiplicative_expr DIV unary_expr;
+    /* | multiplicative_expr[LHS] MUL unary_expr[RHS] */
+    /* | multiplicative_expr[LHS] DIV unary_expr[RHS] */
+    | multiplicative_expr[LHS] MUL unary_expr[RHS] { $$ = MultiplicativeExpr($LHS.shared_from_this(), MultiplicativeExpr::MUL, $RHS.shared_from_this()); }
+    | multiplicative_expr[LHS] DIV unary_expr[RHS] { $$ = MultiplicativeExpr($LHS.shared_from_this(), MultiplicativeExpr::DIV, $RHS.shared_from_this()); }
+    ;
 
 additive_expr
     : multiplicative_expr
-    | additive_expr PLUS multiplicative_expr
-    | additive_expr MINUS multiplicative_expr;
+    | additive_expr[LHS] PLUS multiplicative_expr[RHS]
+    | additive_expr[LHS] MINUS multiplicative_expr[RHS]
+    /* | additive_expr[LHS] PLUS multiplicative_expr[RHS]  { $$ = AdditiveExpr($LHS.shared_from_this(), AdditiveExpr::PLUS, $RHS.shared_from_this()); } */
+    /* | additive_expr[LHS] MINUS multiplicative_expr[RHS] { $$ = AdditiveExpr($LHS.shared_from_this(), AdditiveExpr::MINUS, $RHS.shared_from_this()); } */
+    ;
 
 relational_expr
     : additive_expr
-    | relational_expr LT additive_expr
-    | relational_expr LE additive_expr
-    | relational_expr GT additive_expr
-    | relational_expr GE additive_expr;
+    | relational_expr[LHS] LT additive_expr[RHS]
+    | relational_expr[LHS] LE additive_expr[RHS]
+    | relational_expr[LHS] GT additive_expr[RHS]
+    | relational_expr[LHS] GE additive_expr[RHS]
+    /* | relational_expr[LHS] LT additive_expr[RHS] { $$ = RelationalExpr($LHS.shared_from_this(), RelationalExpr::LT, $RHS.shared_from_this()); } */
+    /* | relational_expr[LHS] LE additive_expr[RHS] { $$ = RelationalExpr($LHS.shared_from_this(), RelationalExpr::LE, $RHS.shared_from_this()); } */
+    /* | relational_expr[LHS] GT additive_expr[RHS] { $$ = RelationalExpr($LHS.shared_from_this(), RelationalExpr::GT, $RHS.shared_from_this()); } */
+    /* | relational_expr[LHS] GE additive_expr[RHS] { $$ = RelationalExpr($LHS.shared_from_this(), RelationalExpr::GE, $RHS.shared_from_this()); } */
+    ;
 
 equality_expr
     : relational_expr
-    | equality_expr EQ relational_expr
-    | equality_expr NE relational_expr;
+    | equality_expr[LHS] EQ relational_expr[RHS]
+    | equality_expr[LHS] NE relational_expr[RHS]
+    /* | equality_expr[LHS] EQ relational_expr[RHS] { $$ = EqualityExpr($LHS.shared_from_this(), EqualityExpr::EQ, $RHS.shared_from_this()); } */
+    /* | equality_expr[LHS] NE relational_expr[RHS] { $$ = EqualityExpr($LHS.shared_from_this(), EqualityExpr::NE, $RHS.shared_from_this()); } */
+    ;
 
 logical_expr
     : equality_expr
-    | logical_expr AND equality_expr
-    | logical_expr OR equality_expr
-    | logical_expr XOR equality_expr;
+    | logical_expr[LHS] AND equality_expr[RHS]
+    | logical_expr[LHS] OR equality_expr[RHS]
+    | logical_expr[LHS] XOR equality_expr[RHS]
+    /* | logical_expr[LHS] AND equality_expr[RHS] { $$ = LogicalExpr($LHS.shared_from_this(), LogicalExpr::AND, $RHS.shared_from_this()); } */
+    /* | logical_expr[LHS] OR equality_expr[RHS]  { $$ = LogicalExpr($LHS.shared_from_this(), LogicalExpr::OR, $RHS.shared_from_this()); } */
+    /* | logical_expr[LHS] XOR equality_expr[RHS] { $$ = LogicalExpr($LHS.shared_from_this(), LogicalExpr::XOR, $RHS.shared_from_this()); } */
+    ;
 
 expr
     : logical_expr;
@@ -177,7 +232,9 @@ class_scope
     : INDENT inner_class_scope DEDENT;
 
 inner_class_scope
-    : function_definition
+    : assignment_expr
+    | function_definition
+    | inner_class_scope assignment_expr
     | inner_class_scope function_definition;
 
 stmt_list
@@ -193,24 +250,22 @@ stmt
     | RETURN exprlist;
 
 assignment_expr
-    : LET IDENTIFIER EQ atom_expr
-    | IDENTIFIER EQ atom_expr
-    | IDENTIFIER LBRACK atom RBRACK EQ atom_expr;
+    : LET IDENTIFIER EQ expr
+    | IDENTIFIER EQ expr
+    | IDENTIFIER LBRACK atom RBRACK EQ expr;
 
 function_call
     : IDENTIFIER LPAREN RPAREN
     | IDENTIFIER LPAREN args_list RPAREN;
 
 args_list
-    : atom_list
-    | atom_list COMMA variadic_param
+    : expr_list
+    | expr_list COMMA variadic_param
     | variadic_param;
 
-atom_list
-    : atom_expr
-    | atom EQ atom_expr
-    | atom_list COMMA atom_expr
-    | atom_list COMMA atom EQ atom_expr;
+expr_list
+    : expr
+    | expr_list COMMA expr;
 
 /* flow control */
 compound_stmt
@@ -240,13 +295,8 @@ try_stmt
 
 void yy::parser::error(const yy::location& loc, const std::string& message)
 {
-    std::cout << "Error: " << message << "\nLocation: " << loc << '\n';
+    std::cout << "Error: " << message << "\nLocation: L" << loc.end.line
+        << " C" << loc.end.column << '\n';
 }
-
-/* int yylex(void) */
-/* { */
-/*     std::cout << "Enfia essa função no cu" << std::endl; */
-/*     return 0; */
-/* } */
 
 /* vim: set ft=yacc: */
