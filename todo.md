@@ -9,6 +9,28 @@ Trabalho
     - [ ] Detectar o maior número possível de erros em uma única passagem;
  - [ ] Incluir as novas estruturas sintáticas necessárias;
 
+### Erros encontrados e correções
+
+#### "undefined reference: `yy::parser::parser(variant<...>, location)`"
+
+O erro se dá porque o gerador não sabe, por algum motivo, quem é a classe do
+parser.
+Adicionando `%define parser_class_name {parser}` "corrige" o problema.
+
+#### "no matching function for call to `AST::[...]Expr::[...]Expr()`"
+
+Construções sintáticas do tipo:
+
+```
+%type <Type> stmt
+
+stmt
+    : valid1;
+```
+
+Irá chamar o construtor padrão de `Type` ao reconhecer `valid1`. Definir um
+construtor customizado caso ele não exista.
+
 Relatório e Apresentação
 ------------------------
 
