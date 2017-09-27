@@ -1,0 +1,632 @@
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{code}{}{code:}
+
+    \includegraphics[width=5.18750in,height=1.00000in]{diagram/code.png}
+
+    \begin{verbatim}
+    code     ::= ( import_stmt NEWLINE )* ( stmt | definition )+
+    \end{verbatim}
+
+    no references
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{atom}{}{atom:}
+
+    \includegraphics[width=2.45833in,height=2.66667in]{diagram/atom.png}
+
+    \begin{verbatim}
+    atom     ::= IDENTIFIER
+           | INTEGER_LITERAL
+           | FLOAT_LITERAL
+           | STRING_LITERAL
+           | '(' expr ')'
+           | '[' expr ']'
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{arglist}{arglist}
+        \item
+            \protect\hyperlink{assignment_expr}{assignment\_expr}
+        \item
+            \protect\hyperlink{atom_expr}{atom\_expr}
+        \item
+            \protect\hyperlink{function_params_list}{function\_params\_list}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{atom_expr}{}{atom\_expr:}
+
+    \includegraphics[width=2.33333in,height=0.70833in]{diagram/atom_expr.png}
+
+    \begin{verbatim}
+    atom_expr
+         ::= atom trailer?
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{unary_expr}{unary\_expr}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{trailer}{}{trailer:}
+
+    \includegraphics[width=2.95833in,height=1.62500in]{diagram/trailer.png}
+
+    \begin{verbatim}
+    trailer  ::= '(' arglist? ')'
+           | '[' expr ']'
+           | '.' IDENTIFIER
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{atom_expr}{atom\_expr}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{unary_expr}{}{unary\_expr:}
+
+    \includegraphics[width=3.00000in,height=1.18750in]{diagram/unary_expr.png}
+
+    \begin{verbatim}
+    unary_expr
+         ::= ( NOT | SUB )* atom_expr ( POW atom_expr )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{multiplicative_expr}{multiplicative\_expr}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{multiplicative_expr}{}{multiplicative\_expr:}
+
+    \includegraphics[width=1.93750in,height=1.29167in]{diagram/multiplicative_expr.png}
+
+    \begin{verbatim}
+    multiplicative_expr
+         ::= unary_expr ( ( MUL | DIV ) unary_expr )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{additive_expr}{additive\_expr}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{additive_expr}{}{additive\_expr:}
+
+    \includegraphics[width=2.37500in,height=1.29167in]{diagram/additive_expr.png}
+
+    \begin{verbatim}
+    additive_expr
+         ::= multiplicative_expr ( ( ADD | SUB ) multiplicative_expr )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{relational_expr}{relational\_expr}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{relational_expr}{}{relational\_expr:}
+
+    \includegraphics[width=2.06250in,height=2.20833in]{diagram/relational_expr.png}
+
+    \begin{verbatim}
+    relational_expr
+         ::= additive_expr ( ( LT | LE | GT | GE ) additive_expr )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{equality_expr}{equality\_expr}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{equality_expr}{}{equality\_expr:}
+
+    \includegraphics[width=2.14583in,height=1.29167in]{diagram/equality_expr.png}
+
+    \begin{verbatim}
+    equality_expr
+         ::= relational_expr ( ( EQ | NE ) relational_expr )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{expr}{expr}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{expr}{}{expr:}
+
+    \includegraphics[width=2.06250in,height=1.75000in]{diagram/expr.png}
+
+    \begin{verbatim}
+    expr     ::= equality_expr ( ( AND | OR | XOR ) equality_expr )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{atom}{atom}
+        \item
+            \protect\hyperlink{exprlist}{exprlist}
+        \item
+            \protect\hyperlink{for_stmt}{for\_stmt}
+        \item
+            \protect\hyperlink{if_stmt}{if\_stmt}
+        \item
+            \protect\hyperlink{stmt}{stmt}
+        \item
+            \protect\hyperlink{trailer}{trailer}
+        \item
+            \protect\hyperlink{while_stmt}{while\_stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{exprlist}{}{exprlist:}
+
+    \includegraphics[width=1.50000in,height=0.83333in]{diagram/exprlist.png}
+
+    \begin{verbatim}
+    exprlist ::= expr ( ',' expr )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{for_stmt}{for\_stmt}
+        \item
+            \protect\hyperlink{stmt}{stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{import_stmt}{}{import\_stmt:}
+
+    \includegraphics[width=6.50000in,height=1.75000in]{diagram/import_stmt.png}
+
+    \begin{verbatim}
+    import_stmt
+         ::= ( IMPORT dotted_as_name ( ',' dotted_as_name )* | FROM dotted_name IMPORT import_as_name ( ',' import_as_name )* ) ','?
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{code}{code}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{dotted_as_name}{}{dotted\_as\_name:}
+
+    \includegraphics[width=3.75000in,height=0.70833in]{diagram/dotted_as_name.png}
+
+    \begin{verbatim}
+    dotted_as_name
+         ::= dotted_name ( AS IDENTIFIER )?
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{import_stmt}{import\_stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{import_as_name}{}{import\_as\_name:}
+
+    \includegraphics[width=3.60417in,height=0.70833in]{diagram/import_as_name.png}
+
+    \begin{verbatim}
+    import_as_name
+         ::= IDENTIFIER ( AS IDENTIFIER )?
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{import_stmt}{import\_stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{dotted_name}{}{dotted\_name:}
+
+    \includegraphics[width=1.91667in,height=0.83333in]{diagram/dotted_name.png}
+
+    \begin{verbatim}
+    dotted_name
+         ::= IDENTIFIER ( '.' IDENTIFIER )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{dotted_as_name}{dotted\_as\_name}
+        \item
+            \protect\hyperlink{import_stmt}{import\_stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{definition}{}{definition:}
+
+    \includegraphics[width=3.66667in,height=0.83333in]{diagram/definition.png}
+
+    \begin{verbatim}
+    definition
+         ::= EXPORT? ( function_definition | class_definition )
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{code}{code}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{function_definition}{}{function\_definition:}
+
+    \includegraphics[width=5.97917in,height=0.70833in]{diagram/function_definition.png}
+
+    \begin{verbatim}
+    function_definition
+         ::= LET IDENTIFIER '(' function_params_list? ')' scope
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{class_scope}{class\_scope}
+        \item
+            \protect\hyperlink{definition}{definition}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{function_params_list}{}{function\_params\_list:}
+
+    \includegraphics[width=6.31250in,height=1.62500in]{diagram/function_params_list.png}
+
+    \begin{verbatim}
+    function_params_list
+         ::= IDENTIFIER ( EQ atom )? ( ',' IDENTIFIER ( EQ atom )? )* ( ',' variadic_param )?
+           | variadic_param
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{function_definition}{function\_definition}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{variadic_param}{}{variadic\_param:}
+
+    \includegraphics[width=2.43750in,height=0.37500in]{diagram/variadic_param.png}
+
+    \begin{verbatim}
+    variadic_param
+         ::= ELLIPSIS IDENTIFIER
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{function_params_list}{function\_params\_list}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{scope}{}{scope:}
+
+    \includegraphics[width=5.25000in,height=0.54167in]{diagram/scope.png}
+
+    \begin{verbatim}
+    scope    ::= NEWLINE INDENT ( stmt NEWLINE )+ DEDENT
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{for_stmt}{for\_stmt}
+        \item
+            \protect\hyperlink{function_definition}{function\_definition}
+        \item
+            \protect\hyperlink{if_stmt}{if\_stmt}
+        \item
+            \protect\hyperlink{while_stmt}{while\_stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{class_definition}{}{class\_definition:}
+
+    \includegraphics[width=3.47917in,height=0.37500in]{diagram/class_definition.png}
+
+    \begin{verbatim}
+    class_definition
+         ::= CLASS IDENTIFIER class_scope
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{definition}{definition}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{class_scope}{}{class\_scope:}
+
+    \includegraphics[width=5.10417in,height=0.54167in]{diagram/class_scope.png}
+
+    \begin{verbatim}
+    class_scope
+         ::= NEWLINE INDENT function_definition+ DEDENT
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{class_definition}{class\_definition}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{stmt}{}{stmt:}
+
+    \includegraphics[width=2.56250in,height=2.20833in]{diagram/stmt.png}
+
+    \begin{verbatim}
+    stmt     ::= assignment_expr
+           | function_call
+           | compound_stmt
+           | THROW expr
+           | RETURN exprlist
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{code}{code}
+        \item
+            \protect\hyperlink{scope}{scope}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{assignment_expr}{}{assignment\_expr:}
+
+    \includegraphics[width=5.37500in,height=1.16667in]{diagram/assignment_expr.png}
+
+    \begin{verbatim}
+    assignment_expr
+         ::= ( LET IDENTIFIER | IDENTIFIER ( '[' atom ']' )? ) EQ atom
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{stmt}{stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{function_call}{}{function\_call:}
+
+    \includegraphics[width=3.64583in,height=0.70833in]{diagram/function_call.png}
+
+    \begin{verbatim}
+    function_call
+         ::= IDENTIFIER '(' arglist? ')'
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{stmt}{stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{arglist}{}{arglist:}
+
+    \includegraphics[width=1.56250in,height=0.83333in]{diagram/arglist.png}
+
+    \begin{verbatim}
+    arglist  ::= atom ( ',' atom )*
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{function_call}{function\_call}
+        \item
+            \protect\hyperlink{trailer}{trailer}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{compound_stmt}{}{compound\_stmt:}
+
+    \includegraphics[width=1.91667in,height=1.29167in]{diagram/compound_stmt.png}
+
+    \begin{verbatim}
+    compound_stmt
+         ::= if_stmt
+           | while_stmt
+           | for_stmt
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{stmt}{stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{if_stmt}{}{if\_stmt:}
+
+    \includegraphics[width=4.27083in,height=0.70833in]{diagram/if_stmt.png}
+
+    \begin{verbatim}
+    if_stmt  ::= IF expr scope ( ELSE scope )?
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{compound_stmt}{compound\_stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{while_stmt}{}{while\_stmt:}
+
+    \includegraphics[width=2.66667in,height=0.37500in]{diagram/while_stmt.png}
+
+    \begin{verbatim}
+    while_stmt
+         ::= WHILE expr scope
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{compound_stmt}{compound\_stmt}
+    \end{itemize}
+
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+    \protect\hypertarget{for_stmt}{}{for\_stmt:}
+
+    \includegraphics[width=3.91667in,height=0.37500in]{diagram/for_stmt.png}
+
+    \begin{verbatim}
+    for_stmt ::= FOR exprlist IN expr scope
+    \end{verbatim}
+
+    referenced by:
+
+    \begin{itemize}
+            \tightlist
+        \item
+            \protect\hyperlink{compound_stmt}{compound\_stmt}
+    \end{itemize}
+\end{minipage}
+
+\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}

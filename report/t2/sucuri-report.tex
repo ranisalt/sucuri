@@ -1,0 +1,49 @@
+\documentclass[headings=standardclasses, headings=big]{scrreprt}
+
+\input{preamble}
+
+\usepackage[portuguese]{babel}
+\usepackage[a4paper,tmargin=1cm]{geometry}
+
+\usepackage{graphics}
+\usepackage{listings}
+
+\title{Sucuri}
+\subtitle{Uma linguagem baseada em Python}
+\author{João Paulo T. I. Z., Ranieri S. A., William K. A.}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\clearpage
+
+\section{A linguagem}
+
+A linguagem é planejada tendo como base algumas ideias de Python, Javascript e
+Haskell. Para geração do analisador léxico, foi utilizada as ferramentas FLEX
+(para especificação do léxico) e BISON (para gerar o código-fonte do
+analisador).
+
+Exemplo de código válido na linguagem Sucuri:
+
+\lstinputlisting{../../examples/geometry.scr}
+
+\clearpage
+
+\section{Especificação Sintática}
+
+\lstinputlisting{../../sucuri.ebnf}
+
+\clearpage
+
+\section{Arquivos}
+
+Os arquivos FLEX e BISON são respectivamente \texttt{sucuri.l} e
+\texttt{sucuri.y}. Exemplos de programas válidos se encontram na pasta
+\texttt{examples/}. O código fonte do analisador é \texttt{sucuri.yy.c}.  Os
+logs de saída aplicados no exemplo \texttt{examples/geometry.scr} estão no
+arquivo \texttt{geometry-parse.ylog}.
+
+\end{document}
