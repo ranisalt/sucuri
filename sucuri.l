@@ -150,7 +150,7 @@ if (!called) {
 
     /* extra */
 "..."                 { count("ELLIPSIS"); return yy::parser::make_ELLIPSIS(yylloc); }
-{L}((\.{L})|{L}|{D})* { count("IDENTIFIER"); return yy::parser::make_IDENTIFIER(yylloc); }
+{L}((\.{L})|{L}|{D})* { count("IDENTIFIER"); return yy::parser::make_IDENTIFIER(yytext, yylloc); }
 
 ","   { return yy::parser::make_COMMA(yylloc); }
 " "+
@@ -181,7 +181,7 @@ if (!called) {
 
 void count(const char* token)
 {
-    /* std::cout << std::string(indent_stack.size() * 2, '>') << ' ' << token << ": '" << yytext << "'\n"; */
+    std::cout << std::string(indent_stack.size() * 2, '>') << ' ' << token << ": '" << yytext << "'\n";
 }
 
 /* vim: set ft=lex: */

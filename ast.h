@@ -1,14 +1,67 @@
 #pragma once
 
-#include <iostream>
+#include <ostream>
 #include <memory>
+#include <vector>
 #include <string>
 
 namespace AST {
 
+using Alias = std::pair<std::string, std::string>;
+
+std::ostream& operator<<(std::ostream& os, const Alias& rhs);
+
 class Node: public std::enable_shared_from_this<Node>
 {
 };
+
+class Import: public Node
+{
+  public:
+    Import() = default;
+
+    Import(Alias name):
+      name{std::move(name)} {}
+
+    Import(std::string path, Alias name):
+      path{std::move(path)}, name{std::move(name)} {}
+
+    std::string path;
+    Alias name;
+};
+
+std::ostream& operator<<(std::ostream& os, const Import& rhs);
+
+using ImportList = std::vector<Import>;
+
+std::ostream& operator<<(std::ostream& os, const ImportList& rhs);
+
+class Statement: public Node
+{
+};
+
+std::ostream& operator<<(std::ostream& os, const Statement& rhs);
+
+using StatementList = std::vector<std::shared_ptr<Statement>>;
+
+std::ostream& operator<<(std::ostream& os, const StatementList& rhs);
+
+class Program: public Node
+{
+  public:
+    Program() = default;
+
+    Program(StatementList stmt_list):
+      import_list{}, stmt_list{std::move(stmt_list)} {}
+
+    Program(ImportList import_list, StatementList stmt_list):
+      import_list{std::move(import_list)}, stmt_list{std::move(stmt_list)} {}
+
+    ImportList import_list;
+    StatementList stmt_list;
+};
+
+std::ostream& operator<<(std::ostream& os, const Program& rhs);
 
 class Expr: public Node
 {
@@ -19,9 +72,7 @@ class Literal: public Expr {};
 class Float: public Literal
 {
   public:
-    Float(long double value): value{value} {
-      std::cout << "Float: " << value << std::endl;
-    }
+    Float(long double value): value{value} {}
 
     const long double value;
 };
@@ -29,9 +80,7 @@ class Float: public Literal
 class Integer: public Literal
 {
   public:
-    Integer(long long value): value{value} {
-      std::cout << "Integer: " << value << std::endl;
-    }
+    Integer(long long value): value{value} {}
 
     const long long value;
 };
@@ -39,9 +88,7 @@ class Integer: public Literal
 class String: public Literal
 {
   public:
-    String(std::string value): value{std::move(value)} {
-      std::cout << "String: " << this->value << std::endl;
-    }
+    String(std::string value): value{std::move(value)} {}
 
     const std::string value;
 };
@@ -53,7 +100,9 @@ class UnaryExpr: public Expr
       NOT, MINUS,
     };
 
-    UnaryExpr(Operator op, std::shared_ptr<Node> rhs):
+    UnaryExpr() = default;
+
+    UnaryExpr(Operator op, std::shared_ptr<Node>&& rhs):
       op{op}, rhs{std::move(rhs)} {}
 
     Operator op;
@@ -127,7 +176,9 @@ class MultiplicativeExpr: public Expr
       MUL, DIV,
     };
 
-    MultiplicativeExpr(std::shared_ptr<Node> lhs, Operator op, std::shared_ptr<Node> rhs):
+    MultiplicativeExpr() = default;
+
+    MultiplicativeExpr(std::shared_ptr<Node>&& lhs, Operator op, std::shared_ptr<Node>&& rhs):
       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
 
     std::shared_ptr<Node> lhs;

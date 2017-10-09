@@ -22,7 +22,7 @@ scanner.cxx scanner.hxx: scanner
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 $(LANG): parser.o scanner.o
-	$(CXX) $(CFLAGS) parser.o scanner.o main.cpp -o $(LANG)
+	$(CXX) $(CFLAGS) parser.o scanner.o ast.cpp main.cpp -o $(LANG)
 
 clean:
 	$(RM) *.hh *.cxx *.hxx *.o $(LANG)
