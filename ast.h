@@ -11,11 +11,7 @@ using Alias = std::pair<std::string, std::string>;
 
 std::ostream& operator<<(std::ostream& os, const Alias& rhs);
 
-class Node: public std::enable_shared_from_this<Node>
-{
-};
-
-class Import: public Node
+class Import
 {
   public:
     Import() = default;
@@ -26,27 +22,115 @@ class Import: public Node
     Import(std::string path, Alias name):
       path{std::move(path)}, name{std::move(name)} {}
 
+    std::string to_string() const;
+
     std::string path;
     Alias name;
 };
 
-std::ostream& operator<<(std::ostream& os, const Import& rhs);
-
 using ImportList = std::vector<Import>;
 
-std::ostream& operator<<(std::ostream& os, const ImportList& rhs);
-
-class Statement: public Node
+class Expr
 {
+  public:
+    Expr() = default;
+
+    Expr(const Expr& stmt):
+      self{stmt.self->copy()} {}
+
+    template<class T>
+    Expr(T expr):
+      self{new model<T>{std::move(expr)}} {}
+
+    Expr& operator=(const Expr& stmt)
+    { self.reset(stmt.self->copy()); return *this; }
+
+    std::string to_string() const
+    {
+      return self->to_string();
+    }
+
+  private:
+    struct concept {
+      virtual ~concept() = default;
+      virtual concept* copy() const = 0;
+      virtual std::string to_string() const = 0;
+    };
+
+    template<class T>
+    struct model: concept {
+      model(T data): data{std::move(data)} {}
+      virtual model<T>* copy() const
+      { return new model<T>{data}; }
+      virtual std::string to_string() const
+      { return data.to_string(); }
+
+      T data;
+    };
+
+    std::unique_ptr<concept> self;
 };
 
-std::ostream& operator<<(std::ostream& os, const Statement& rhs);
+class AssignmentExpr
+{
+  public:
+    AssignmentExpr() = default;
 
-using StatementList = std::vector<std::shared_ptr<Statement>>;
+    AssignmentExpr(std::string name, Expr value):
+      name{std::move(name)}, value{std::move(value)} {}
 
-std::ostream& operator<<(std::ostream& os, const StatementList& rhs);
+    std::unique_ptr<AssignmentExpr> copy() const;
 
-class Program: public Node
+    std::string to_string() const;
+
+    std::string name;
+    Expr value;
+};
+
+class Statement
+{
+  public:
+    Statement() = default;
+
+    Statement(const Statement& stmt):
+      self{stmt.self->copy()} {}
+
+    template<class T>
+    Statement(T expr):
+      self{new model<T>{std::move(expr)}} {}
+
+    Statement& operator=(const Statement& stmt)
+    { self.reset(stmt.self->copy()); return *this; }
+
+    std::string to_string() const
+    {
+      return self->to_string();
+    }
+
+  private:
+    struct concept {
+      virtual ~concept() = default;
+      virtual concept* copy() const = 0;
+      virtual std::string to_string() const = 0;
+    };
+
+    template<class T>
+    struct model: concept {
+      model(T data): data{std::move(data)} {}
+      virtual model<T>* copy() const
+      { return new model<T>{data}; }
+      virtual std::string to_string() const
+      { return data.to_string(); }
+
+      T data;
+    };
+
+    std::unique_ptr<concept> self;
+};
+
+using StatementList = std::vector<Statement>;
+
+class Program
 {
   public:
     Program() = default;
@@ -57,43 +141,84 @@ class Program: public Node
     Program(ImportList import_list, StatementList stmt_list):
       import_list{std::move(import_list)}, stmt_list{std::move(stmt_list)} {}
 
+    std::string to_string() const;
+
     ImportList import_list;
     StatementList stmt_list;
 };
 
-std::ostream& operator<<(std::ostream& os, const Program& rhs);
-
-class Expr: public Node
-{
-};
-
-class Literal: public Expr {};
-
-class Float: public Literal
+class Float
 {
   public:
     Float(long double value): value{value} {}
 
+    std::string to_string() const;
+
     const long double value;
 };
 
-class Integer: public Literal
+class Integer
 {
   public:
     Integer(long long value): value{value} {}
 
+    std::string to_string() const;
+
     const long long value;
 };
 
-class String: public Literal
+class String
 {
   public:
     String(std::string value): value{std::move(value)} {}
 
+    std::string to_string() const;
+
     const std::string value;
 };
 
-class UnaryExpr: public Expr
+class Literal
+{
+  public:
+    Literal() = default;
+
+    Literal(const Literal& stmt):
+      self{stmt.self->copy()} {}
+
+    template<class T>
+    Literal(T expr):
+      self{new model<T>{std::move(expr)}} {}
+
+    Literal& operator=(const Literal& stmt)
+    { self.reset(stmt.self->copy()); return *this; }
+
+    std::string to_string() const
+    {
+      return self->to_string();
+    }
+
+  private:
+    struct concept {
+      virtual ~concept() = default;
+      virtual concept* copy() const = 0;
+      virtual std::string to_string() const = 0;
+    };
+
+    template<class T>
+    struct model: concept {
+      model(T data): data{std::move(data)} {}
+      virtual model<T>* copy() const
+      { return new model<T>{data}; }
+      virtual std::string to_string() const
+      { return data.to_string(); }
+
+      T data;
+    };
+
+    std::unique_ptr<concept> self;
+};
+
+class UnaryExpr
 {
   public:
     enum Operator {
@@ -102,11 +227,13 @@ class UnaryExpr: public Expr
 
     UnaryExpr() = default;
 
-    UnaryExpr(Operator op, std::shared_ptr<Node>&& rhs):
+    UnaryExpr(Operator op, Expr rhs):
       op{op}, rhs{std::move(rhs)} {}
 
+    std::string to_string() const;
+
     Operator op;
-    std::shared_ptr<Node> rhs;
+    Expr rhs;
 };
 
 /* class LogicalExpr: public Expr */
@@ -116,12 +243,12 @@ class UnaryExpr: public Expr
 /*       AND, OR, XOR, */
 /*     }; */
 
-/*     LogicalExpr(std::shared_ptr<Expr> lhs, Operator op, std::shared_ptr<Expr> rhs): */
+/*     LogicalExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
 /*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
 
-/*     std::shared_ptr<Expr> lhs; */
+/*     std::unique_ptr<Expr> lhs; */
 /*     Operator op; */
-/*     std::shared_ptr<Expr> rhs; */
+/*     std::unique_ptr<Expr> rhs; */
 /* }; */
 
 /* class EqualityExpr: public Expr */
@@ -131,12 +258,12 @@ class UnaryExpr: public Expr
 /*       EQ, NE, */
 /*     }; */
 
-/*     EqualityExpr(std::shared_ptr<Expr> lhs, Operator op, std::shared_ptr<Expr> rhs): */
+/*     EqualityExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
 /*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
 
-/*     std::shared_ptr<Expr> lhs; */
+/*     std::unique_ptr<Expr> lhs; */
 /*     Operator op; */
-/*     std::shared_ptr<Expr> rhs; */
+/*     std::unique_ptr<Expr> rhs; */
 /* }; */
 
 /* class RelationalExpr: public Expr */
@@ -146,12 +273,12 @@ class UnaryExpr: public Expr
 /*       LT, LE, GT, GE, */
 /*     }; */
 
-/*     RelationalExpr(std::shared_ptr<Expr> lhs, Operator op, std::shared_ptr<Expr> rhs): */
+/*     RelationalExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
 /*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
 
-/*     std::shared_ptr<Expr> lhs; */
+/*     std::unique_ptr<Expr> lhs; */
 /*     Operator op; */
-/*     std::shared_ptr<Expr> rhs; */
+/*     std::unique_ptr<Expr> rhs; */
 /* }; */
 
 /* class AdditiveExpr: public Expr */
@@ -161,15 +288,15 @@ class UnaryExpr: public Expr
 /*       PLUS, MINUS, */
 /*     }; */
 
-/*     AdditiveExpr(std::shared_ptr<Expr> lhs, Operator op, std::shared_ptr<Expr> rhs): */
+/*     AdditiveExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
 /*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
 
-/*     std::shared_ptr<Expr> lhs; */
+/*     std::unique_ptr<Expr> lhs; */
 /*     Operator op; */
-/*     std::shared_ptr<Expr> rhs; */
+/*     std::unique_ptr<Expr> rhs; */
 /* }; */
 
-class MultiplicativeExpr: public Expr
+class MultiplicativeExpr
 {
   public:
     enum Operator {
@@ -178,12 +305,14 @@ class MultiplicativeExpr: public Expr
 
     MultiplicativeExpr() = default;
 
-    MultiplicativeExpr(std::shared_ptr<Node>&& lhs, Operator op, std::shared_ptr<Node>&& rhs):
+    MultiplicativeExpr(Expr lhs, Operator op, Expr rhs):
       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
 
-    std::shared_ptr<Node> lhs;
+    std::string to_string() const;
+
+    Expr lhs;
     Operator op;
-    std::shared_ptr<Node> rhs;
+    Expr rhs;
 };
 
 /* class ExponentialExpr: public Expr */
