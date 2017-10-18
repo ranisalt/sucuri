@@ -39,6 +39,11 @@
 %define parse.error verbose
 %define parse.trace
 
+/* %union { */
+/*   Node* node; */
+/*   Literal* literal; */
+/* } */
+
 %token <long double> FLOAT
 %token <long long> INTEGER
 %token <std::string> STRING
@@ -58,31 +63,30 @@ yy::parser::symbol_type yylex(
   yy::parser::semantic_type& yylval,
   yy::parser::location_type& yylloc
 );
-
-std::shared_ptr<Program> root;
 }
 
-%type <std::shared_ptr<Program>> program
+/* %type <std::shared_ptr<Program>> program */
 
-%type <ImportList> import_list
-%type <ImportList> import_stmt;
-%type <ImportList> dotted_as_names;
-%type <Alias> dotted_as_name;
-%type <std::string> dotted_name;
+/* %type <ImportList> import_list */
+/* %type <ImportList> import_stmt; */
+/* %type <ImportList> dotted_as_names; */
+/* %type <Alias> dotted_as_name; */
+/* %type <std::string> dotted_name; */
 
 /* %type <StatementList> stmt_list */
-%type <Statement> stmt;
-%type <Statement> assignment_expr;
+/* %type <Statement> stmt; */
+/* %type <Statement> assignment_expr; */
 
-%type <Expr> expr
-/* %type <std::unique_ptr<ExponentialExpr>> exponential_expr */
-%type <Expr> unary_expr
-%type <Expr> multiplicative_expr
-/* %type <std::unique_ptr<AdditiveExpr>> additive_expr */
-/* %type <std::unique_ptr<RelationalExpr>> relational_expr */
-/* %type <std::unique_ptr<EqualityExpr>> equality_expr */
-/* %type <std::unique_ptr<LogicalExpr>> logical_expr */
-/* %type <std::unique_ptr<Expr>> expr */
+/* %type <Expr> expr */
+%type <ExprHolder> assignment_expr
+%type <ExprHolder> exponential_expr
+%type <ExprHolder> unary_expr
+%type <ExprHolder> multiplicative_expr
+%type <ExprHolder> additive_expr
+%type <ExprHolder> relational_expr
+%type <ExprHolder> equality_expr
+%type <ExprHolder> logical_expr
+%type <ExprHolder> expr
 %type <Literal> literal
 
 %start program
@@ -90,45 +94,32 @@ std::shared_ptr<Program> root;
 %%
 
 program
-    : stmt_list END             {
-        /*$$ = std::make_shared<Program>(std::move($1));
-        root = $$;*/
-    }
-    | import_list stmt_list END {
-        /*$$ = std::make_shared<Program>(std::move($1), std::move($2));
-        root = $$;*/
-    }
+    : stmt_list END
+    | import_list stmt_list END
     ;
 
 /* module system */
 import_list
-    : import_stmt             { $$ = std::move($1); }
-    | import_list import_stmt {
-        $$ = std::move($1);
-        $$.reserve($1.size() + $2.size());
-        std::copy($2.begin(), $2.end(), std::back_inserter($$));
-    }
+    : import_stmt
+    | import_list import_stmt
     ;
 
 import_stmt
-    : IMPORT dotted_as_names               { $$ = std::move($2); }
-    | IMPORT LPAREN dotted_as_names RPAREN { $$ = std::move($3); }
+    : IMPORT dotted_as_names
+    | IMPORT LPAREN dotted_as_names RPAREN
     | FROM dotted_name IMPORT import_as_names
     | FROM dotted_name IMPORT LPAREN import_as_names RPAREN
     ;
 
 /* import a.b.c */
 dotted_as_names
-    : dotted_as_name                       { $$ = {}; $$.push_back($1); }
-    | dotted_as_names COMMA dotted_as_name {
-        $$ = std::move($1);
-        $$.push_back($3);
-    }
+    : dotted_as_name
+    | dotted_as_names COMMA dotted_as_name
     ;
 
 dotted_as_name
-    : dotted_name               { $$ = std::make_pair($1, $1); }
-    | dotted_name AS IDENTIFIER { $$ = std::make_pair($1, $3); }
+    : dotted_name
+    | dotted_name AS IDENTIFIER
     ;
 
 /* from a.b import c */
@@ -142,21 +133,17 @@ import_as_name
     | IDENTIFIER AS IDENTIFIER;
 
 dotted_name
-    : IDENTIFIER                 { $$ = std::move($1); }
-    | dotted_name '.' IDENTIFIER {
-        $$ = std::move($1);
-        $$.append(".");
-        $$.append($3);
-    }
+    : IDENTIFIER
+    | dotted_name '.' IDENTIFIER;
     ;
 
 stmt_list
-    : stmt           { /*$$ = {}; $$.push_back($1);*/ }
-    | stmt_list stmt { /*$$ = std::move($1); $$.push_back($2);*/ }
+    : stmt
+    | stmt_list stmt
     ;
 
 stmt
-    : assignment_expr { $$ = std::move($1); }
+    : assignment_expr
     | definition
     | function_call
     | compound_stmt
@@ -165,17 +152,15 @@ stmt
 
 assignment_expr
     : LET IDENTIFIER[NAME] EQ expr[VALUE] {
-        $$ = AssignmentExpr{std::move($NAME), std::move($VALUE)};
+      $$ = ExprHolder{AssignmentExpr(std::move($NAME), std::move($VALUE))};
     }
-    | IDENTIFIER[NAME] EQ expr[VALUE] {
-        $$ = AssignmentExpr{std::move($NAME), std::move($VALUE)};
-    }
+    | IDENTIFIER[NAME] EQ expr[VALUE]
     | IDENTIFIER LBRACK atom RBRACK EQ expr
     ;
 
 literal
-    : INTEGER { $$ = Integer($1); }
-    | FLOAT   { $$ = Float($1); }
+    : FLOAT   { $$ = Float($1); }
+    | INTEGER { $$ = Integer($1); }
     | STRING  { $$ = String($1); }
     ;
 
@@ -208,10 +193,10 @@ unary_expr
     /* | NOT unary_expr[RHS] */
     /* | MINUS unary_expr[RHS] */
     | NOT unary_expr[RHS]   {
-        $$ = UnaryExpr(UnaryExpr::NOT, std::move($RHS));
+        $$ = ExprHolder{UnaryExpr(UnaryExpr::NOT, std::move($RHS))};
     }
     | MINUS unary_expr[RHS] {
-        $$ = UnaryExpr(UnaryExpr::MINUS, std::move($RHS));
+        $$ = ExprHolder{UnaryExpr(UnaryExpr::MINUS, std::move($RHS))};
     }
     ;
 
@@ -220,49 +205,49 @@ multiplicative_expr
     /* | multiplicative_expr[LHS] MUL unary_expr[RHS] */
     /* | multiplicative_expr[LHS] DIV unary_expr[RHS] */
     | multiplicative_expr[LHS] MUL unary_expr[RHS] {
-        $$ = MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::MUL, std::move($RHS));
+        $$ = ExprHolder{MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::MUL, std::move($RHS))};
     }
     | multiplicative_expr[LHS] DIV unary_expr[RHS] {
-        $$ = MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::DIV, std::move($RHS));
+        $$ = ExprHolder{MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::DIV, std::move($RHS))};
     }
     ;
 
 additive_expr
     : multiplicative_expr
-    | additive_expr[LHS] PLUS multiplicative_expr[RHS]
-    | additive_expr[LHS] MINUS multiplicative_expr[RHS]
-    /* | additive_expr[LHS] PLUS multiplicative_expr[RHS]  { $$ = std::make_unique<AdditiveExpr>(std::move($LHS), AdditiveExpr::PLUS, std::move($RHS)); } */
-    /* | additive_expr[LHS] MINUS multiplicative_expr[RHS] { $$ = std::make_unique<AdditiveExpr>(std::move($LHS), AdditiveExpr::MINUS, std::move($RHS)); } */
+    /* | additive_expr[LHS] PLUS multiplicative_expr[RHS] */
+    /* | additive_expr[LHS] MINUS multiplicative_expr[RHS] */
+    | additive_expr[LHS] PLUS multiplicative_expr[RHS]  { $$ = ExprHolder{AdditiveExpr(std::move($LHS), AdditiveExpr::PLUS, std::move($RHS))}; };
+    | additive_expr[LHS] MINUS multiplicative_expr[RHS] { $$ = ExprHolder{AdditiveExpr(std::move($LHS), AdditiveExpr::MINUS, std::move($RHS))}; };
     ;
 
 relational_expr
     : additive_expr
-    | relational_expr[LHS] LT additive_expr[RHS]
-    | relational_expr[LHS] LE additive_expr[RHS]
-    | relational_expr[LHS] GT additive_expr[RHS]
-    | relational_expr[LHS] GE additive_expr[RHS]
-    /* | relational_expr[LHS] LT additive_expr[RHS] { $$ = std::make_unique<RelationalExpr>(std::move($LHS), RelationalExpr::LT, std::move($RHS)); } */
-    /* | relational_expr[LHS] LE additive_expr[RHS] { $$ = std::make_unique<RelationalExpr>(std::move($LHS), RelationalExpr::LE, std::move($RHS)); } */
-    /* | relational_expr[LHS] GT additive_expr[RHS] { $$ = std::make_unique<RelationalExpr>(std::move($LHS), RelationalExpr::GT, std::move($RHS)); } */
-    /* | relational_expr[LHS] GE additive_expr[RHS] { $$ = std::make_unique<RelationalExpr>(std::move($LHS), RelationalExpr::GE, std::move($RHS)); } */
+    /* | relational_expr[LHS] LT additive_expr[RHS] */
+    /* | relational_expr[LHS] LE additive_expr[RHS] */
+    /* | relational_expr[LHS] GT additive_expr[RHS] */
+    /* | relational_expr[LHS] GE additive_expr[RHS] */
+    | relational_expr[LHS] LT additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::LT, std::move($RHS))}; }
+    | relational_expr[LHS] LE additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::LE, std::move($RHS))}; }
+    | relational_expr[LHS] GT additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::GT, std::move($RHS))}; }
+    | relational_expr[LHS] GE additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::GE, std::move($RHS))}; }
     ;
 
 equality_expr
     : relational_expr
-    | equality_expr[LHS] EQ relational_expr[RHS]
-    | equality_expr[LHS] NE relational_expr[RHS]
-    /* | equality_expr[LHS] EQ relational_expr[RHS] { $$ = std::make_unique<EqualityExpr>(std::move($LHS), EqualityExpr::EQ, std::move($RHS)); } */
-    /* | equality_expr[LHS] NE relational_expr[RHS] { $$ = std::make_unique<EqualityExpr>(std::move($LHS), EqualityExpr::NE, std::move($RHS)); } */
+    /* | equality_expr[LHS] EQ relational_expr[RHS] */
+    /* | equality_expr[LHS] NE relational_expr[RHS] */
+    | equality_expr[LHS] EQ relational_expr[RHS] { $$ = ExprHolder{EqualityExpr(std::move($LHS), EqualityExpr::EQ, std::move($RHS))}; }
+    | equality_expr[LHS] NE relational_expr[RHS] { $$ = ExprHolder{EqualityExpr(std::move($LHS), EqualityExpr::NE, std::move($RHS))}; }
     ;
 
 logical_expr
     : equality_expr
-    | logical_expr[LHS] AND equality_expr[RHS]
-    | logical_expr[LHS] OR equality_expr[RHS]
-    | logical_expr[LHS] XOR equality_expr[RHS]
-    /* | logical_expr[LHS] AND equality_expr[RHS] { $$ = std::make_unique<LogicalExpr>(std::move($LHS), LogicalExpr::AND, std::move($RHS)); } */
-    /* | logical_expr[LHS] OR equality_expr[RHS]  { $$ = std::make_unique<LogicalExpr>(std::move($LHS), LogicalExpr::OR, std::move($RHS)); } */
-    /* | logical_expr[LHS] XOR equality_expr[RHS] { $$ = std::make_unique<LogicalExpr>(std::move($LHS), LogicalExpr::XOR, std::move($RHS)); } */
+    /* | logical_expr[LHS] AND equality_expr[RHS] */
+    /* | logical_expr[LHS] OR equality_expr[RHS] */
+    /* | logical_expr[LHS] XOR equality_expr[RHS] */
+    | logical_expr[LHS] AND equality_expr[RHS] { $$ = ExprHolder{LogicalExpr(std::move($LHS), LogicalExpr::AND, std::move($RHS))}; }
+    | logical_expr[LHS] OR equality_expr[RHS]  { $$ = ExprHolder{LogicalExpr(std::move($LHS), LogicalExpr::OR, std::move($RHS))}; }
+    | logical_expr[LHS] XOR equality_expr[RHS] { $$ = ExprHolder{LogicalExpr(std::move($LHS), LogicalExpr::XOR, std::move($RHS))}; }
     ;
 
 expr

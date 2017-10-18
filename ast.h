@@ -1,322 +1,217 @@
 #pragma once
 
-#include <ostream>
+#include <iostream>
 #include <memory>
 #include <vector>
 #include <string>
 
 namespace AST {
 
-using Alias = std::pair<std::string, std::string>;
-
-std::ostream& operator<<(std::ostream& os, const Alias& rhs);
-
-class Import
+struct Node
 {
-  public:
-    Import() = default;
+  Node() = default;
+  virtual ~Node() = default;
 
-    Import(Alias name):
-      name{std::move(name)} {}
-
-    Import(std::string path, Alias name):
-      path{std::move(path)}, name{std::move(name)} {}
-
-    std::string to_string() const;
-
-    std::string path;
-    Alias name;
+  virtual std::string to_string() const { return "Not implemented."; }
 };
 
-using ImportList = std::vector<Import>;
+struct Expr: public Node
+{
+  /* virtual ~Expr() = default; */
+};
 
-class Expr
+class ExprHolder
 {
   public:
-    Expr() = default;
+    constexpr ExprHolder() = default;
 
-    Expr(const Expr& stmt):
-      self{stmt.self->copy()} {}
+    ExprHolder(const ExprHolder& other):
+      ptr{other.ptr ? other.ptr->copy() : nullptr} {}
 
     template<class T>
-    Expr(T expr):
-      self{new model<T>{std::move(expr)}} {}
+    ExprHolder(T data):
+      ptr{std::make_unique<model<T>>(std::move(data))} {}
 
-    Expr& operator=(const Expr& stmt)
-    { self.reset(stmt.self->copy()); return *this; }
+    ExprHolder& operator=(const ExprHolder& rhs)
+    { ptr = rhs.ptr ? rhs.ptr->copy() : nullptr; return *this; }
 
-    std::string to_string() const
-    {
-      return self->to_string();
-    }
+    std::string to_string() const { return ptr ? ptr->to_string() : ""; }
 
   private:
     struct concept {
       virtual ~concept() = default;
-      virtual concept* copy() const = 0;
+      virtual std::unique_ptr<concept> copy() const = 0;
       virtual std::string to_string() const = 0;
     };
 
     template<class T>
-    struct model: concept {
+    struct model final: concept {
       model(T data): data{std::move(data)} {}
-      virtual model<T>* copy() const
-      { return new model<T>{data}; }
-      virtual std::string to_string() const
-      { return data.to_string(); }
+      std::unique_ptr<concept> copy() const override { return std::make_unique<model<T>>(data); }
+      std::string to_string() const override { return data.to_string(); }
 
       T data;
     };
 
-    std::unique_ptr<concept> self;
+    std::unique_ptr<concept> ptr;
 };
 
-class AssignmentExpr
+struct AssignmentExpr: public Expr
 {
-  public:
-    AssignmentExpr() = default;
+  AssignmentExpr(std::string identifier, ExprHolder value):
+    identifier{std::move(identifier)}, value{std::move(value)} { std::cout << to_string() << std::endl; }
 
-    AssignmentExpr(std::string name, Expr value):
-      name{std::move(name)}, value{std::move(value)} {}
+  std::string to_string() const override;
 
-    std::unique_ptr<AssignmentExpr> copy() const;
-
-    std::string to_string() const;
-
-    std::string name;
-    Expr value;
+  std::string identifier;
+  ExprHolder value;
 };
 
-class Statement
+struct Literal: public Expr {};
+
+struct Float: public Literal
 {
-  public:
-    Statement() = default;
+  Float(long double value): value{value} {}
 
-    Statement(const Statement& stmt):
-      self{stmt.self->copy()} {}
+  std::string to_string() const override;
 
-    template<class T>
-    Statement(T expr):
-      self{new model<T>{std::move(expr)}} {}
-
-    Statement& operator=(const Statement& stmt)
-    { self.reset(stmt.self->copy()); return *this; }
-
-    std::string to_string() const
-    {
-      return self->to_string();
-    }
-
-  private:
-    struct concept {
-      virtual ~concept() = default;
-      virtual concept* copy() const = 0;
-      virtual std::string to_string() const = 0;
-    };
-
-    template<class T>
-    struct model: concept {
-      model(T data): data{std::move(data)} {}
-      virtual model<T>* copy() const
-      { return new model<T>{data}; }
-      virtual std::string to_string() const
-      { return data.to_string(); }
-
-      T data;
-    };
-
-    std::unique_ptr<concept> self;
+  long double value;
 };
 
-using StatementList = std::vector<Statement>;
-
-class Program
+struct Integer: public Literal
 {
-  public:
-    Program() = default;
+  Integer(long long value): value{value} {}
 
-    Program(StatementList stmt_list):
-      import_list{}, stmt_list{std::move(stmt_list)} {}
+  std::string to_string() const override;
 
-    Program(ImportList import_list, StatementList stmt_list):
-      import_list{std::move(import_list)}, stmt_list{std::move(stmt_list)} {}
-
-    std::string to_string() const;
-
-    ImportList import_list;
-    StatementList stmt_list;
+  long long value;
 };
 
-class Float
+struct String: public Literal
 {
-  public:
-    Float(long double value): value{value} {}
+  String(std::string value): value{std::move(value)} {}
 
-    std::string to_string() const;
+  std::string to_string() const override;
 
-    const long double value;
+  std::string value;
 };
 
-class Integer
+struct UnaryExpr: public Expr
 {
-  public:
-    Integer(long long value): value{value} {}
+  enum Operator {
+    NOT, MINUS,
+  };
 
-    std::string to_string() const;
+  UnaryExpr() = default;
 
-    const long long value;
+  UnaryExpr(Operator op, ExprHolder rhs):
+    op{op}, rhs{std::move(rhs)} {}
+
+  std::string to_string() const override;
+
+  Operator op;
+  ExprHolder rhs;
 };
 
-class String
+struct LogicalExpr: public Expr
 {
-  public:
-    String(std::string value): value{std::move(value)} {}
+  enum Operator {
+    AND, OR, XOR,
+  };
 
-    std::string to_string() const;
+  LogicalExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
 
-    const std::string value;
+  ~LogicalExpr() = default;
+
+  ExprHolder lhs;
+  Operator op;
+  ExprHolder rhs;
 };
 
-class Literal
-{
-  public:
-    Literal() = default;
-
-    Literal(const Literal& stmt):
-      self{stmt.self->copy()} {}
-
-    template<class T>
-    Literal(T expr):
-      self{new model<T>{std::move(expr)}} {}
-
-    Literal& operator=(const Literal& stmt)
-    { self.reset(stmt.self->copy()); return *this; }
-
-    std::string to_string() const
-    {
-      return self->to_string();
-    }
-
-  private:
-    struct concept {
-      virtual ~concept() = default;
-      virtual concept* copy() const = 0;
-      virtual std::string to_string() const = 0;
-    };
-
-    template<class T>
-    struct model: concept {
-      model(T data): data{std::move(data)} {}
-      virtual model<T>* copy() const
-      { return new model<T>{data}; }
-      virtual std::string to_string() const
-      { return data.to_string(); }
-
-      T data;
-    };
-
-    std::unique_ptr<concept> self;
-};
-
-class UnaryExpr
+struct EqualityExpr: public Expr
 {
   public:
     enum Operator {
-      NOT, MINUS,
+      EQ, NE,
     };
 
-    UnaryExpr() = default;
-
-    UnaryExpr(Operator op, Expr rhs):
-      op{op}, rhs{std::move(rhs)} {}
-
-    std::string to_string() const;
-
-    Operator op;
-    Expr rhs;
-};
-
-/* class LogicalExpr: public Expr */
-/* { */
-/*   public: */
-/*     enum Operator { */
-/*       AND, OR, XOR, */
-/*     }; */
-
-/*     LogicalExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
-/*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
-
-/*     std::unique_ptr<Expr> lhs; */
-/*     Operator op; */
-/*     std::unique_ptr<Expr> rhs; */
-/* }; */
-
-/* class EqualityExpr: public Expr */
-/* { */
-/*   public: */
-/*     enum Operator { */
-/*       EQ, NE, */
-/*     }; */
-
-/*     EqualityExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
-/*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
-
-/*     std::unique_ptr<Expr> lhs; */
-/*     Operator op; */
-/*     std::unique_ptr<Expr> rhs; */
-/* }; */
-
-/* class RelationalExpr: public Expr */
-/* { */
-/*   public: */
-/*     enum Operator { */
-/*       LT, LE, GT, GE, */
-/*     }; */
-
-/*     RelationalExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
-/*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
-
-/*     std::unique_ptr<Expr> lhs; */
-/*     Operator op; */
-/*     std::unique_ptr<Expr> rhs; */
-/* }; */
-
-/* class AdditiveExpr: public Expr */
-/* { */
-/*   public: */
-/*     enum Operator { */
-/*       PLUS, MINUS, */
-/*     }; */
-
-/*     AdditiveExpr(std::unique_ptr<Expr> lhs, Operator op, std::unique_ptr<Expr> rhs): */
-/*       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {} */
-
-/*     std::unique_ptr<Expr> lhs; */
-/*     Operator op; */
-/*     std::unique_ptr<Expr> rhs; */
-/* }; */
-
-class MultiplicativeExpr
-{
-  public:
-    enum Operator {
-      MUL, DIV,
-    };
-
-    MultiplicativeExpr() = default;
-
-    MultiplicativeExpr(Expr lhs, Operator op, Expr rhs):
+    EqualityExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
       lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
 
-    std::string to_string() const;
+    ~EqualityExpr() = default;
 
-    Expr lhs;
+    ExprHolder lhs;
     Operator op;
-    Expr rhs;
+    ExprHolder rhs;
 };
 
-/* class ExponentialExpr: public Expr */
-/* { */
-/* }; */
+struct RelationalExpr: public Expr
+{
+  public:
+    enum Operator {
+      LT, LE, GT, GE,
+    };
+
+    RelationalExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
+      lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
+
+    ~RelationalExpr() = default;
+
+    ExprHolder lhs;
+    Operator op;
+    ExprHolder rhs;
+};
+
+struct AdditiveExpr: public Expr
+{
+  enum Operator {
+    PLUS, MINUS,
+  };
+
+  AdditiveExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+
+  ~AdditiveExpr() = default;
+
+  std::string to_string() const override;
+
+  ExprHolder lhs;
+  Operator op;
+  ExprHolder rhs;
+};
+
+struct MultiplicativeExpr: public Expr
+{
+  enum Operator {
+    MUL, DIV,
+  };
+
+  MultiplicativeExpr() = default;
+
+  MultiplicativeExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
+
+  ~MultiplicativeExpr() = default;
+
+  std::string to_string() const override;
+
+  ExprHolder lhs;
+  Operator op;
+  ExprHolder rhs;
+};
+
+struct ExponentialExpr: public Expr
+{
+  ExponentialExpr(ExprHolder lhs, ExprHolder rhs):
+    lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
+
+  ~ExponentialExpr() = default;
+
+  std::string to_string() const override;
+
+  ExprHolder lhs;
+  ExprHolder rhs;
+};
 
 }

@@ -12,6 +12,7 @@ parser: $(LANG).y
 	$(BISON) $<
 
 parser.cxx parser.hxx: parser
+	# sed -i 's/return \*new (yyas_<T> ()) T (t)/return \*new (yyas_<T> ()) T (std::move(t))/' parser.hxx
 
 scanner: $(LANG).l
 	$(FLEX) $<

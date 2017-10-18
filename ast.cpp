@@ -4,7 +4,7 @@
 
 namespace AST {
 
-namespace {
+/* namespace { */
 
 /* static unsigned level = 0; */
 
@@ -57,46 +57,68 @@ namespace {
 /*   return os.str(); */
 /* } */
 
-/* std::string AssignmentExpr::to_string() const */
-/* { */
-/*   auto indent = make_indent(); */
-/*   std::ostringstream os; */
-/*   os << indent << "AssignmentExpr(" << name << '=' << value->to_string() << ")"; */
-/*   return os.str(); */
-/* } */
+std::string AssignmentExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "AssignmentExpr(" << identifier << '=' << value.to_string() << ")";
+  return os.str();
+}
 
-/* std::string Float::to_string() const */
-/* { */
-/*   auto indent = make_indent(); */
-/*   std::ostringstream os; */
-/*   os << indent << "Float(" << value << ")"; */
-/*   return os.str(); */
-/* } */
+std::string Float::to_string() const
+{
+  std::ostringstream os;
+  os << "Float(" << value << ")";
+  return os.str();
+}
 
-/* std::string UnaryExpr::to_string() const */
-/* { */
-/*   auto indent = make_indent(); */
-/*   std::ostringstream os; */
-/*   os << indent << "UnaryExpr("; */
-/*   switch (op) { */
-/*     case NOT: os << "not "; break; */
-/*     case MINUS: os << "- "; break; */
-/*   } */
-/*   os << rhs->to_string() << ")"; */
-/*   return os.str(); */
-/* } */
+std::string Integer::to_string() const
+{
+  std::ostringstream os;
+  os << "Integer(" << value << ")";
+  return os.str();
+}
 
-/* std::string MultiplicativeExpr::to_string() const */
-/* { */
-/*   auto indent = make_indent(); */
-/*   std::ostringstream os; */
-/*   os << indent << "MultiplicativeExpr(" << lhs->to_string(); */
-/*   switch (op) { */
-/*     case MUL: os << " * "; break; */
-/*     case DIV: os << " / "; break; */
-/*   } */
-/*   os << rhs->to_string() << ")"; */
-/*   return os.str(); */
-/* } */
+std::string String::to_string() const
+{
+  std::ostringstream os;
+  os << "String(" << value << ")";
+  return os.str();
+}
+
+std::string UnaryExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "UnaryExpr(";
+  switch (op) {
+    case NOT: os << "not "; break;
+    case MINUS: os << "- "; break;
+  }
+  os << rhs.to_string() << ")";
+  return os.str();
+}
+
+std::string AdditiveExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "AdditiveExpr(" << lhs.to_string();
+  switch (op) {
+    case PLUS: os << " + "; break;
+    case MINUS: os << " - "; break;
+  }
+  os << rhs.to_string() << ")";
+  return os.str();
+}
+
+std::string MultiplicativeExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "MultiplicativeExpr(" << lhs.to_string();
+  switch (op) {
+    case MUL: os << " * "; break;
+    case DIV: os << " / "; break;
+  }
+  os << rhs.to_string() << ")";
+  return os.str();
+}
 
 }
