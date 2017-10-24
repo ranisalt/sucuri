@@ -77,17 +77,36 @@ yy::parser::symbol_type yylex(
 /* %type <Statement> stmt; */
 /* %type <Statement> assignment_expr; */
 
+/* %type <Expr> atom_expr */
+/* %type <Expr> assignment_expr */
+/* %type <Expr> exponential_expr */
+/* %type <Expr> unary_expr */
+/* %type <Expr> multiplicative_expr */
+/* %type <Expr> additive_expr */
+/* %type <Expr> relational_expr */
+/* %type <Expr> equality_expr */
+/* %type <Expr> logical_expr */
 /* %type <Expr> expr */
-%type <ExprHolder> assignment_expr
-%type <ExprHolder> exponential_expr
-%type <ExprHolder> unary_expr
-%type <ExprHolder> multiplicative_expr
-%type <ExprHolder> additive_expr
-%type <ExprHolder> relational_expr
-%type <ExprHolder> equality_expr
-%type <ExprHolder> logical_expr
-%type <ExprHolder> expr
-%type <Literal> literal
+/* %type <Literal> literal */
+/* %type <Decl> variable_declaration */
+/* %type <Name> dotted_name */
+/* %type <Identifier> identifier; */
+/* %type <Expr> atom */
+%type <Node> atom_expr
+%type <Node> assignment_expr
+%type <Node> exponential_expr
+%type <Node> unary_expr
+%type <Node> multiplicative_expr
+%type <Node> additive_expr
+%type <Node> relational_expr
+%type <Node> equality_expr
+%type <Node> logical_expr
+%type <Node> expr
+%type <Node> literal
+%type <Node> variable_declaration
+%type <Name> dotted_name
+%type <Identifier> identifier;
+%type <Node> atom
 
 %start program
 
@@ -96,6 +115,10 @@ yy::parser::symbol_type yylex(
 program
     : stmt_list END
     | import_list stmt_list END
+    ;
+
+identifier
+    : IDENTIFIER { $$ = Identifier(std::move($1)); }
     ;
 
 /* module system */
@@ -119,7 +142,7 @@ dotted_as_names
 
 dotted_as_name
     : dotted_name
-    | dotted_name AS IDENTIFIER
+    | dotted_name AS identifier
     ;
 
 /* from a.b import c */
@@ -129,12 +152,18 @@ import_as_names
     ;
 
 import_as_name
-    : IDENTIFIER
-    | IDENTIFIER AS IDENTIFIER;
+    : identifier
+    | identifier AS identifier;
 
 dotted_name
-    : IDENTIFIER
-    | dotted_name '.' IDENTIFIER;
+    : identifier {
+      $$ = Name();
+      $$.path.push_back(std::move($1));
+    }
+    | dotted_name '.' identifier {
+      $$ = std::move($1);
+      $$.path.push_back($3);
+    }
     ;
 
 stmt_list
@@ -143,19 +172,24 @@ stmt_list
     ;
 
 stmt
-    : assignment_expr
+    : variable_declaration
+    | assignment_expr
     | definition
     | function_call
     | compound_stmt
     | THROW expr
     | RETURN exprlist;
 
-assignment_expr
-    : LET IDENTIFIER[NAME] EQ expr[VALUE] {
-      $$ = ExprHolder{AssignmentExpr(std::move($NAME), std::move($VALUE))};
+variable_declaration
+    : LET assignment_expr[EXPR] {
+      $$ = VariableDecl(std::move($EXPR));
     }
-    | IDENTIFIER[NAME] EQ expr[VALUE]
-    | IDENTIFIER LBRACK atom RBRACK EQ expr
+    ;
+
+assignment_expr
+    : dotted_name[NAME] EQ expr[VALUE] {
+      $$ = AssignmentExpr(std::move($NAME), std::move($VALUE));
+    }
     ;
 
 literal
@@ -165,14 +199,15 @@ literal
     ;
 
 atom
-    : dotted_name
-    | literal
-    | LPAREN expr RPAREN
-    | LBRACK list_expr RBRACK;
+    : dotted_name   { $$ = std::move($1); }
+    | literal       { $$ = std::move($1); }
+    | LPAREN expr RPAREN { $$ = std::move($2); }
+    | LBRACK list_expr RBRACK
+    ;
 
 /* expressions */
 atom_expr
-    : atom
+    : atom { $$ = std::move($1); }
     | atom trailer;
 
 trailer
@@ -185,73 +220,98 @@ list_expr
     | list_expr COMMA atom;
 
 exponential_expr
-    : atom_expr
-    | exponential_expr POW atom_expr;
+    : atom_expr { $$ = std::move($1); }
+    | exponential_expr[LHS] POW atom_expr[RHS] {
+      $$ = ExponentialExpr(std::move($LHS), std::move($RHS));
+    }
+    ;
 
 unary_expr
-    : exponential_expr
+    : exponential_expr { $$ = std::move($1); }
     /* | NOT unary_expr[RHS] */
     /* | MINUS unary_expr[RHS] */
     | NOT unary_expr[RHS]   {
-        $$ = ExprHolder{UnaryExpr(UnaryExpr::NOT, std::move($RHS))};
+      $$ = UnaryExpr(UnaryExpr::NOT, std::move($RHS));
     }
     | MINUS unary_expr[RHS] {
-        $$ = ExprHolder{UnaryExpr(UnaryExpr::MINUS, std::move($RHS))};
+      $$ = UnaryExpr(UnaryExpr::MINUS, std::move($RHS));
     }
     ;
 
 multiplicative_expr
-    : unary_expr
+    : unary_expr { $$ = std::move($1); }
     /* | multiplicative_expr[LHS] MUL unary_expr[RHS] */
     /* | multiplicative_expr[LHS] DIV unary_expr[RHS] */
     | multiplicative_expr[LHS] MUL unary_expr[RHS] {
-        $$ = ExprHolder{MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::MUL, std::move($RHS))};
+      $$ = MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::MUL, std::move($RHS));
     }
     | multiplicative_expr[LHS] DIV unary_expr[RHS] {
-        $$ = ExprHolder{MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::DIV, std::move($RHS))};
+      $$ = MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::DIV, std::move($RHS));
     }
     ;
 
 additive_expr
-    : multiplicative_expr
+    : multiplicative_expr { $$ = std::move($1); }
     /* | additive_expr[LHS] PLUS multiplicative_expr[RHS] */
     /* | additive_expr[LHS] MINUS multiplicative_expr[RHS] */
-    | additive_expr[LHS] PLUS multiplicative_expr[RHS]  { $$ = ExprHolder{AdditiveExpr(std::move($LHS), AdditiveExpr::PLUS, std::move($RHS))}; };
-    | additive_expr[LHS] MINUS multiplicative_expr[RHS] { $$ = ExprHolder{AdditiveExpr(std::move($LHS), AdditiveExpr::MINUS, std::move($RHS))}; };
+    | additive_expr[LHS] PLUS multiplicative_expr[RHS]  {
+      $$ = AdditiveExpr(std::move($LHS), AdditiveExpr::PLUS, std::move($RHS));
+    }
+    | additive_expr[LHS] MINUS multiplicative_expr[RHS] {
+      $$ = AdditiveExpr(std::move($LHS), AdditiveExpr::MINUS, std::move($RHS));
+    }
     ;
 
 relational_expr
-    : additive_expr
+    : additive_expr { $$ = std::move($1); }
     /* | relational_expr[LHS] LT additive_expr[RHS] */
     /* | relational_expr[LHS] LE additive_expr[RHS] */
     /* | relational_expr[LHS] GT additive_expr[RHS] */
     /* | relational_expr[LHS] GE additive_expr[RHS] */
-    | relational_expr[LHS] LT additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::LT, std::move($RHS))}; }
-    | relational_expr[LHS] LE additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::LE, std::move($RHS))}; }
-    | relational_expr[LHS] GT additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::GT, std::move($RHS))}; }
-    | relational_expr[LHS] GE additive_expr[RHS] { $$ = ExprHolder{RelationalExpr(std::move($LHS), RelationalExpr::GE, std::move($RHS))}; }
+    | relational_expr[LHS] LT additive_expr[RHS] {
+      $$ = RelationalExpr(std::move($LHS), RelationalExpr::LT, std::move($RHS));
+    }
+    | relational_expr[LHS] LE additive_expr[RHS] {
+      $$ = RelationalExpr(std::move($LHS), RelationalExpr::LE, std::move($RHS));
+    }
+    | relational_expr[LHS] GT additive_expr[RHS] {
+      $$ = RelationalExpr(std::move($LHS), RelationalExpr::GT, std::move($RHS));
+    }
+    | relational_expr[LHS] GE additive_expr[RHS] {
+      $$ = RelationalExpr(std::move($LHS), RelationalExpr::GE, std::move($RHS));
+    }
     ;
 
 equality_expr
-    : relational_expr
+    : relational_expr { $$ = std::move($1); }
     /* | equality_expr[LHS] EQ relational_expr[RHS] */
     /* | equality_expr[LHS] NE relational_expr[RHS] */
-    | equality_expr[LHS] EQ relational_expr[RHS] { $$ = ExprHolder{EqualityExpr(std::move($LHS), EqualityExpr::EQ, std::move($RHS))}; }
-    | equality_expr[LHS] NE relational_expr[RHS] { $$ = ExprHolder{EqualityExpr(std::move($LHS), EqualityExpr::NE, std::move($RHS))}; }
+    | equality_expr[LHS] EQ relational_expr[RHS] {
+      $$ = EqualityExpr(std::move($LHS), EqualityExpr::EQ, std::move($RHS));
+    }
+    | equality_expr[LHS] NE relational_expr[RHS] {
+      $$ = EqualityExpr(std::move($LHS), EqualityExpr::NE, std::move($RHS));
+    }
     ;
 
 logical_expr
-    : equality_expr
+    : equality_expr { $$ = std::move($1); }
     /* | logical_expr[LHS] AND equality_expr[RHS] */
     /* | logical_expr[LHS] OR equality_expr[RHS] */
     /* | logical_expr[LHS] XOR equality_expr[RHS] */
-    | logical_expr[LHS] AND equality_expr[RHS] { $$ = ExprHolder{LogicalExpr(std::move($LHS), LogicalExpr::AND, std::move($RHS))}; }
-    | logical_expr[LHS] OR equality_expr[RHS]  { $$ = ExprHolder{LogicalExpr(std::move($LHS), LogicalExpr::OR, std::move($RHS))}; }
-    | logical_expr[LHS] XOR equality_expr[RHS] { $$ = ExprHolder{LogicalExpr(std::move($LHS), LogicalExpr::XOR, std::move($RHS))}; }
+    | logical_expr[LHS] AND equality_expr[RHS] {
+      $$ = LogicalExpr(std::move($LHS), LogicalExpr::AND, std::move($RHS));
+    }
+    | logical_expr[LHS] OR equality_expr[RHS]  {
+      $$ = LogicalExpr(std::move($LHS), LogicalExpr::OR, std::move($RHS));
+    }
+    | logical_expr[LHS] XOR equality_expr[RHS] {
+      $$ = LogicalExpr(std::move($LHS), LogicalExpr::XOR, std::move($RHS));
+    }
     ;
 
 expr
-    : logical_expr;
+    : logical_expr { $$ = std::move($1); }
 
 exprlist
     : expr
@@ -273,32 +333,32 @@ function_params_list
     | variadic_param;
 
 identifier_list
-    : IDENTIFIER
-    | IDENTIFIER EQ atom
-    | identifier_list COMMA IDENTIFIER
-    | identifier_list COMMA IDENTIFIER EQ atom;
+    : identifier
+    | identifier EQ atom
+    | identifier_list COMMA identifier
+    | identifier_list COMMA identifier EQ atom;
 
 variadic_param
-    : ELLIPSIS IDENTIFIER;
+    : ELLIPSIS identifier;
 
 scope
     : INDENT stmt_list DEDENT;
 
 class_definition
-    : CLASS IDENTIFIER class_scope;
+    : CLASS identifier class_scope;
 
 class_scope
     : INDENT inner_class_scope DEDENT;
 
 inner_class_scope
-    : assignment_expr
+    : variable_declaration
     | function_definition
-    | inner_class_scope assignment_expr
+    | inner_class_scope variable_declaration
     | inner_class_scope function_definition;
 
 function_call
-    : IDENTIFIER LPAREN RPAREN
-    | IDENTIFIER LPAREN args_list RPAREN;
+    : identifier LPAREN RPAREN
+    | identifier LPAREN args_list RPAREN;
 
 args_list
     : expr_list

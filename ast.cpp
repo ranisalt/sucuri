@@ -4,63 +4,28 @@
 
 namespace AST {
 
-/* namespace { */
+std::string Identifier::to_string() const
+{
+  std::ostringstream os;
+  os << "Identifier(" << value << ")";
+  return os.str();
+}
 
-/* static unsigned level = 0; */
-
-/* std::string make_indent() { */
-/*   return std::string(level, ' '); */
-/* } */
-
-/* } */
-
-/* std::ostream& operator<<(std::ostream& os, const Alias& rhs) */
-/* { */
-/*   return os << "alias='" << rhs.first << "'->'" << rhs.second << "'"; */
-/* } */
-
-/* std::ostream& operator<<(std::ostream& os, const ImportList& rhs) */
-/* { */
-/*   auto indent = make_indent(); */
-/*   os << indent << "ImportList(\n"; */
-/*   ++level; */
-/*   for (auto&& import: rhs) { */
-/*     os << import.to_string() << ",\n"; */
-/*   } */
-/*   --level; */
-/*   os << indent << ")"; */
-/*   return os; */
-/* } */
-
-/* std::ostream& operator<<(std::ostream& os, const StatementList& rhs) */
-/* { */
-/*   auto indent = make_indent(); */
-/*   os << indent << "StatementList(\n"; */
-/*   ++level; */
-/*   for (auto&& stmt: rhs) { */
-/*     os << stmt.to_string() << ",\n"; */
-/*   } */
-/*   --level; */
-/*   os << indent << ")"; */
-/*   return os; */
-/* } */
-
-/* std::string Program::to_string() const */
-/* { */
-/*   std::ostringstream os; */
-/*   auto indent = make_indent(); */
-/*   os << indent << "Program(\n"; */
-/*   ++level; */
-/*   os << import_list << ",\n" << stmt_list << ",\n"; */
-/*   --level; */
-/*   os << indent << ")"; */
-/*   return os.str(); */
-/* } */
+std::string Name::to_string() const
+{
+  std::ostringstream os;
+  auto it = path.begin();
+  os << it->to_string();
+  while (++it != path.end()) {
+    os << "." << it->to_string();
+  }
+  return os.str();
+}
 
 std::string AssignmentExpr::to_string() const
 {
   std::ostringstream os;
-  os << "AssignmentExpr(" << identifier << '=' << value.to_string() << ")";
+  os << "AssignmentExpr(" << name.to_string() << '=' << value.to_string() << ")";
   return os.str();
 }
 
@@ -85,6 +50,13 @@ std::string String::to_string() const
   return os.str();
 }
 
+std::string ExponentialExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "ExponentialExpr(" << lhs.to_string() << " ** " << rhs.to_string() << ")";
+  return os.str();
+}
+
 std::string UnaryExpr::to_string() const
 {
   std::ostringstream os;
@@ -92,6 +64,45 @@ std::string UnaryExpr::to_string() const
   switch (op) {
     case NOT: os << "not "; break;
     case MINUS: os << "- "; break;
+  }
+  os << rhs.to_string() << ")";
+  return os.str();
+}
+
+std::string LogicalExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "LogicalExpr(" << lhs.to_string();
+  switch (op) {
+    case AND: os << " and "; break;
+    case OR: os << " or "; break;
+    case XOR: os << " xor "; break;
+  }
+  os << rhs.to_string() << ")";
+  return os.str();
+}
+
+std::string EqualityExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "EqualityExpr(" << lhs.to_string();
+  switch (op) {
+    case EQ: os << " = "; break;
+    case NE: os << " != "; break;
+  }
+  os << rhs.to_string() << ")";
+  return os.str();
+}
+
+std::string RelationalExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "RelationalExpr(" << lhs.to_string();
+  switch (op) {
+    case LT: os << " < "; break;
+    case LE: os << " <= "; break;
+    case GT: os << " > "; break;
+    case GE: os << " >= "; break;
   }
   os << rhs.to_string() << ")";
   return os.str();
@@ -118,6 +129,13 @@ std::string MultiplicativeExpr::to_string() const
     case DIV: os << " / "; break;
   }
   os << rhs.to_string() << ")";
+  return os.str();
+}
+
+std::string VariableDecl::to_string() const
+{
+  std::ostringstream os;
+  os << "VariableDecl(" << expr.to_string() << ")";
   return os.str();
 }
 

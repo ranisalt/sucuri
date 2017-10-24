@@ -7,37 +7,27 @@
 
 namespace AST {
 
-struct Node
-{
-  Node() = default;
-  virtual ~Node() = default;
-
-  virtual std::string to_string() const { return "Not implemented."; }
-};
-
-struct Expr: public Node
-{
-  /* virtual ~Expr() = default; */
-};
-
-class ExprHolder
+class Node
 {
   public:
-    constexpr ExprHolder() = default;
+    constexpr Node() = default;
 
-    ExprHolder(const ExprHolder& other):
-      ptr{other.ptr ? other.ptr->copy() : nullptr} {}
+    Node(const Node& other) = default;
 
     template<class T>
-    ExprHolder(T data):
-      ptr{std::make_unique<model<T>>(std::move(data))} {}
+    Node(T data):
+      ptr{std::make_shared<model<T>>(std::move(data))} {}
 
-    ExprHolder& operator=(const ExprHolder& rhs)
-    { ptr = rhs.ptr ? rhs.ptr->copy() : nullptr; return *this; }
+    Node& operator=(const Node& rhs) = default;
 
-    std::string to_string() const { return ptr ? ptr->to_string() : ""; }
+    template<class T>
+    Node& operator=(T data)
+    { ptr = std::make_shared<model<T>>(std::move(data)); return *this; }
+
+    virtual std::string to_string() const { return ptr ? ptr->to_string() : "ptr null"; }
 
   private:
+  public:
     struct concept {
       virtual ~concept() = default;
       virtual std::unique_ptr<concept> copy() const = 0;
@@ -45,58 +35,115 @@ class ExprHolder
     };
 
     template<class T>
-    struct model final: concept {
-      model(T data): data{std::move(data)} {}
-      std::unique_ptr<concept> copy() const override { return std::make_unique<model<T>>(data); }
-      std::string to_string() const override { return data.to_string(); }
+      struct model final: concept {
+        model(T data): data{std::move(data)} {}
+        std::unique_ptr<concept> copy() const { return std::make_unique<model<T>>(data); }
+        std::string to_string() const { return data.to_string(); }
 
-      T data;
-    };
+        T data;
+      };
 
-    std::unique_ptr<concept> ptr;
+    std::shared_ptr<concept> ptr;
 };
 
-struct AssignmentExpr: public Expr
+struct Identifier
 {
-  AssignmentExpr(std::string identifier, ExprHolder value):
-    identifier{std::move(identifier)}, value{std::move(value)} { std::cout << to_string() << std::endl; }
+  Identifier() = default;
 
-  std::string to_string() const override;
+  Identifier(std::string value): value{std::move(value)} { std::cout << to_string() << std::endl; }
 
-  std::string identifier;
-  ExprHolder value;
-};
-
-struct Literal: public Expr {};
-
-struct Float: public Literal
-{
-  Float(long double value): value{value} {}
-
-  std::string to_string() const override;
-
-  long double value;
-};
-
-struct Integer: public Literal
-{
-  Integer(long long value): value{value} {}
-
-  std::string to_string() const override;
-
-  long long value;
-};
-
-struct String: public Literal
-{
-  String(std::string value): value{std::move(value)} {}
-
-  std::string to_string() const override;
+  std::string to_string() const;
 
   std::string value;
 };
 
-struct UnaryExpr: public Expr
+struct Name
+{
+  Name() = default;
+
+  Name(std::vector<Identifier> path): path{std::move(path)} {}
+
+  std::string to_string() const;
+
+  std::vector<Identifier> path;
+};
+
+struct Float
+{
+  Float(long double value): value{value} { std::cout << to_string() << std::endl; }
+
+  std::string to_string() const;
+
+  long double value;
+};
+
+struct Integer
+{
+  Integer(long long value): value{value} { std::cout << to_string() << std::endl; }
+
+  std::string to_string() const;
+
+  long long value;
+};
+
+struct String
+{
+  String(std::string value): value{std::move(value)} { std::cout << to_string() << std::endl; }
+
+  std::string to_string() const;
+
+  std::string value;
+};
+
+struct Literal: public Node
+{
+  Literal() = default;
+
+  /* explicit Literal(Float value): Node{std::move(value)} {} */
+  Literal& operator=(Float value) { Node::operator=(std::move(value)); return *this; }
+
+  /* explicit Literal(Integer value): Node{std::move(value)} {} */
+  Literal& operator=(Integer value) { Node::operator=(std::move(value)); return *this; }
+
+  /* explicit Literal(String value): Node{std::move(value)} {} */
+  Literal& operator=(String value) { Node::operator=(std::move(value)); return *this; }
+};
+
+struct AssignmentExpr;
+struct UnaryExpr;
+struct LogicalExpr;
+struct EqualityExpr;
+struct RelationalExpr;
+struct AdditiveExpr;
+struct MultiplicativeExpr;
+struct ExponentialExpr;
+
+/* struct Expr: public Node { */
+/*   Expr() = default; */
+
+/*   Expr& operator=(Name value); */
+/*   Expr& operator=(AssignmentExpr value); */
+/*   Expr& operator=(UnaryExpr value); */
+/*   Expr& operator=(LogicalExpr value); */
+/*   Expr& operator=(EqualityExpr value); */
+/*   Expr& operator=(RelationalExpr value); */
+/*   Expr& operator=(AdditiveExpr value); */
+/*   Expr& operator=(MultiplicativeExpr value); */
+/*   Expr& operator=(ExponentialExpr value); */
+/* }; */
+
+struct AssignmentExpr
+{
+  AssignmentExpr(Name name, Node value):
+    name{std::move(name)}, value{std::move(value)} { std::cout << to_string() << std::endl; }
+
+  std::string to_string() const;
+
+  Name name;
+  Node value;
+};
+
+struct UnaryExpr
 {
   enum Operator {
     NOT, MINUS,
@@ -104,84 +151,80 @@ struct UnaryExpr: public Expr
 
   UnaryExpr() = default;
 
-  UnaryExpr(Operator op, ExprHolder rhs):
-    op{op}, rhs{std::move(rhs)} {}
+  UnaryExpr(Operator op, Node rhs):
+    op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
 
-  std::string to_string() const override;
+  std::string to_string() const;
 
   Operator op;
-  ExprHolder rhs;
+  Node rhs;
 };
 
-struct LogicalExpr: public Expr
+struct LogicalExpr
 {
   enum Operator {
     AND, OR, XOR,
   };
 
-  LogicalExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
-    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
+  LogicalExpr(Node lhs, Operator op, Node rhs):
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
 
-  ~LogicalExpr() = default;
+  std::string to_string() const;
 
-  ExprHolder lhs;
+  Node lhs;
   Operator op;
-  ExprHolder rhs;
+  Node rhs;
 };
 
-struct EqualityExpr: public Expr
+struct EqualityExpr
 {
-  public:
-    enum Operator {
-      EQ, NE,
-    };
+  enum Operator {
+    EQ, NE,
+  };
 
-    EqualityExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
-      lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
+  EqualityExpr(Node lhs, Operator op, Node rhs):
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
 
-    ~EqualityExpr() = default;
+  std::string to_string() const;
 
-    ExprHolder lhs;
-    Operator op;
-    ExprHolder rhs;
+  Node lhs;
+  Operator op;
+  Node rhs;
 };
 
-struct RelationalExpr: public Expr
+struct RelationalExpr
 {
-  public:
-    enum Operator {
-      LT, LE, GT, GE,
-    };
+  enum Operator {
+    LT, LE, GT, GE,
+  };
 
-    RelationalExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
-      lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
+  RelationalExpr(Node lhs, Operator op, Node rhs):
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
 
-    ~RelationalExpr() = default;
+  std::string to_string() const;
 
-    ExprHolder lhs;
-    Operator op;
-    ExprHolder rhs;
+  Node lhs;
+  Operator op;
+  Node rhs;
 };
 
-struct AdditiveExpr: public Expr
+struct AdditiveExpr
 {
   enum Operator {
     PLUS, MINUS,
   };
 
-  AdditiveExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
+  AdditiveExpr(Node lhs, Operator op, Node rhs):
     lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
 
-  ~AdditiveExpr() = default;
+  std::string to_string() const;
 
-  std::string to_string() const override;
-
-  ExprHolder lhs;
+  Node lhs;
   Operator op;
-  ExprHolder rhs;
+  Node rhs;
 };
 
-struct MultiplicativeExpr: public Expr
+struct MultiplicativeExpr
 {
   enum Operator {
     MUL, DIV,
@@ -189,29 +232,36 @@ struct MultiplicativeExpr: public Expr
 
   MultiplicativeExpr() = default;
 
-  MultiplicativeExpr(ExprHolder lhs, Operator op, ExprHolder rhs):
-    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
+  MultiplicativeExpr(Node lhs, Operator op, Node rhs):
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
 
-  ~MultiplicativeExpr() = default;
+  std::string to_string() const;
 
-  std::string to_string() const override;
-
-  ExprHolder lhs;
+  Node lhs;
   Operator op;
-  ExprHolder rhs;
+  Node rhs;
 };
 
-struct ExponentialExpr: public Expr
+struct ExponentialExpr
 {
-  ExponentialExpr(ExprHolder lhs, ExprHolder rhs):
-    lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
+  ExponentialExpr(Node lhs, Node rhs):
+    lhs{std::move(lhs)}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
 
-  ~ExponentialExpr() = default;
+  std::string to_string() const;
 
-  std::string to_string() const override;
+  Node lhs;
+  Node rhs;
+};
 
-  ExprHolder lhs;
-  ExprHolder rhs;
+struct Decl: public Node {};
+
+struct VariableDecl: public Decl
+{
+  explicit VariableDecl(Node expr): expr{std::move(expr)} { std::cout << to_string() << std::endl; }
+
+  std::string to_string() const;
+
+  Node expr;
 };
 
 }
