@@ -68,6 +68,10 @@ struct Name
   std::vector<Identifier> path;
 };
 
+inline bool operator==(const Name lhs, const Name rhs) {
+    return lhs.to_string() == rhs.to_string();
+}
+
 struct Float
 {
   Float(long double value): value{value} { std::cout << to_string() << std::endl; }
@@ -134,6 +138,7 @@ struct ExponentialExpr;
 
 struct AssignmentExpr
 {
+  AssignmentExpr() = default;
   AssignmentExpr(Name name, Node value):
     name{std::move(name)}, value{std::move(value)} { std::cout << to_string() << std::endl; }
 

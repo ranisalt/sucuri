@@ -21,8 +21,8 @@ scanner.cxx scanner.hxx: scanner
 %.o: %.cxx
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-$(LANG): parser.o scanner.o
-	$(CXX) $(CFLAGS) parser.o scanner.o ast.cpp main.cpp -o $(LANG)
+$(LANG): parser.o scanner.o symbol.o
+	$(CXX) $(CFLAGS) parser.o scanner.o symbol.o ast.cpp main.cpp -o $(LANG)
 
 clean:
 	$(RM) *.hh *.cxx *.hxx *.o $(LANG)

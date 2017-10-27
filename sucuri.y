@@ -54,8 +54,10 @@
 
 %code requires {
 #include "ast.h"
+#include "symbol.h"
 
 using namespace AST;
+using namespace symbol;
 }
 
 %code {
@@ -93,7 +95,7 @@ yy::parser::symbol_type yylex(
 /* %type <Identifier> identifier; */
 /* %type <Expr> atom */
 %type <Node> atom_expr
-%type <Node> assignment_expr
+%type <AssignmentExpr> assignment_expr
 %type <Node> exponential_expr
 %type <Node> unary_expr
 %type <Node> multiplicative_expr
@@ -105,8 +107,9 @@ yy::parser::symbol_type yylex(
 %type <Node> literal
 %type <Node> variable_declaration
 %type <Name> dotted_name
-%type <Identifier> identifier;
+%type <Identifier> identifier
 %type <Node> atom
+%type <Node> for_stmt
 
 %start program
 
@@ -182,7 +185,9 @@ stmt
 
 variable_declaration
     : LET assignment_expr[EXPR] {
+      auto name = $EXPR.name;
       $$ = VariableDecl(std::move($EXPR));
+      add_symbol(name);
     }
     ;
 
@@ -199,7 +204,11 @@ literal
     ;
 
 atom
-    : dotted_name   { $$ = std::move($1); }
+    : dotted_name   {
+        if (not has_symbol($1)) {
+            parser::error(yylloc, "undeclared variable " + $1.to_string());
+        }
+        $$ = std::move($1); }
     | literal       { $$ = std::move($1); }
     | LPAREN expr RPAREN { $$ = std::move($2); }
     | LBRACK list_expr RBRACK
@@ -342,7 +351,7 @@ variadic_param
     : ELLIPSIS identifier;
 
 scope
-    : INDENT stmt_list DEDENT;
+    : INDENT { open_scope(); } stmt_list DEDENT { close_scope(); };
 
 class_definition
     : CLASS identifier class_scope;
@@ -397,7 +406,11 @@ try_stmt
 
 void yy::parser::error(const yy::location& loc, const std::string& message)
 {
-    std::cout << "Error: " << message << "\nLocation: L" << loc.end.line
+    static const auto red = "\033[31m";
+    static const auto bold = "\033[1m";
+    static const auto reset = "\033[0m";
+    std::cout << bold << red << "Error: " << reset << message
+        << "\nLocation: L" << loc.end.line
         << " C" << loc.end.column << '\n';
 }
 
