@@ -1,10 +1,18 @@
 #include "symbol.h"
 
+#include <experimental/filesystem>
+
 #include <iostream>
 #include <iterator>
 #include <algorithm>
 
+#include "utils.h"
+
+using namespace std::string_literals;
+using namespace std::experimental::filesystem;
+
 using namespace AST;
+using namespace utils;
 
 /* using DeclInfo = std::pair<Name, parser::location_type>; */
 using DeclInfo = Name;
@@ -21,24 +29,41 @@ void symbol::add_symbol(symbol_t s) {
 }
 
 void symbol::open_scope() {
-    std::cout << "opening scope" << std::endl;
     scope_decls.emplace_back(std::vector<DeclInfo>{});
+    std::cout << " >>> " << scope_decls.size() << "\n";
 }
 
 void symbol::close_scope() {
-    std::cout << "closing scope\n";
+    std::cout << " <<< " << scope_decls.size() << "\n";
     scope_decls.pop_back();
 }
 
 bool symbol::has_symbol(const symbol_t& s) {
-    std::cout << "\033[1;33mchecking existence of " << s.to_string() << "\033[0m\n";
     for (auto i = scope_decls.rbegin(); i != scope_decls.rend(); ++i) {
         const auto& v = *i;
         if (std::find(begin(v), end(v), s) != std::end(v)) {
-            std::cout << "\033[1;32mexists!\033[0m\n";
             return true;
         }
     }
-    std::cout << "\033[1;31mdoesn't exists...\033[0m\n";
     return false;
+}
+
+void symbol::import_module(const std::string& filename) {
+    std::cout << "importing " << filename << "\n";
+    if (not exists(filename)) {
+        throw import_error(filename, "not found");
+    }
+    if (is_directory(filename)) {
+        throw import_error(filename, "is a directory");
+    }
+}
+
+void symbol::import_module(const std::vector<std::string>& path) {
+    const auto filename = join("/"s, path);
+    import_module(filename);
+}
+
+void symbol::import_module(const std::vector<Identifier>& path) {
+    const auto filename = join("/"s, path);
+    import_module(filename);
 }

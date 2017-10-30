@@ -96,6 +96,18 @@ if (!called) {
     return yy::parser::make_INTEGER(val, yylloc);
 }
 
+true {
+    auto val = true;
+    count("BOOL");
+    return yy::parser::make_BOOL(val, yylloc);
+}
+
+false {
+    auto val = false;
+    count("BOOL");
+    return yy::parser::make_BOOL(val, yylloc);
+}
+
 "'"{NO_SQUOTE_STRING}"'" {
     auto val = std::string{yytext+1u, yyleng-2u};
     count("STRING");

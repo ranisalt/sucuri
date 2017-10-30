@@ -65,7 +65,27 @@ struct Name
 
   std::string to_string() const;
 
+  void append(Identifier i) {
+      path.push_back(std::move(i));
+  }
+
   std::vector<Identifier> path;
+};
+
+struct Alias {
+    Alias() = default;
+
+    Alias(Name name):
+        alias{name, name.path[0]}
+    {}
+
+    Alias(std::pair<Name, Identifier> alias):
+        alias{alias}
+    {}
+
+    std::string to_string() const;
+
+    std::pair<Name, Identifier> alias;
 };
 
 inline bool operator==(const Name lhs, const Name rhs) {
@@ -88,6 +108,17 @@ struct Integer
   std::string to_string() const;
 
   long long value;
+};
+
+struct Bool
+{
+    Bool(bool value): value{value} {
+        std::cout << to_string() << std::endl;
+    }
+
+    std::string to_string() const;
+
+    bool value;
 };
 
 struct String
