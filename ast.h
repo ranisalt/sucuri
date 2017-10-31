@@ -24,7 +24,9 @@ class Node
     Node& operator=(T data)
     { ptr = std::make_shared<model<T>>(std::move(data)); return *this; }
 
-    virtual std::string to_string() const { return ptr ? ptr->to_string() : "ptr null"; }
+    virtual std::string to_string() const {
+        return ptr ? ptr->to_string() : "ptr null";
+    }
 
   private:
   public:
@@ -37,8 +39,12 @@ class Node
     template<class T>
       struct model final: concept {
         model(T data): data{std::move(data)} {}
-        std::unique_ptr<concept> copy() const { return std::make_unique<model<T>>(data); }
-        std::string to_string() const { return data.to_string(); }
+        std::unique_ptr<concept> copy() const {
+            return std::make_unique<model<T>>(data);
+        }
+        std::string to_string() const {
+            return data.to_string();
+        }
 
         T data;
       };
@@ -50,7 +56,9 @@ struct Identifier
 {
   Identifier() = default;
 
-  Identifier(std::string value): value{std::move(value)} { std::cout << to_string() << std::endl; }
+  Identifier(std::string value): value{std::move(value)} {
+      std::cout << to_string() << std::endl;
+  }
 
   std::string to_string() const;
 
@@ -94,7 +102,9 @@ inline bool operator==(const Name lhs, const Name rhs) {
 
 struct Float
 {
-  Float(long double value): value{value} { std::cout << to_string() << std::endl; }
+  Float(long double value): value{value} {
+      std::cout << to_string() << std::endl;
+  }
 
   std::string to_string() const;
 
@@ -103,7 +113,9 @@ struct Float
 
 struct Integer
 {
-  Integer(long long value): value{value} { std::cout << to_string() << std::endl; }
+  Integer(long long value): value{value} {
+      std::cout << to_string() << std::endl;
+  }
 
   std::string to_string() const;
 
@@ -123,7 +135,9 @@ struct Bool
 
 struct String
 {
-  String(std::string value): value{std::move(value)} { std::cout << to_string() << std::endl; }
+  String(std::string value): value{std::move(value)} {
+      std::cout << to_string() << std::endl;
+  }
 
   std::string to_string() const;
 
@@ -135,13 +149,19 @@ struct Literal: public Node
   Literal() = default;
 
   /* explicit Literal(Float value): Node{std::move(value)} {} */
-  Literal& operator=(Float value) { Node::operator=(std::move(value)); return *this; }
+  Literal& operator=(Float value) {
+      Node::operator=(std::move(value)); return *this;
+  }
 
   /* explicit Literal(Integer value): Node{std::move(value)} {} */
-  Literal& operator=(Integer value) { Node::operator=(std::move(value)); return *this; }
+  Literal& operator=(Integer value) {
+      Node::operator=(std::move(value)); return *this;
+  }
 
   /* explicit Literal(String value): Node{std::move(value)} {} */
-  Literal& operator=(String value) { Node::operator=(std::move(value)); return *this; }
+  Literal& operator=(String value) {
+      Node::operator=(std::move(value)); return *this;
+  }
 };
 
 struct AssignmentExpr;
@@ -171,7 +191,9 @@ struct AssignmentExpr
 {
   AssignmentExpr() = default;
   AssignmentExpr(Name name, Node value):
-    name{std::move(name)}, value{std::move(value)} { std::cout << to_string() << std::endl; }
+    name{std::move(name)}, value{std::move(value)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -188,7 +210,9 @@ struct UnaryExpr
   UnaryExpr() = default;
 
   UnaryExpr(Operator op, Node rhs):
-    op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+    op{op}, rhs{std::move(rhs)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -203,7 +227,9 @@ struct LogicalExpr
   };
 
   LogicalExpr(Node lhs, Operator op, Node rhs):
-    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -219,7 +245,9 @@ struct EqualityExpr
   };
 
   EqualityExpr(Node lhs, Operator op, Node rhs):
-    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -235,7 +263,9 @@ struct RelationalExpr
   };
 
   RelationalExpr(Node lhs, Operator op, Node rhs):
-    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -251,7 +281,9 @@ struct AdditiveExpr
   };
 
   AdditiveExpr(Node lhs, Operator op, Node rhs):
-    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -269,7 +301,9 @@ struct MultiplicativeExpr
   MultiplicativeExpr() = default;
 
   MultiplicativeExpr(Node lhs, Operator op, Node rhs):
-    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+    lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -281,7 +315,9 @@ struct MultiplicativeExpr
 struct ExponentialExpr
 {
   ExponentialExpr(Node lhs, Node rhs):
-    lhs{std::move(lhs)}, rhs{std::move(rhs)} { std::cout << to_string() << std::endl; }
+    lhs{std::move(lhs)}, rhs{std::move(rhs)} {
+        std::cout << to_string() << std::endl;
+    }
 
   std::string to_string() const;
 
@@ -293,7 +329,9 @@ struct Decl: public Node {};
 
 struct VariableDecl: public Decl
 {
-  explicit VariableDecl(Node expr): expr{std::move(expr)} { std::cout << to_string() << std::endl; }
+  explicit VariableDecl(Node expr): expr{std::move(expr)} {
+      std::cout << to_string() << std::endl;
+  }
 
   std::string to_string() const;
 
