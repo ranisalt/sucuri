@@ -39,11 +39,6 @@
 %define parse.error verbose
 %define parse.trace
 
-/* %union { */
-/*   Node* node; */
-/*   Literal* literal; */
-/* } */
-
 %token <long double> FLOAT
 %token <long long> INTEGER
 %token <std::string> STRING
@@ -92,6 +87,7 @@ yy::parser::symbol_type yylex(
 /* %type <Name> dotted_name */
 /* %type <Identifier> identifier; */
 /* %type <Expr> atom */
+/* %type <std::pair<std::vector<Import>, std::vector<Statement>>> program */
 %type <Node> atom_expr
 %type <Node> assignment_expr
 %type <Node> exponential_expr
@@ -105,6 +101,7 @@ yy::parser::symbol_type yylex(
 %type <Node> literal
 %type <Node> variable_declaration
 %type <Name> dotted_name
+%type <ListExpr> list_expr
 %type <Identifier> identifier;
 %type <Node> atom
 
@@ -202,7 +199,7 @@ atom
     : dotted_name   { $$ = std::move($1); }
     | literal       { $$ = std::move($1); }
     | LPAREN expr RPAREN { $$ = std::move($2); }
-    | LBRACK list_expr RBRACK
+    | LBRACK list_expr RBRACK { $$ = std::move($2); }
     ;
 
 /* expressions */
@@ -216,8 +213,15 @@ trailer
     | LBRACK expr RBRACK;
 
 list_expr
-    : atom
-    | list_expr COMMA atom;
+    : atom {
+      $$ = ListExpr();
+      $$.values.push_back(std::move($1));
+    }
+    | list_expr COMMA atom {
+      $$ = std::move($1);
+      $$.values.push_back(std::move($3));
+    }
+    ;
 
 exponential_expr
     : atom_expr { $$ = std::move($1); }
@@ -228,8 +232,6 @@ exponential_expr
 
 unary_expr
     : exponential_expr { $$ = std::move($1); }
-    /* | NOT unary_expr[RHS] */
-    /* | MINUS unary_expr[RHS] */
     | NOT unary_expr[RHS]   {
       $$ = UnaryExpr(UnaryExpr::NOT, std::move($RHS));
     }
@@ -240,8 +242,6 @@ unary_expr
 
 multiplicative_expr
     : unary_expr { $$ = std::move($1); }
-    /* | multiplicative_expr[LHS] MUL unary_expr[RHS] */
-    /* | multiplicative_expr[LHS] DIV unary_expr[RHS] */
     | multiplicative_expr[LHS] MUL unary_expr[RHS] {
       $$ = MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::MUL, std::move($RHS));
     }
@@ -252,8 +252,6 @@ multiplicative_expr
 
 additive_expr
     : multiplicative_expr { $$ = std::move($1); }
-    /* | additive_expr[LHS] PLUS multiplicative_expr[RHS] */
-    /* | additive_expr[LHS] MINUS multiplicative_expr[RHS] */
     | additive_expr[LHS] PLUS multiplicative_expr[RHS]  {
       $$ = AdditiveExpr(std::move($LHS), AdditiveExpr::PLUS, std::move($RHS));
     }
@@ -264,10 +262,6 @@ additive_expr
 
 relational_expr
     : additive_expr { $$ = std::move($1); }
-    /* | relational_expr[LHS] LT additive_expr[RHS] */
-    /* | relational_expr[LHS] LE additive_expr[RHS] */
-    /* | relational_expr[LHS] GT additive_expr[RHS] */
-    /* | relational_expr[LHS] GE additive_expr[RHS] */
     | relational_expr[LHS] LT additive_expr[RHS] {
       $$ = RelationalExpr(std::move($LHS), RelationalExpr::LT, std::move($RHS));
     }
@@ -284,8 +278,6 @@ relational_expr
 
 equality_expr
     : relational_expr { $$ = std::move($1); }
-    /* | equality_expr[LHS] EQ relational_expr[RHS] */
-    /* | equality_expr[LHS] NE relational_expr[RHS] */
     | equality_expr[LHS] EQ relational_expr[RHS] {
       $$ = EqualityExpr(std::move($LHS), EqualityExpr::EQ, std::move($RHS));
     }
@@ -296,9 +288,6 @@ equality_expr
 
 logical_expr
     : equality_expr { $$ = std::move($1); }
-    /* | logical_expr[LHS] AND equality_expr[RHS] */
-    /* | logical_expr[LHS] OR equality_expr[RHS] */
-    /* | logical_expr[LHS] XOR equality_expr[RHS] */
     | logical_expr[LHS] AND equality_expr[RHS] {
       $$ = LogicalExpr(std::move($LHS), LogicalExpr::AND, std::move($RHS));
     }

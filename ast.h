@@ -109,29 +109,6 @@ struct Literal: public Node
   Literal& operator=(String value) { Node::operator=(std::move(value)); return *this; }
 };
 
-struct AssignmentExpr;
-struct UnaryExpr;
-struct LogicalExpr;
-struct EqualityExpr;
-struct RelationalExpr;
-struct AdditiveExpr;
-struct MultiplicativeExpr;
-struct ExponentialExpr;
-
-/* struct Expr: public Node { */
-/*   Expr() = default; */
-
-/*   Expr& operator=(Name value); */
-/*   Expr& operator=(AssignmentExpr value); */
-/*   Expr& operator=(UnaryExpr value); */
-/*   Expr& operator=(LogicalExpr value); */
-/*   Expr& operator=(EqualityExpr value); */
-/*   Expr& operator=(RelationalExpr value); */
-/*   Expr& operator=(AdditiveExpr value); */
-/*   Expr& operator=(MultiplicativeExpr value); */
-/*   Expr& operator=(ExponentialExpr value); */
-/* }; */
-
 struct AssignmentExpr
 {
   AssignmentExpr(Name name, Node value):
@@ -253,15 +230,22 @@ struct ExponentialExpr
   Node rhs;
 };
 
-struct Decl: public Node {};
-
-struct VariableDecl: public Decl
+struct VariableDecl
 {
-  explicit VariableDecl(Node expr): expr{std::move(expr)} { std::cout << to_string() << std::endl; }
+  VariableDecl(Node expr): expr{std::move(expr)} { std::cout << to_string() << std::endl; }
 
   std::string to_string() const;
 
   Node expr;
+};
+
+struct ListExpr
+{
+  ListExpr() = default;
+
+  std::string to_string() const;
+
+  std::vector<Node> values;
 };
 
 }

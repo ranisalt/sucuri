@@ -1,4 +1,5 @@
 let a = 42
+let x = [1, 2, 3]
 let b = 7
 
 while b != 0

@@ -139,4 +139,15 @@ std::string VariableDecl::to_string() const
   return os.str();
 }
 
+std::string ListExpr::to_string() const
+{
+  std::ostringstream os;
+  os << "ListExpr([";
+  for (auto&& v: values) {
+    os << v.to_string() << ", ";
+  }
+  os << "])";
+  return os.str();
+}
+
 }
