@@ -46,7 +46,7 @@
 %token <std::string> IDENTIFIER
 
 %locations
-%param {parser::semantic_type& yylval} {parser::location_type& yylloc}
+%param {parser::semantic_type& yylval} {parser::location_type& yylloc} { symbol::Compiler& compiler }
 
 %code requires {
 
@@ -54,21 +54,31 @@
 #include <utility>
 
 #include "ast.h"
-#include "symbol.h"
 #include "utils.h"
 
 using namespace AST;
-using namespace symbol;
 using namespace utils;
 
 using namespace std::string_literals;
+
+namespace symbol { class Compiler; }
 }
 
 %code {
+#include "symbol.h"
+
 yy::parser::symbol_type yylex(
   yy::parser::semantic_type& yylval,
   yy::parser::location_type& yylloc
 );
+
+yy::parser::symbol_type yylex(
+  yy::parser::semantic_type& yylval,
+  yy::parser::location_type& yylloc,
+  symbol::Compiler&
+) {
+  return yylex(yylval, yylloc);
+}
 }
 %type <Node> atom_expr
 %type <AssignmentExpr> assignment_expr
@@ -114,35 +124,39 @@ import_stmt
     : IMPORT dotted_as_names[NAMES] {
         for (const auto& alias: $NAMES) {
             try {
-                import_module(alias.alias.second.value);
+                compiler.import_module(alias.alias.second.value);
             } catch (const symbol::import_error& e) {
                 parser::error(yylloc, e.what());
+                YYABORT;
             }
         }
     }
     | IMPORT LPAREN dotted_as_names[NAMES] RPAREN {
         for (const auto& alias: $NAMES) {
             try {
-                import_module(alias.alias.second.value);
+                compiler.import_module(alias.alias.second.value);
             } catch (const symbol::import_error& e) {
                 parser::error(yylloc, e.what());
+                YYABORT;
             }
         }
     }
     | FROM dotted_name[PATH] IMPORT import_as_names[NAMES] {
         auto& module = $PATH.path;
         try {
-            import_module(module);
+            compiler.import_module(module);
         } catch (const symbol::import_error& e) {
             parser::error(yylloc, e.what());
+            YYABORT;
         }
     }
     | FROM dotted_name[PATH] IMPORT LPAREN import_as_names[NAMES] RPAREN {
         auto& module = $PATH.path;
         try {
-            import_module(module);
+            compiler.import_module(module);
         } catch (const symbol::import_error& e) {
             parser::error(yylloc, e.what());
+            YYABORT;
         }
     }
     ;
@@ -216,7 +230,7 @@ variable_declaration
     : LET assignment_expr[EXPR] {
       auto name = $EXPR.name;
       $$ = VariableDecl(std::move($EXPR));
-      add_symbol(name);
+      compiler.add_symbol(name);
     }
     ;
 
@@ -235,7 +249,7 @@ literal
 
 atom
     : dotted_name   {
-        if (not has_symbol($1)) {
+        if (not compiler.has_symbol($1)) {
             parser::error(yylloc, "undeclared variable '" + join(".", $1.path) + "'");
         }
         $$ = std::move($1);
@@ -382,7 +396,7 @@ variadic_param
     : ELLIPSIS identifier;
 
 scope
-    : INDENT { open_scope(); } stmt_list DEDENT { close_scope(); };
+    : INDENT { /*open_scope();*/ } stmt_list DEDENT { /*close_scope();*/ };
 
 class_definition
     : CLASS identifier class_scope;

@@ -1,23 +1,27 @@
-#include "scanner.hxx"
-#include "parser.hxx"
+#include <iostream>
+#include <string>
 
-#include <cstdlib>
+#include "symbol.h"
 
 int main(int argc, char** argv)
 {
-  int debug_level = argc > 1 ? std::atoi(argv[1]) : 0;
+  int debug_level = 0;
 
   std::string filename{"stdin"};
-  if (argc > 2) {
-      filename = argv[2];
+  for (auto i = 0; i < argc; ++i) {
+      if (argv[i] == std::string{"-d"}) {
+          try {
+              debug_level = std::stoi(argv[i + 1]);
+          } catch (const std::invalid_argument& e) {
+              std::cerr << "error: debug level must be integer (e.g. -d 0)\n";
+              return 1;
+          }
+      }
   }
 
-  yy::parser::semantic_type yylval;
-  yy::parser::location_type yylloc(&filename, 0, 0);
-  yy::parser p{yylval, yylloc};
-  yyset_in(std::fopen(filename.c_str(), "r"));
+  if (argc > 1) {
+      filename = argv[argc - 1];
+  }
 
-  p.set_debug_level(debug_level);
-
-  return p.parse();
+  return symbol::Compiler{filename, debug_level}.compile();
 }
