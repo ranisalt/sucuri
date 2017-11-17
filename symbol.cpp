@@ -23,10 +23,12 @@ using namespace utils;
 using DeclInfo = Name;
 std::vector<std::vector<DeclInfo>> scope_decls = { {} };
 
-std::optional<AST::Node> lookup(const DeclInfo& node, const std::string& trailer) {
+std::optional<AST::Node> lookup(
+        const DeclInfo& node,
+        const std::string& trailer) {
     for (auto i = scope_decls.rbegin(); i != scope_decls.rend(); ++i) {
         const auto& v = *i;
-        if (std::find(begin(v), end(v), ) != std::end(v)) {
+        if (std::find(begin(v), end(v), node) != std::end(v)) {
             return true;
         }
     }
