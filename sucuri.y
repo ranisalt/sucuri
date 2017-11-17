@@ -46,7 +46,7 @@
 %token <std::string> IDENTIFIER
 
 %locations
-%param {parser::semantic_type& yylval} {parser::location_type& yylloc} { symbol::Compiler& compiler }
+%param {parser::semantic_type& yylval} {parser::location_type& yylloc} {symbol::Compiler& compiler}
 
 %code requires {
 
