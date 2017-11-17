@@ -3,8 +3,9 @@
 
 # == Imports:
 import module as module
-from module import (thing, another_thing)
+import (a, b, c)
 from module import just_this
+from module import (thing, another_thing)
 
 # == Commands:
 print('Hellossss, Worldsssss')

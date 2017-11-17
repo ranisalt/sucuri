@@ -7,4 +7,6 @@ while b != 0
         a = a - b
     else
         b = b - a
+
+    a = a + k
 return a

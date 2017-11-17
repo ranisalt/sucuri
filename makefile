@@ -1,6 +1,6 @@
 BISON ?= bison
 CXX ?= g++
-CFLAGS += -std=c++14 -Wall -Wextra -g
+CFLAGS += -std=c++17 -Wall -Wextra -g
 FLEX ?= flex
 LANG = sucuri
 
@@ -19,10 +19,13 @@ scanner: $(LANG).l
 scanner.cxx scanner.hxx: scanner
 
 %.o: %.cxx
+	$(CXX) $(CFLAGS) -c $< -o $@ -std=c++17
+
+symbol.o: symbol.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-$(LANG): parser.o scanner.o
-	$(CXX) $(CFLAGS) parser.o scanner.o ast.cpp main.cpp -o $(LANG)
+$(LANG): parser.o scanner.o symbol.o
+	$(CXX) $(CFLAGS) parser.o scanner.o symbol.o ast.cpp main.cpp -o $(LANG) -lstdc++fs
 
 clean:
 	$(RM) *.hh *.cxx *.hxx *.o $(LANG)

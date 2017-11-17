@@ -41,55 +41,47 @@
 
 %token <long double> FLOAT
 %token <long long> INTEGER
+%token <bool> BOOL
 %token <std::string> STRING
 %token <std::string> IDENTIFIER
 
 %locations
-%param {parser::semantic_type& yylval} {parser::location_type& yylloc}
+%param {parser::semantic_type& yylval} {parser::location_type& yylloc} { symbol::Compiler& compiler }
 
 %code requires {
+
+#include <sstream>
+#include <utility>
+
 #include "ast.h"
+#include "utils.h"
 
 using namespace AST;
+using namespace utils;
+
+using namespace std::string_literals;
+
+namespace symbol { class Compiler; }
 }
 
 %code {
+#include "symbol.h"
+
 yy::parser::symbol_type yylex(
   yy::parser::semantic_type& yylval,
   yy::parser::location_type& yylloc
 );
+
+yy::parser::symbol_type yylex(
+  yy::parser::semantic_type& yylval,
+  yy::parser::location_type& yylloc,
+  symbol::Compiler&
+) {
+  return yylex(yylval, yylloc);
 }
-
-/* %type <std::shared_ptr<Program>> program */
-
-/* %type <ImportList> import_list */
-/* %type <ImportList> import_stmt; */
-/* %type <ImportList> dotted_as_names; */
-/* %type <Alias> dotted_as_name; */
-/* %type <std::string> dotted_name; */
-
-/* %type <StatementList> stmt_list */
-/* %type <Statement> stmt; */
-/* %type <Statement> assignment_expr; */
-
-/* %type <Expr> atom_expr */
-/* %type <Expr> assignment_expr */
-/* %type <Expr> exponential_expr */
-/* %type <Expr> unary_expr */
-/* %type <Expr> multiplicative_expr */
-/* %type <Expr> additive_expr */
-/* %type <Expr> relational_expr */
-/* %type <Expr> equality_expr */
-/* %type <Expr> logical_expr */
-/* %type <Expr> expr */
-/* %type <Literal> literal */
-/* %type <Decl> variable_declaration */
-/* %type <Name> dotted_name */
-/* %type <Identifier> identifier; */
-/* %type <Expr> atom */
-/* %type <std::pair<std::vector<Import>, std::vector<Statement>>> program */
+}
 %type <Node> atom_expr
-%type <Node> assignment_expr
+%type <AssignmentExpr> assignment_expr
 %type <Node> exponential_expr
 %type <Node> unary_expr
 %type <Node> multiplicative_expr
@@ -102,8 +94,13 @@ yy::parser::symbol_type yylex(
 %type <Node> variable_declaration
 %type <Name> dotted_name
 %type <ListExpr> list_expr
-%type <Identifier> identifier;
+%type <Alias> dotted_as_name
+%type <Alias> import_as_name
+%type <std::vector<Alias>> dotted_as_names
+%type <std::vector<Alias>> import_as_names
+%type <Identifier> identifier
 %type <Node> atom
+%type <Node> for_stmt
 
 %start program
 
@@ -125,41 +122,94 @@ import_list
     ;
 
 import_stmt
-    : IMPORT dotted_as_names
-    | IMPORT LPAREN dotted_as_names RPAREN
-    | FROM dotted_name IMPORT import_as_names
-    | FROM dotted_name IMPORT LPAREN import_as_names RPAREN
+    : IMPORT dotted_as_names[NAMES] {
+        for (const auto& alias: $NAMES) {
+            try {
+                compiler.import_module(alias.alias.second.value);
+            } catch (const symbol::import_error& e) {
+                parser::error(yylloc, e.what());
+                YYABORT;
+            }
+        }
+    }
+    | IMPORT LPAREN dotted_as_names[NAMES] RPAREN {
+        for (const auto& alias: $NAMES) {
+            try {
+                compiler.import_module(alias.alias.second.value);
+            } catch (const symbol::import_error& e) {
+                parser::error(yylloc, e.what());
+                YYABORT;
+            }
+        }
+    }
+    | FROM dotted_name[PATH] IMPORT import_as_names[NAMES] {
+        auto& module = $PATH.path;
+        try {
+            compiler.import_module(module);
+        } catch (const symbol::import_error& e) {
+            parser::error(yylloc, e.what());
+            YYABORT;
+        }
+    }
+    | FROM dotted_name[PATH] IMPORT LPAREN import_as_names[NAMES] RPAREN {
+        auto& module = $PATH.path;
+        try {
+            compiler.import_module(module);
+        } catch (const symbol::import_error& e) {
+            parser::error(yylloc, e.what());
+            YYABORT;
+        }
+    }
     ;
 
 /* import a.b.c */
 dotted_as_names
-    : dotted_as_name
-    | dotted_as_names COMMA dotted_as_name
+    : dotted_as_name {
+        $$.push_back($1);
+    }
+    | dotted_as_names[L] COMMA dotted_as_name[NAME] {
+        $$ = std::move($L);
+        $$.push_back($NAME);
+    }
     ;
 
 dotted_as_name
-    : dotted_name
-    | dotted_name AS identifier
+    : dotted_name {
+        $$ = {$1};
+    }
+    | dotted_name AS identifier {
+        $$ = Alias({std::move($1), std::move($3)});
+    }
     ;
 
 /* from a.b import c */
 import_as_names
-    : import_as_name
-    | import_as_names COMMA import_as_name
+    : import_as_name {
+        $$.push_back($1);
+    }
+    | import_as_names COMMA import_as_name {
+        $$ = std::move($1);
+        $$.push_back($3);
+    }
     ;
 
 import_as_name
-    : identifier
-    | identifier AS identifier;
+    : identifier {
+        $$ = Alias(Name({$1}));
+    }
+    | identifier AS identifier {
+        $$ = Alias(std::pair(Name{{std::move($1)}}, std::move($3)));
+    }
+    ;
 
 dotted_name
     : identifier {
       $$ = Name();
-      $$.path.push_back(std::move($1));
+      $$.append(std::move($1));
     }
     | dotted_name '.' identifier {
       $$ = std::move($1);
-      $$.path.push_back($3);
+      $$.append($3);
     }
     ;
 
@@ -179,7 +229,9 @@ stmt
 
 variable_declaration
     : LET assignment_expr[EXPR] {
+      auto name = $EXPR.name;
       $$ = VariableDecl(std::move($EXPR));
+      compiler.add_symbol(name);
     }
     ;
 
@@ -193,10 +245,16 @@ literal
     : FLOAT   { $$ = Float($1); }
     | INTEGER { $$ = Integer($1); }
     | STRING  { $$ = String($1); }
+    | BOOL    { $$ = Bool($1); }
     ;
 
 atom
-    : dotted_name   { $$ = std::move($1); }
+    : dotted_name   {
+        if (not compiler.has_symbol($1)) {
+            parser::error(yylloc, "undeclared variable '" + join(".", $1.path) + "'");
+        }
+        $$ = std::move($1);
+    }
     | literal       { $$ = std::move($1); }
     | LPAREN expr RPAREN { $$ = std::move($2); }
     | LBRACK list_expr RBRACK { $$ = std::move($2); }
@@ -331,7 +389,7 @@ variadic_param
     : ELLIPSIS identifier;
 
 scope
-    : INDENT stmt_list DEDENT;
+    : INDENT { /*open_scope();*/ } stmt_list DEDENT { /*close_scope();*/ };
 
 class_definition
     : CLASS identifier class_scope;
@@ -386,8 +444,22 @@ try_stmt
 
 void yy::parser::error(const yy::location& loc, const std::string& message)
 {
-    std::cout << "Error: " << message << "\nLocation: L" << loc.end.line
-        << " C" << loc.end.column << '\n';
+    static const auto red = "\033[31m";
+    static const auto bold = "\033[1m";
+    static const auto reset = "\033[0m";
+
+    auto filename = "stdin"s;
+    if (loc.end.filename) {
+        filename = *loc.end.filename;
+    }
+
+    std::ostringstream os;
+    os << loc.end.line << ":" << loc.end.column;
+    const auto lc = os.str();
+
+    std::cerr << bold << filename << ":" << lc << ": " << red << "error: "
+              << reset
+              << bold << message << reset << '\n';
 }
 
 /* vim: set ft=yacc: */

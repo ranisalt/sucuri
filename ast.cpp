@@ -43,6 +43,13 @@ std::string Integer::to_string() const
   return os.str();
 }
 
+std::string Bool::to_string() const
+{
+  std::ostringstream os;
+  os << "Bool(" << value << ")";
+  return os.str();
+}
+
 std::string String::to_string() const
 {
   std::ostringstream os;
