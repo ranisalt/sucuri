@@ -1,6 +1,21 @@
+# Flex/Bison temp
+parser.output
+parser.cxx
+parser.hxx
+
+scanner.cxx
+scanner.hxx
+
+stack.hh
+location.hh
+position.hh
+
 sucuri.tab.*
 sucuri.yy*
 sucuri
+
+**/*.o
+
 **/*.aux
 **/*.log
 **/*.toc
