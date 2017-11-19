@@ -94,11 +94,6 @@ void Compiler::import_module(const std::vector<std::string>& path) {
     import_module(filename);
 }
 
-void Compiler::import_module(const std::vector<Identifier>& path) {
-    const auto filename = join("/"s, path);
-    import_module(filename);
-}
-
 void Compiler::import_module(const std::string& module_name) {
     const auto filename = module_name + ".scr";
     std::cout << "importing " << filename << "\n";

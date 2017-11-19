@@ -4,20 +4,13 @@
 
 namespace AST {
 
-std::string Identifier::to_string() const
-{
-  std::ostringstream os;
-  os << "Identifier(" << value << ")";
-  return os.str();
-}
-
 std::string Name::to_string() const
 {
   std::ostringstream os;
   auto it = path.begin();
-  os << it->to_string();
+  os << *it;
   while (++it != path.end()) {
-    os << "." << it->to_string();
+    os << "." << *it;
   }
   return os.str();
 }
@@ -160,11 +153,11 @@ std::string ListExpr::to_string() const
 std::string FunctionCall::to_string() const
 {
   std::ostringstream os;
-  os << "FunctionCall(";
+  os << "FunctionCall(name=" << name.to_string() << ", args=[";
   for (auto&& e: expr_list) {
     os << e.to_string() << ", ";
   }
-  os << ")";
+  os << "])";
   return os.str();
 }
 

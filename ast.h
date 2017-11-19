@@ -16,18 +16,21 @@ class Node
     Node(const Node& other) = default;
 
     template<class T>
-      Node(T data):
-        ptr{std::make_shared<model<T>>(std::move(data))} {}
+    Node(T data):
+      ptr{std::make_shared<model<T>>(std::move(data))} {}
 
     Node& operator=(const Node& rhs) = default;
 
     template<class T>
-      Node& operator=(T data)
-      { ptr = std::make_shared<model<T>>(std::move(data)); return *this; }
+    Node& operator=(T data)
+    { ptr = std::make_shared<model<T>>(std::move(data)); return *this; }
 
     virtual std::string to_string() const {
       return ptr ? ptr->to_string() : "ptr null";
     }
+
+    template<class T>
+    const T& as() const { return dynamic_cast<T&>(*ptr); }
 
   private:
   public:
@@ -53,32 +56,19 @@ class Node
     std::shared_ptr<concept> ptr;
 };
 
-struct Identifier
-{
-  Identifier() = default;
-
-  Identifier(std::string value): value{std::move(value)} {
-    std::cout << to_string() << std::endl;
-  }
-
-  std::string to_string() const;
-
-  std::string value;
-};
-
 struct Name
 {
   Name() = default;
 
-  Name(std::vector<Identifier> path): path{std::move(path)} {}
+  Name(std::vector<std::string> path): path{std::move(path)} {}
 
   std::string to_string() const;
 
-  void append(Identifier i) {
+  void append(std::string i) {
     path.push_back(std::move(i));
   }
 
-  std::vector<Identifier> path;
+  std::vector<std::string> path;
 };
 
 struct Alias {
@@ -88,13 +78,13 @@ struct Alias {
     alias{name, name.path[0]}
   {}
 
-  Alias(std::pair<Name, Identifier> alias):
+  Alias(std::pair<Name, std::string> alias):
     alias{alias}
   {}
 
   std::string to_string() const;
 
-  std::pair<Name, Identifier> alias;
+  std::pair<Name, std::string> alias;
 };
 
 inline bool operator==(const Name lhs, const Name rhs) {
@@ -325,14 +315,14 @@ struct FunctionCall
 {
   FunctionCall() = default;
 
-  FunctionCall(Identifier identifier, std::vector<Node> expr_list = {}):
-    identifier{std::move(identifier)}, expr_list(std::move(expr_list)) {
+  FunctionCall(Name name, std::vector<Node> expr_list = {}):
+    name{std::move(name)}, expr_list(std::move(expr_list)) {
       std::cout << to_string() << std::endl;
     }
 
   std::string to_string() const;
 
-  Identifier identifier;
+  Name name;
   std::vector<Node> expr_list;
 };
 

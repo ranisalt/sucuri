@@ -11,7 +11,6 @@ namespace symbol {
 using DeclInfo = AST::Name;
 
 class Compiler {
-    using Identifier = AST::Identifier;
     using parser_t = yy::parser;
 public:
     Compiler(std::string filename,
@@ -34,7 +33,6 @@ public:
 
     void import_module(const std::string&);
     void import_module(const std::vector<std::string>& path);
-    void import_module(const std::vector<Identifier>& path);
 
 private:
     int debug_level{0};

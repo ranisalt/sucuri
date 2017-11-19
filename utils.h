@@ -24,16 +24,16 @@ inline auto join(const std::string& sep, Iterable i)
 }
 
 template <>
-inline auto join(const std::string& sep, std::vector<AST::Identifier> i)
+inline auto join(const std::string& sep, std::vector<std::string> i)
 {
     std::stringstream ss;
     auto it = std::begin(i);
     if (it != std::end(i)) {
-        ss << it->value;
+        ss << *it;
         ++it;
     }
     for (; it != std::end(i); ++it) {
-        ss << sep << it->value;
+        ss << sep << *it;
     }
     return ss.str();
 }

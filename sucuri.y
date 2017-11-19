@@ -100,7 +100,7 @@ yy::parser::symbol_type yylex(
 %type <Alias> import_as_name
 %type <std::vector<Alias>> dotted_as_names
 %type <std::vector<Alias>> import_as_names
-%type <Identifier> identifier
+%type <std::string> identifier
 %type <Node> atom
 %type <Node> for_stmt
 %type <std::vector<Node>> expr_list
@@ -116,7 +116,7 @@ program
     ;
 
 identifier
-    : IDENTIFIER { $$ = Identifier(std::move($1)); }
+    : IDENTIFIER { $$ = std::move($1); }
     ;
 
 /* module system */
@@ -129,7 +129,7 @@ import_stmt
     : IMPORT dotted_as_names[NAMES] {
         for (const auto& alias: $NAMES) {
             try {
-                compiler.import_module(alias.alias.second.value);
+                compiler.import_module(alias.alias.second);
             } catch (const symbol::import_error& e) {
                 parser::error(yylloc, e.what());
                 YYABORT;
@@ -139,7 +139,7 @@ import_stmt
     | IMPORT LPAREN dotted_as_names[NAMES] RPAREN {
         for (const auto& alias: $NAMES) {
             try {
-                compiler.import_module(alias.alias.second.value);
+                compiler.import_module(alias.alias.second);
             } catch (const symbol::import_error& e) {
                 parser::error(yylloc, e.what());
                 YYABORT;
@@ -366,9 +366,10 @@ expr
 
 definition
     : function_definition
-    | class_definition
+    /* | class_definition */
     | EXPORT function_definition
-    | EXPORT class_definition;
+    /* | EXPORT class_definition */
+    ;
 
 function_definition
     : LET dotted_name LPAREN RPAREN scope
@@ -383,24 +384,34 @@ identifier_list
 scope
     : INDENT { /*open_scope();*/ } stmt_list DEDENT { /*close_scope();*/ };
 
-class_definition
-    : CLASS identifier class_scope;
+/* class_definition */
+/*     : CLASS identifier class_scope; */
 
-class_scope
-    : INDENT inner_class_scope DEDENT;
+/* class_scope */
+/*     : INDENT inner_class_scope DEDENT; */
 
-inner_class_scope
-    : variable_declaration
-    | function_definition
-    | inner_class_scope variable_declaration
-    | inner_class_scope function_definition;
+/* inner_class_scope */
+/*     : variable_declaration */
+/*     | function_definition */
+/*     | inner_class_scope variable_declaration */
+/*     | inner_class_scope function_definition; */
 
 function_call
     : identifier[ID] LPAREN RPAREN {
-      $$ = FunctionCall{std::move($ID)};
+      auto fn = compiler.lookup({{$1}});
+      if (not fn) {
+        parser::error(yylloc, "undeclared function '" + $1 + "'");
+        YYABORT;
+      }
+      $$ = FunctionCall{fn.value().as<Name>()};
     }
     | identifier[ID] LPAREN expr_list[ARGS] RPAREN {
-      $$ = FunctionCall{std::move($ID), std::move($ARGS)};
+      auto fn = compiler.lookup({{$1}});
+      if (not fn) {
+        parser::error(yylloc, "undeclared function '" + $1 + "'");
+        YYABORT;
+      }
+      $$ = FunctionCall{fn.value().as<Name>(), std::move($ARGS)};
     }
     ;
 
