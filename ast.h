@@ -320,4 +320,19 @@ struct ListExpr
   std::vector<Node> values;
 };
 
+struct FunctionCall
+{
+  FunctionCall() = default;
+
+  FunctionCall(Identifier identifier, std::vector<Node> expr_list = {}):
+    identifier{std::move(identifier)}, expr_list(std::move(expr_list)) {
+      std::cout << to_string() << std::endl;
+    }
+
+  std::string to_string() const;
+
+  Identifier identifier;
+  std::vector<Node> expr_list;
+};
+
 }

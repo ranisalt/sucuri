@@ -101,6 +101,8 @@ yy::parser::symbol_type yylex(
 %type <Identifier> identifier
 %type <Node> atom
 %type <Node> for_stmt
+%type <std::vector<Node>> expr_list
+%type <FunctionCall> function_call
 
 %start program
 
@@ -225,7 +227,7 @@ stmt
     | function_call
     | compound_stmt
     | THROW expr
-    | RETURN exprlist;
+    | RETURN expr_list;
 
 variable_declaration
     : LET assignment_expr[EXPR] {
@@ -267,7 +269,7 @@ atom_expr
 
 trailer
     : LPAREN RPAREN
-    | LPAREN args_list RPAREN
+    | LPAREN expr_list RPAREN
     | LBRACK expr RBRACK;
 
 list_expr
@@ -358,11 +360,7 @@ logical_expr
     ;
 
 expr
-    : logical_expr { $$ = std::move($1); }
-
-exprlist
-    : expr
-    | exprlist COMMA expr;
+    : logical_expr[EXPR] { $$ = std::move($EXPR); }
 
 definition
     : function_definition
@@ -404,17 +402,22 @@ inner_class_scope
     | inner_class_scope function_definition;
 
 function_call
-    : identifier LPAREN RPAREN
-    | identifier LPAREN args_list RPAREN;
-
-args_list
-    : expr_list
-    | expr_list COMMA variadic_param
-    | variadic_param;
+    : identifier[ID] LPAREN RPAREN {
+      $$ = FunctionCall{std::move($ID)};
+    }
+    | identifier[ID] LPAREN expr_list[ARGS] RPAREN {
+      $$ = FunctionCall{std::move($ID), std::move($ARGS)};
+    }
+    ;
 
 expr_list
-    : expr
-    | expr_list COMMA expr;
+    : expr[EXPR] {
+      $$.push_back(std::move($EXPR));
+    }
+    | expr_list[L] COMMA expr[EXPR] {
+      $$ = std::move($L);
+      $$.push_back(std::move($EXPR));
+    };
 
 /* flow control */
 compound_stmt
@@ -435,7 +438,7 @@ while_stmt
     : WHILE expr scope;
 
 for_stmt
-    : FOR exprlist IN expr scope;
+    : FOR expr_list IN expr scope;
 
 try_stmt
     : TRY scope CATCH dotted_as_name scope;

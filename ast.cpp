@@ -157,4 +157,15 @@ std::string ListExpr::to_string() const
   return os.str();
 }
 
+std::string FunctionCall::to_string() const
+{
+  std::ostringstream os;
+  os << "FunctionCall(";
+  for (auto&& e: expr_list) {
+    os << e.to_string() << ", ";
+  }
+  os << ")";
+  return os.str();
+}
+
 }
