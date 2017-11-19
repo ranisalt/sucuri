@@ -46,12 +46,10 @@ if (!called) {
 
 <INDENT>[ \t]*/[^ \t\n\r#] {
     if (yyleng > indent_stack.top()) {
-        count("INDENT");
         indent_stack.push(yyleng);
         BEGIN INITIAL;
         return yy::parser::make_INDENT(yylloc);
     } else if (yyleng < indent_stack.top()) {
-        count("DEDENT");
         indent_stack.pop();
         if (yyleng == indent_stack.top()) {
             BEGIN INITIAL;
@@ -69,7 +67,7 @@ if (!called) {
 
 <INITIAL>#[^\n\r]*
 <INITIAL>[\n\r] {
-    /* count("NEWLINE"); */
+    /* */
     yylloc.lines(1);
     if (nesting == 0) {
         BEGIN INDENT;
@@ -80,94 +78,86 @@ if (!called) {
     /* literals */
 [+-]?"."{D}+ {
     auto val = text_to_float(yytext);
-    count("FLOAT");
     return yy::parser::make_FLOAT(val, yylloc);
 }
 
 [+-]?{D}+"."{D}* {
     auto val = text_to_float(yytext);
-    count("FLOAT");
     return yy::parser::make_FLOAT(val, yylloc);
 }
 
 [+-]?{D}+ {
     auto val = text_to_integer(yytext);
-    count("INTEGER");
     return yy::parser::make_INTEGER(val, yylloc);
 }
 
 true {
     auto val = true;
-    count("BOOL");
     return yy::parser::make_BOOL(val, yylloc);
 }
 
 false {
     auto val = false;
-    count("BOOL");
     return yy::parser::make_BOOL(val, yylloc);
 }
 
 "'"{NO_SQUOTE_STRING}"'" {
     auto val = std::string{yytext+1u, yyleng-2u};
-    count("STRING");
     return yy::parser::make_STRING(val, yylloc);
 }
 
 "\""{NO_DQUOTE_STRING}"\"" {
     auto val = std::string{yytext+1u, yyleng-2u};
-    count("STRING");
     return yy::parser::make_STRING(val, yylloc);
 }
 
     /* operators */
-"!="  { count("NE"); return yy::parser::make_NE(yylloc); }
-"("   { count("LPAREN"); ++nesting; return yy::parser::make_LPAREN(yylloc); }
-")"   { count("RPAREN"); --nesting; return yy::parser::make_RPAREN(yylloc); }
-"["   { count("LBRACK"); ++nesting; return yy::parser::make_LBRACK(yylloc); }
-"]"   { count("RBRACK"); --nesting; return yy::parser::make_RBRACK(yylloc); }
-"*"   { count("MUL"); return yy::parser::make_MUL(yylloc); }
-"**"  { count("POW"); return yy::parser::make_POW(yylloc); }
-"+"   { count("PLUS"); return yy::parser::make_PLUS(yylloc); }
-"-"   { count("MINUS"); return yy::parser::make_MINUS(yylloc); }
-"/"   { count("DIV"); return yy::parser::make_DIV(yylloc); }
-"<"   { count("LT"); return yy::parser::make_LT(yylloc); }
-"<="  { count("LE"); return yy::parser::make_LE(yylloc); }
-"="   { count("EQ"); return yy::parser::make_EQ(yylloc); }
-">"   { count("GT"); return yy::parser::make_GT(yylloc); }
-">="  { count("GE"); return yy::parser::make_GE(yylloc); }
-"and" { count("AND"); return yy::parser::make_AND(yylloc); }
-"not" { count("NOT"); return yy::parser::make_NOT(yylloc); }
-"or"  { count("OR"); return yy::parser::make_OR(yylloc); }
-"xor" { count("XOR"); return yy::parser::make_XOR(yylloc); }
+"!="  { return yy::parser::make_NE(yylloc); }
+"("   { ++nesting; return yy::parser::make_LPAREN(yylloc); }
+")"   { --nesting; return yy::parser::make_RPAREN(yylloc); }
+"["   { ++nesting; return yy::parser::make_LBRACK(yylloc); }
+"]"   { --nesting; return yy::parser::make_RBRACK(yylloc); }
+"*"   { return yy::parser::make_MUL(yylloc); }
+"**"  { return yy::parser::make_POW(yylloc); }
+"+"   { return yy::parser::make_PLUS(yylloc); }
+"-"   { return yy::parser::make_MINUS(yylloc); }
+"/"   { return yy::parser::make_DIV(yylloc); }
+"<"   { return yy::parser::make_LT(yylloc); }
+"<="  { return yy::parser::make_LE(yylloc); }
+"="   { return yy::parser::make_EQ(yylloc); }
+">"   { return yy::parser::make_GT(yylloc); }
+">="  { return yy::parser::make_GE(yylloc); }
+"and" { return yy::parser::make_AND(yylloc); }
+"not" { return yy::parser::make_NOT(yylloc); }
+"or"  { return yy::parser::make_OR(yylloc); }
+"xor" { return yy::parser::make_XOR(yylloc); }
 
     /* keywords */
-"as"     { count("AS"); return yy::parser::make_AS(yylloc); }
-"catch"  { count("CATCH"); return yy::parser::make_CATCH(yylloc); }
-"class"  { count("CLASS"); return yy::parser::make_CLASS(yylloc); }
-"else"   { count("ELSE"); return yy::parser::make_ELSE(yylloc); }
-"export" { count("EXPORT"); return yy::parser::make_EXPORT(yylloc); }
-"for"    { count("FOR"); return yy::parser::make_FOR(yylloc); }
-"from"   { count("FROM"); return yy::parser::make_FROM(yylloc); }
-"if"     { count("IF"); return yy::parser::make_IF(yylloc); }
-"import" { count("IMPORT"); return yy::parser::make_IMPORT(yylloc); }
-"in"     { count("IN"); return yy::parser::make_IN(yylloc); }
-"let"    { count("LET"); return yy::parser::make_LET(yylloc); }
-"return" { count("RETURN"); return yy::parser::make_RETURN(yylloc); }
-"throw"  { count("THROW"); return yy::parser::make_THROW(yylloc); }
-"try"    { count("TRY"); return yy::parser::make_TRY(yylloc); }
-"while"  { count("WHILE"); return yy::parser::make_WHILE(yylloc); }
+"as"     { return yy::parser::make_AS(yylloc); }
+"catch"  { return yy::parser::make_CATCH(yylloc); }
+"class"  { return yy::parser::make_CLASS(yylloc); }
+"else"   { return yy::parser::make_ELSE(yylloc); }
+"export" { return yy::parser::make_EXPORT(yylloc); }
+"for"    { return yy::parser::make_FOR(yylloc); }
+"from"   { return yy::parser::make_FROM(yylloc); }
+"if"     { return yy::parser::make_IF(yylloc); }
+"import" { return yy::parser::make_IMPORT(yylloc); }
+"in"     { return yy::parser::make_IN(yylloc); }
+"let"    { return yy::parser::make_LET(yylloc); }
+"return" { return yy::parser::make_RETURN(yylloc); }
+"throw"  { return yy::parser::make_THROW(yylloc); }
+"try"    { return yy::parser::make_TRY(yylloc); }
+"while"  { return yy::parser::make_WHILE(yylloc); }
 
     /* extra */
-"..."                 { count("ELLIPSIS"); return yy::parser::make_ELLIPSIS(yylloc); }
-{L}((\.{L})|{L}|{D})* { count("IDENTIFIER"); return yy::parser::make_IDENTIFIER(yytext, yylloc); }
+"..."                 { return yy::parser::make_ELLIPSIS(yylloc); }
+{L}((\.{L})|{L}|{D})* { return yy::parser::make_IDENTIFIER(yytext, yylloc); }
 
 ","   { return yy::parser::make_COMMA(yylloc); }
 " "+
 <INDENT><<EOF>> {
     // pop remaining indent levels
     if (indent_stack.top() != 0) {
-        count("DEDENT");
         indent_stack.pop();
         return yy::parser::make_DEDENT(yylloc);
     } else {
@@ -179,18 +169,12 @@ false {
     if (indent_stack.top() != 0) {
         BEGIN INDENT;
     } else {
-        count("END");
         yyterminate();
     }
 }
 
-. { count("UNMATCHED"); }
+. { }
 
 %%
-
-void count(const char* token)
-{
-    /* std::cout << std::string(indent_stack.size() * 2, '>') << ' ' << token << ": '" << yytext << "'\n"; */
-}
 
 /* vim: set ft=lex: */

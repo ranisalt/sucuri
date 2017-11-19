@@ -4,7 +4,7 @@
 %skeleton "lalr1.cc"
 
 %token INDENT DEDENT
-%token NOT POW MUL DIV PLUS MINUS LT LE GT GE EQ NE AND OR XOR
+/* %token NOT POW MUL DIV PLUS MINUS LT LE GT GE EQ NE AND OR XOR */
 %token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token ELLIPSIS
 
@@ -15,19 +15,21 @@
 %token LBRACK "["
 %token RBRACK "]"
 
-%left MUL
-%left DIV
-%left PLUS
-%left MINUS
-%left LT
-%left LE
-%left GT
-%left GE
-%left EQ
-%left NE
-%left AND
-%left OR
-%left XOR
+%left NOT "not"
+%left POW "**"
+%left MUL "*"
+%left DIV "/"
+%left PLUS "+"
+%left MINUS "-"
+%left LT "<"
+%left LE "<="
+%left GT ">"
+%left GE ">="
+%left EQ "="
+%left NE "!="
+%left AND "and"
+%left OR "or"
+%left XOR "xor"
 
 %defines "parser.hxx"
 %output "parser.cxx"
@@ -370,21 +372,13 @@ definition
 
 function_definition
     : LET dotted_name LPAREN RPAREN scope
-    | LET dotted_name LPAREN function_params_list RPAREN scope;
-
-function_params_list
-    : identifier_list
-    | identifier_list COMMA variadic_param
-    | variadic_param;
+    | LET dotted_name LPAREN identifier_list RPAREN scope;
 
 identifier_list
     : identifier
     | identifier EQ atom
     | identifier_list COMMA identifier
     | identifier_list COMMA identifier EQ atom;
-
-variadic_param
-    : ELLIPSIS identifier;
 
 scope
     : INDENT { /*open_scope();*/ } stmt_list DEDENT { /*close_scope();*/ };
