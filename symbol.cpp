@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
-#include <optional>
 
 #include "scanner.hxx"
 #include "parser.hxx"
@@ -20,27 +19,28 @@ using namespace AST;
 using namespace utils;
 
 /* using DeclInfo = std::pair<Name, parser::location_type>; */
-using DeclInfo = Name;
-std::vector<std::vector<DeclInfo>> scope_decls = { {} };
+using symbol::DeclInfo;
+std::vector<std::vector<DeclInfo>> scope_decls = {{}};
 
 std::optional<AST::Node> lookup(
         const DeclInfo& node,
         const std::string& trailer) {
     for (auto i = scope_decls.rbegin(); i != scope_decls.rend(); ++i) {
         const auto& v = *i;
-        if (std::find(begin(v), end(v), node) != std::end(v)) {
-            return true;
+        auto it = std::find(v.begin(), v.end(), node);
+        if (it != v.end()) {
+            return *it;
         }
     }
-    return false;
+    return {};
 }
 
 }
 
 namespace symbol {
 
-Node& Compiler::lookup(const DeclInfo& node, const std::string& trailer) {
-    return lookup(node, trailer);
+std::optional<AST::Node> Compiler::lookup(const DeclInfo& node, const std::string& trailer) {
+    return ::lookup(node, trailer);
 }
 
 /**
@@ -60,7 +60,7 @@ int Compiler::compile() {
 /**
  * Symbol table handling
  */
-void Compiler::add_symbol(symbol_t s) {
+void Compiler::add_symbol(DeclInfo s) {
     std::cout << "\tdeclaring " << s.to_string();
     scope_decls.back().push_back(s);
     std::cout << " (";
@@ -80,8 +80,8 @@ void Compiler::close_scope() {
     scope_decls.pop_back();
 }
 
-bool Compiler::has_symbol(const symbol_t& s) {
-    return lookup(s);
+bool Compiler::has_symbol(const DeclInfo& s) {
+    return lookup(s).has_value();
 }
 
 

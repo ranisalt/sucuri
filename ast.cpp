@@ -46,7 +46,7 @@ std::string Integer::to_string() const
 std::string Bool::to_string() const
 {
   std::ostringstream os;
-  os << "Bool(" << value << ")";
+  os << "Bool(" << std::boolalpha << value << ")";
   return os.str();
 }
 

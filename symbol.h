@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 
 #include "parser.hxx"
@@ -7,8 +8,7 @@
 
 namespace symbol {
 
-using symbol_t = AST::Name;
-
+using DeclInfo = AST::Name;
 
 class Compiler {
     using Identifier = AST::Identifier;
@@ -24,13 +24,13 @@ public:
 
     int compile();
 
-    void add_symbol(symbol_t);
+    void add_symbol(DeclInfo);
     void open_scope();
     void close_scope();
 
-    bool has_symbol(const symbol_t&);
+    bool has_symbol(const DeclInfo&);
 
-    AST::Node& lookup(const AST::Node&, const std::string& trailer);
+    std::optional<AST::Node> lookup(const DeclInfo&, const std::string& trailer = {});
 
     void import_module(const std::string&);
     void import_module(const std::vector<std::string>& path);
@@ -48,7 +48,7 @@ private:
 
 class undeclared_variable: std::exception {
 public:
-    undeclared_variable(const symbol_t& s):
+    undeclared_variable(const DeclInfo& s):
         what_(s.to_string())
     {}
 

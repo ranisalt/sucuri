@@ -11,6 +11,7 @@ class Node
 {
   public:
     constexpr Node() = default;
+    virtual ~Node() = default;
 
     Node(const Node& other) = default;
 
