@@ -1,31 +1,110 @@
-BISON ?= bison
-CXX ?= g++
-CFLAGS += -std=c++17 -Wall -Wextra -g
-FLEX ?= flex
-LANG = sucuri
+# Project
+#-----------------------------------------------------------------------------
+# Output
+LANG         := sucuri
+BISONREPORT  := bison-report.output
 
+# Directories
+BUILDDIR     := $(CURDIR)/build
+GRAMMARDIR   := $(CURDIR)/grammar
+INCLUDEDIR   := $(CURDIR)/include
+SRCDIR       := $(CURDIR)/src
+
+# Flex/Bison generated files
+SCANNERHEADER  := $(INCLUDEDIR)/scanner.hxx
+SCANNERSOURCE  := $(SRCDIR)/scanner.cxx
+
+PARSERHEADER  := $(INCLUDEDIR)/parser.hxx
+PARSERSOURCE  := $(SRCDIR)/parser.cxx
+
+FLEXBISONFILES := \
+				  $(BISONREPORT) \
+	              $(PARSERHEADER) \
+	              $(SCANNERHEADER) \
+				  $(INCLUDEDIR)/location.hh \
+				  $(INCLUDEDIR)/position.hh \
+				  $(INCLUDEDIR)/stack.hh
+
+# Tools
+#-----------------------------------------------------------------------------
+BISON        ?= bison
+FLEX         ?= flex
+
+CXX          ?= g++
+CXXFLAGS     += -std=c++17 -Wall -Wextra -g -I$(INCLUDEDIR)
+
+# Automation
+#-----------------------------------------------------------------------------
+LEXFILE      := $(GRAMMARDIR)/$(LANG).l
+SYNTAXFILE   := $(GRAMMARDIR)/$(LANG).y
+
+SUBDIRS      := $(wildcard */)
+
+CXXSOURCES   := $(SCANNERSOURCE) $(PARSERSOURCE)
+CXXOBJECTS   := $(patsubst %.cxx,%.oxx,$(CXXSOURCES))
+
+CPPSOURCES   := $(wildcard $(SRCDIR)/*.cpp)
+CPPOBJECTS   += $(patsubst %.cpp,%.o,$(CPPSOURCES))
+
+OBJECTS      := $(CXXOBJECTS) $(CPPOBJECTS)
+
+# Rules
+#-----------------------------------------------------------------------------
 all: $(LANG)
 
 .PHONY: parser scanner clean
 
-parser: $(LANG).y
-	$(BISON) $<
+parser: $(PARSERSOURCE)
+scanner: $(SCANNERSOURCE)
 
-parser.cxx parser.hxx: parser
+$(PARSERSOURCE): $(SYNTAXFILE)
+	@echo -e \
+		"\e[32m====================================================================\
+	     \n=\e[1m Compiling parser...\e[0;32m\
+	     \n====================================================================\e[0m"
+	@mkdir -p $(INCLUDEDIR)
+	@mkdir -p $(SRCDIR)
+	$(BISON) --defines=$(PARSERHEADER) --report-file=$(BISONREPORT) -o $@ $<
+	mv $(SRCDIR)/*.hh $(INCLUDEDIR)
+	@echo -e \
+	    "\e[32m=\e[1m Done...\e[0;32m\
+	     \n====================================================================\e[0m"
 
-scanner: $(LANG).l
-	$(FLEX) $<
+$(SCANNERSOURCE): $(LEXFILE) $(PARSERSOURCE)
+	@echo -e \
+		"\e[32m====================================================================\
+	     \n=\e[1m Compiling scanner...\e[0;32m\
+	     \n====================================================================\e[0m"
+	@mkdir -p $(INCLUDEDIR)
+	@mkdir -p $(SRCDIR)
+	$(FLEX) --header-file=$(SCANNERHEADER) -o $@ $<
+	@echo -e \
+	    "\e[32m=\e[1m Done...\e[0;32m\
+	     \n====================================================================\e[0m"
 
-scanner.cxx scanner.hxx: scanner
+$(CXXOBJECTS): %.oxx : %.cxx
+	@mkdir -p $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-%.o: %.cxx
-	$(CXX) $(CFLAGS) -c $< -o $@ -std=c++17
+$(CPPOBJECTS): %.o : %.cpp
+	@mkdir -p $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-symbol.o: symbol.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+$(LANG): $(OBJECTS)
+	@echo -e \
+		"\e[32m====================================================================\
+	     \n=\e[1m Linking...\e[0;32m\
+	     \n====================================================================\e[0m"
+	@echo $^
+	$(CXX) $(CXXFLAGS) $^ -o $@ -lstdc++fs
+	@echo -e \
+	    "\e[32m=\e[1m Done...\e[0;32m\
+	     \n====================================================================\e[0m"
 
-$(LANG): parser.o scanner.o symbol.o
-	$(CXX) $(CFLAGS) parser.o scanner.o symbol.o ast.cpp main.cpp -o $(LANG) -lstdc++fs
-
+# Directories
+# General rules
 clean:
-	$(RM) *.hh *.cxx *.hxx *.o $(LANG)
+	$(RM) $(OBJECTS) $(LANG)
+	$(RM) $(CXXSOURCES)
+	$(RM) -r $(BUILDDIR)
+	$(RM) $(FLEXBISONFILES)

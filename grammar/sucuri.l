@@ -19,9 +19,6 @@ long long text_to_integer(const char* s) { return std::strtoll(s, nullptr, 10); 
 
 %option verbose
 
-%option header-file="scanner.hxx"
-%option outfile="scanner.cxx"
-
 %option yylineno
 
 %option nodefault noinput nounput noyywrap

@@ -4,7 +4,6 @@
 %skeleton "lalr1.cc"
 
 %token INDENT DEDENT
-/* %token NOT POW MUL DIV PLUS MINUS LT LE GT GE EQ NE AND OR XOR */
 %token AS CATCH CLASS ELSE EXPORT FOR FROM IF IMPORT IN LET RETURN THROW TRY WHILE
 %token ELLIPSIS
 
@@ -31,8 +30,6 @@
 %left OR "or"
 %left XOR "xor"
 
-%defines "parser.hxx"
-%output "parser.cxx"
 %verbose
 
 %define api.token.constructor
@@ -82,6 +79,7 @@ yy::parser::symbol_type yylex(
   return yylex(yylval, yylloc);
 }
 }
+
 %type <Node> atom_expr
 %type <AssignmentExpr> assignment_expr
 %type <Node> exponential_expr

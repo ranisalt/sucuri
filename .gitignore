@@ -1,5 +1,4 @@
 # Flex/Bison temp
-parser.output
 parser.cxx
 parser.hxx
 
@@ -15,6 +14,8 @@ sucuri.yy*
 sucuri
 
 **/*.o
+**/*.oxx
+**/*.output
 
 **/*.aux
 **/*.log
