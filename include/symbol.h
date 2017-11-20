@@ -3,8 +3,8 @@
 #include <optional>
 #include <string>
 
-#include "parser.hxx"
 #include "ast.h"
+#include "parser.hxx"
 
 namespace symbol {
 
@@ -16,12 +16,20 @@ public:
     Compiler(std::string filename,
             int debug_level = 0):
         debug_level{debug_level},
-        filename{std::move(filename)},
-        yylloc{&this->filename, 0, 0},
+        main_filename{std::move(filename)},
+        yylloc{&this->main_filename, 0, 0},
         parser{yylval, yylloc, *this}
-    {}
+    {
+        std::cout << "   >>> Compiling \"" << main_filename << '"' << std::endl;
+    }
+
+    ~Compiler() {
+        std::cout << "   >>> ~Compiling \"" << main_filename << '"' << std::endl;
+    }
 
     int compile();
+
+    int compile(const std::string&);
 
     void add_symbol(DeclInfo);
     void open_scope();
@@ -36,7 +44,7 @@ public:
 
 private:
     int debug_level{0};
-    std::string filename;
+    std::string main_filename;
 
     parser_t::semantic_type yylval;
     parser_t::location_type yylloc;
