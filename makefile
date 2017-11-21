@@ -25,13 +25,19 @@ FLEXBISONFILES := \
 				  $(INCLUDEDIR)/position.hh \
 				  $(INCLUDEDIR)/stack.hh
 
+LLVM_MODULES := core
+LLVM_CXXFLAGS := $(shell llvm-config --cxxflags)
+LLVM_LDFLAGS := $(shell llvm-config --ldflags)
+LLVM_LIBRARIES := $(shell llvm-config --libs $(LLVM_MODULES))
+
 # Tools
 #-----------------------------------------------------------------------------
 BISON        ?= bison
 FLEX         ?= flex
 
 CXX          ?= g++
-CXXFLAGS     += -std=c++17 -Wall -Wextra -g -I$(INCLUDEDIR)
+CXXFLAGS     += -std=c++17 -Wall -Wextra -g -I$(INCLUDEDIR) $(LLVM_CXXFLAGS)
+LDFLAGS      += -lstdc++fs $(LLVM_LDFLAGS)
 
 # Automation
 #-----------------------------------------------------------------------------
@@ -96,7 +102,7 @@ $(LANG): $(OBJECTS)
 	     \n=\e[1m Linking...\e[0;32m\
 	     \n====================================================================\e[0m"
 	@echo $^
-	$(CXX) $(CXXFLAGS) $^ -o $@ -lstdc++fs
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@
 	@echo -e \
 	    "\e[32m=\e[1m Done...\e[0;32m\
 	     \n====================================================================\e[0m"
