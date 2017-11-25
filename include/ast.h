@@ -1,11 +1,21 @@
 #pragma once
 
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+
 #include <iostream>
 #include <memory>
 #include <vector>
 #include <string>
 
+namespace llvm {
+class Value;
+}
+
 namespace AST {
+
+static llvm::LLVMContext context;
+static llvm::IRBuilder<> builder{context};
 
 class Node
 {
@@ -25,18 +35,23 @@ class Node
     Node& operator=(T data)
     { ptr = std::make_shared<model<T>>(std::move(data)); return *this; }
 
+    virtual llvm::Value* to_llvm() const {
+      return ptr ? ptr->to_llvm() : nullptr;
+    }
+
     virtual std::string to_string() const {
       return ptr ? ptr->to_string() : "ptr null";
     }
 
     template<class T>
-    const T& as() const { return dynamic_cast<T&>(*ptr); }
+    const T* as() const { return dynamic_cast<T*>(ptr.get()); }
 
   private:
   public:
     struct concept {
       virtual ~concept() = default;
       virtual std::unique_ptr<concept> copy() const = 0;
+      virtual llvm::Value* to_llvm() const = 0;
       virtual std::string to_string() const = 0;
     };
 
@@ -45,6 +60,9 @@ class Node
         model(T data): data{std::move(data)} {}
         std::unique_ptr<concept> copy() const {
           return std::make_unique<model<T>>(data);
+        }
+        llvm::Value* to_llvm() const {
+          return data.to_llvm();
         }
         std::string to_string() const {
           return data.to_string();
@@ -61,6 +79,8 @@ struct Name
   Name() = default;
 
   Name(std::vector<std::string> path): path{std::move(path)} {}
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 
@@ -93,13 +113,15 @@ inline bool operator==(const Name lhs, const Name rhs) {
 
 struct Float
 {
-  Float(long double value): value{value} {
+  Float(double value): value{value} {
     std::cout << to_string() << std::endl;
   }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
-  long double value;
+  double value;
 };
 
 struct Integer
@@ -107,6 +129,8 @@ struct Integer
   Integer(long long value): value{value} {
     std::cout << to_string() << std::endl;
   }
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 
@@ -119,6 +143,8 @@ struct Bool
     std::cout << to_string() << std::endl;
   }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
   bool value;
@@ -129,6 +155,8 @@ struct String
   String(std::string value): value{std::move(value)} {
     std::cout << to_string() << std::endl;
   }
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 
@@ -163,6 +191,8 @@ struct AssignmentExpr
       std::cout << to_string() << std::endl;
     }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
   Name name;
@@ -172,7 +202,7 @@ struct AssignmentExpr
 struct UnaryExpr
 {
   enum Operator {
-    NOT, MINUS,
+    NOT, NEG,
   };
 
   UnaryExpr() = default;
@@ -181,6 +211,8 @@ struct UnaryExpr
     op{op}, rhs{std::move(rhs)} {
       std::cout << to_string() << std::endl;
     }
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 
@@ -198,6 +230,8 @@ struct LogicalExpr
     lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {
       std::cout << to_string() << std::endl;
     }
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 
@@ -217,6 +251,8 @@ struct EqualityExpr
       std::cout << to_string() << std::endl;
     }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
   Node lhs;
@@ -235,6 +271,8 @@ struct RelationalExpr
       std::cout << to_string() << std::endl;
     }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
   Node lhs;
@@ -252,6 +290,8 @@ struct AdditiveExpr
     lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {
       std::cout << to_string() << std::endl;
     }
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 
@@ -273,6 +313,8 @@ struct MultiplicativeExpr
       std::cout << to_string() << std::endl;
     }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
   Node lhs;
@@ -287,6 +329,8 @@ struct ExponentialExpr
       std::cout << to_string() << std::endl;
     }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
   Node lhs;
@@ -297,6 +341,8 @@ struct VariableDecl
 {
   VariableDecl(Node expr): expr{std::move(expr)} { std::cout << to_string() << std::endl; }
 
+  llvm::Value* to_llvm() const;
+
   std::string to_string() const;
 
   Node expr;
@@ -305,6 +351,8 @@ struct VariableDecl
 struct ListExpr
 {
   ListExpr() = default;
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 
@@ -319,6 +367,8 @@ struct FunctionCall
     name{std::move(name)}, expr_list(std::move(expr_list)) {
       std::cout << to_string() << std::endl;
     }
+
+  llvm::Value* to_llvm() const;
 
   std::string to_string() const;
 

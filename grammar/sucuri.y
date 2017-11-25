@@ -296,7 +296,7 @@ unary_expr
       $$ = UnaryExpr(UnaryExpr::NOT, std::move($RHS));
     }
     | MINUS unary_expr[RHS] {
-      $$ = UnaryExpr(UnaryExpr::MINUS, std::move($RHS));
+      $$ = UnaryExpr(UnaryExpr::NEG, std::move($RHS));
     }
     ;
 
@@ -401,7 +401,7 @@ function_call
         parser::error(yylloc, "undeclared function '" + $1 + "'");
         YYABORT;
       }
-      $$ = FunctionCall{fn.value().as<Name>()};
+      $$ = FunctionCall{*fn.value().as<Name>()};
     }
     | identifier[ID] LPAREN expr_list[ARGS] RPAREN {
       auto fn = compiler.lookup({{$1}});
@@ -409,7 +409,7 @@ function_call
         parser::error(yylloc, "undeclared function '" + $1 + "'");
         YYABORT;
       }
-      $$ = FunctionCall{fn.value().as<Name>(), std::move($ARGS)};
+      $$ = FunctionCall{*fn.value().as<Name>(), std::move($ARGS)};
     }
     ;
 

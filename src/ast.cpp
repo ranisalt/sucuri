@@ -1,6 +1,12 @@
 #include "ast.h"
 
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APSInt.h"
+#include "llvm/IR/Constants.h"
+
 #include <sstream>
+
+using namespace std::literals;
 
 namespace AST {
 
@@ -22,11 +28,21 @@ std::string AssignmentExpr::to_string() const
   return os.str();
 }
 
+llvm::Value* Float::to_llvm() const
+{
+  return llvm::ConstantFP::get(context, llvm::APFloat(value));
+}
+
 std::string Float::to_string() const
 {
   std::ostringstream os;
   os << "Float(" << value << ")";
   return os.str();
+}
+
+llvm::Value* Integer::to_llvm() const
+{
+  return llvm::ConstantInt::get(context, llvm::APSInt(value));
 }
 
 std::string Integer::to_string() const
@@ -50,11 +66,48 @@ std::string String::to_string() const
   return os.str();
 }
 
+llvm::Value* ExponentialExpr::to_llvm() const
+{
+  throw std::runtime_error(__PRETTY_FUNCTION__ + " not implemented."s);
+
+/*   llvm::Value* L = rhs.to_llvm(); */
+/*   if (not L) { */
+/*     return nullptr; */
+/*   } */
+
+/*   llvm::Value* R = rhs.to_llvm(); */
+/*   if (not R) { */
+/*     return nullptr; */
+/*   } */
+
+/*   switch (op) { */
+/*     case NOT: return builder.CreateNot(R); */
+/*     case NEG: return builder.CreateNeg(R); */
+/*   } */
+
+/*   throw std::runtime_error("Invalid operator"); */
+}
+
 std::string ExponentialExpr::to_string() const
 {
   std::ostringstream os;
   os << "ExponentialExpr(" << lhs.to_string() << " ** " << rhs.to_string() << ")";
   return os.str();
+}
+
+llvm::Value* UnaryExpr::to_llvm() const
+{
+  llvm::Value* R = rhs.to_llvm();
+  if (not R) {
+    return nullptr;
+  }
+
+  switch (op) {
+    case NOT: return builder.CreateNot(R);
+    case NEG: return builder.CreateNeg(R);
+  }
+
+  throw std::runtime_error("Invalid operator");
 }
 
 std::string UnaryExpr::to_string() const
@@ -63,10 +116,31 @@ std::string UnaryExpr::to_string() const
   os << "UnaryExpr(";
   switch (op) {
     case NOT: os << "not "; break;
-    case MINUS: os << "- "; break;
+    case NEG: os << "- "; break;
   }
   os << rhs.to_string() << ")";
   return os.str();
+}
+
+llvm::Value* LogicalExpr::to_llvm() const
+{
+  llvm::Value* L = lhs.to_llvm();
+  if (not L) {
+    return nullptr;
+  }
+
+  llvm::Value* R = rhs.to_llvm();
+  if (not R) {
+    return nullptr;
+  }
+
+  switch (op) {
+    case AND: return builder.CreateAnd(L, R);
+    case OR: return builder.CreateOr(L, R);
+    case XOR: return builder.CreateXor(L, R);
+  }
+
+  throw std::runtime_error("Invalid operator");
 }
 
 std::string LogicalExpr::to_string() const
@@ -82,6 +156,35 @@ std::string LogicalExpr::to_string() const
   return os.str();
 }
 
+llvm::Value* EqualityExpr::to_llvm() const
+{
+  {
+    const Integer* L = lhs.as<Integer>();
+    const Integer* R = rhs.as<Integer>();
+
+    if (L and R) {
+      switch (op) {
+        case EQ: return builder.CreateICmpEQ(L->to_llvm(), R->to_llvm());
+        case NE: return builder.CreateICmpNE(L->to_llvm(), R->to_llvm());
+      }
+    }
+  }
+
+  {
+    const Float* L = lhs.as<Float>();
+    const Float* R = rhs.as<Float>();
+
+    if (L and R) {
+      switch (op) {
+        case EQ: return builder.CreateFCmpUEQ(L->to_llvm(), R->to_llvm());
+        case NE: return builder.CreateFCmpUNE(L->to_llvm(), R->to_llvm());
+      }
+    }
+  }
+
+  throw std::runtime_error("Invalid operator");
+}
+
 std::string EqualityExpr::to_string() const
 {
   std::ostringstream os;
@@ -92,6 +195,39 @@ std::string EqualityExpr::to_string() const
   }
   os << rhs.to_string() << ")";
   return os.str();
+}
+
+llvm::Value* RelationalExpr::to_llvm() const
+{
+  {
+    const Integer* L = lhs.as<Integer>();
+    const Integer* R = rhs.as<Integer>();
+
+    if (L and R) {
+      switch (op) {
+        case LT: return builder.CreateICmpSLT(L->to_llvm(), R->to_llvm());
+        case LE: return builder.CreateICmpSLE(L->to_llvm(), R->to_llvm());
+        case GT: return builder.CreateICmpSGT(L->to_llvm(), R->to_llvm());
+        case GE: return builder.CreateICmpSGE(L->to_llvm(), R->to_llvm());
+      }
+    }
+  }
+
+  {
+    const Float* L = lhs.as<Float>();
+    const Float* R = rhs.as<Float>();
+
+    if (L and R) {
+      switch (op) {
+        case LT: return builder.CreateFCmpULT(L->to_llvm(), R->to_llvm());
+        case LE: return builder.CreateFCmpULE(L->to_llvm(), R->to_llvm());
+        case GT: return builder.CreateFCmpUGT(L->to_llvm(), R->to_llvm());
+        case GE: return builder.CreateFCmpUGE(L->to_llvm(), R->to_llvm());
+      }
+    }
+  }
+
+  throw std::runtime_error("Invalid operator");
 }
 
 std::string RelationalExpr::to_string() const
@@ -108,6 +244,26 @@ std::string RelationalExpr::to_string() const
   return os.str();
 }
 
+llvm::Value* AdditiveExpr::to_llvm() const
+{
+  llvm::Value* L = lhs.to_llvm();
+  if (not L) {
+    return nullptr;
+  }
+
+  llvm::Value* R = rhs.to_llvm();
+  if (not R) {
+    return nullptr;
+  }
+
+  switch (op) {
+    case PLUS: return builder.CreateAdd(L, R);
+    case MINUS: return builder.CreateSub(L, R);
+  }
+
+  throw std::runtime_error("Invalid operator");
+}
+
 std::string AdditiveExpr::to_string() const
 {
   std::ostringstream os;
@@ -118,6 +274,26 @@ std::string AdditiveExpr::to_string() const
   }
   os << rhs.to_string() << ")";
   return os.str();
+}
+
+llvm::Value* MultiplicativeExpr::to_llvm() const
+{
+  llvm::Value* L = lhs.to_llvm();
+  if (not L) {
+    return nullptr;
+  }
+
+  llvm::Value* R = rhs.to_llvm();
+  if (not R) {
+    return nullptr;
+  }
+
+  switch (op) {
+    case MUL: return builder.CreateMul(L, R);
+    case DIV: return builder.CreateSDiv(L, R);
+  }
+
+  throw std::runtime_error("Invalid operator");
 }
 
 std::string MultiplicativeExpr::to_string() const

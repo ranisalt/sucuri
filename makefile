@@ -26,7 +26,7 @@ FLEXBISONFILES := \
 				  $(INCLUDEDIR)/stack.hh
 
 LLVM_MODULES := core
-LLVM_CXXFLAGS := $(shell llvm-config --cxxflags)
+LLVM_CXXFLAGS := $(shell llvm-config --cxxflags) -fexceptions
 LLVM_LDFLAGS := $(shell llvm-config --ldflags)
 LLVM_LIBRARIES := $(shell llvm-config --libs $(LLVM_MODULES))
 
@@ -36,8 +36,8 @@ BISON        ?= bison
 FLEX         ?= flex
 
 CXX          ?= g++
-CXXFLAGS     += -std=c++17 -Wall -Wextra -g -I$(INCLUDEDIR) $(LLVM_CXXFLAGS)
-LDFLAGS      += -lstdc++fs $(LLVM_LDFLAGS)
+CXXFLAGS     += $(LLVM_CXXFLAGS) -std=c++17 -Wall -Wextra -g -I$(INCLUDEDIR) -O0
+LDFLAGS      += $(LLVM_LDFLAGS) $(LLVM_LIBRARIES) -lstdc++fs
 
 # Automation
 #-----------------------------------------------------------------------------
