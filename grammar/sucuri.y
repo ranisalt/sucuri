@@ -103,14 +103,28 @@ yy::parser::symbol_type yylex(
 %type <Node> for_stmt
 %type <std::vector<Node>> expr_list
 %type <FunctionCall> function_call
+/*%type <Program> program*/
 
 %start program
 
 %%
 
 program
-    : stmt_list END
-    | import_list stmt_list END
+    :
+    {
+        std::cout << "Compiling...\n" << std::string(80, '-') << "\n";
+    }
+    code END
+    {
+        auto module = $$.to_llvm();
+        std::cout << std::string(80, '-') << "\n";
+        module->print(llvm::errs(), nullptr);
+    }
+    ;
+
+code
+    : stmt_list
+    | import_list stmt_list
     ;
 
 identifier

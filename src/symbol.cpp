@@ -38,12 +38,6 @@ std::optional<AST::Node> lookup(
 
 namespace scanner {
 
-void push_state() {
-    std::cout << "   >>> pushing new state" << std::endl;
-    yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-    std::cout << "   >>> pushed " << yyin << std::endl;
-}
-
 }
 
 namespace symbol {
@@ -56,6 +50,7 @@ std::optional<AST::Node> Compiler::lookup(const DeclInfo& node, const std::strin
  * Basics
  */
 int Compiler::compile() {
+    parser.set_debug_level(debug_level);
     return compile(main_filename);
 }
 
@@ -63,23 +58,10 @@ int Compiler::compile(const std::string& filename) {
     auto old = yyin;
     yyin = std::fopen(filename.c_str(), "r");
 
-    scanner::push_state();
-
-    parser.set_debug_level(debug_level);
     auto res = parser.parse();
-
     std::fclose(yyin);
 
     return res;
-
-    /*
-    auto toplevel = std::fopen(main_filename.c_str(), "r");
-    yyset_in(toplevel);
-
-    auto res = parser.parse();
-    std::fclose(toplevel);
-    return res;
-    */
 }
 
 /**

@@ -1,7 +1,9 @@
 #pragma once
 
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
+#include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <iostream>
 #include <memory>
@@ -16,6 +18,7 @@ namespace AST {
 
 static llvm::LLVMContext context;
 static llvm::IRBuilder<> builder{context};
+static std::unique_ptr<llvm::Module> module;
 
 class Node
 {
@@ -374,6 +377,15 @@ struct FunctionCall
 
   Name name;
   std::vector<Node> expr_list;
+};
+
+struct Program
+{
+    Program() = default;
+
+    std::unique_ptr<llvm::Module> to_llvm() const;
+
+    std::string to_string() const;
 };
 
 }

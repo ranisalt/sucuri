@@ -166,18 +166,7 @@ false {
     if (indent_stack.top() != 0) {
         BEGIN INDENT;
     } else {
-        if (not YY_CURRENT_BUFFER) {
-            std::cout << "mas ué\n";
-        }
-        std::cout << "   >>> popping YY_BUFFER_STATE" << std::endl;
-        yypop_buffer_state();
-        std::cout << "   >>> popped YY_BUFFER_STATE" << std::endl;
-        /*
-        if (not YY_CURRENT_BUFFER) {
-            std::cout << "   >>> the end\n";
-            yyterminate();
-        }
-        */
+        yyterminate();
     }
 }
 

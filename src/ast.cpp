@@ -8,7 +8,18 @@
 
 using namespace std::literals;
 
+auto type_of(const AST::Node& node) {
+    return llvm::Type::TypeID::StructTyID;
+}
+
 namespace AST {
+
+llvm::Value* Name::to_llvm() const
+{
+    using namespace llvm;
+    auto type = type_of(*this);
+    return nullptr;
+}
 
 std::string Name::to_string() const
 {
@@ -19,6 +30,12 @@ std::string Name::to_string() const
     os << "." << *it;
   }
   return os.str();
+}
+
+llvm::Value* AssignmentExpr::to_llvm() const
+{
+    // TODO
+    throw std::runtime_error("Not implemented.");
 }
 
 std::string AssignmentExpr::to_string() const
@@ -52,11 +69,23 @@ std::string Integer::to_string() const
   return os.str();
 }
 
+
+llvm::Value* Bool::to_llvm() const
+{
+    return llvm::ConstantInt::get(context, llvm::APSInt(value));
+}
+
 std::string Bool::to_string() const
 {
   std::ostringstream os;
   os << "Bool(" << std::boolalpha << value << ")";
   return os.str();
+}
+
+
+llvm::Value* String::to_llvm() const
+{
+    return llvm::ConstantDataArray::getString(context, llvm::StringRef(value));
 }
 
 std::string String::to_string() const
@@ -308,11 +337,24 @@ std::string MultiplicativeExpr::to_string() const
   return os.str();
 }
 
+llvm::Value* VariableDecl::to_llvm() const
+{
+    // TODO
+    throw std::runtime_error("Not implemented.");
+}
+
 std::string VariableDecl::to_string() const
 {
   std::ostringstream os;
   os << "VariableDecl(" << expr.to_string() << ")";
   return os.str();
+}
+
+
+llvm::Value* ListExpr::to_llvm() const
+{
+    // TODO
+    throw std::runtime_error("Not implemented.");
 }
 
 std::string ListExpr::to_string() const
@@ -326,6 +368,13 @@ std::string ListExpr::to_string() const
   return os.str();
 }
 
+
+llvm::Value* FunctionCall::to_llvm() const
+{
+    // TODO
+    throw std::runtime_error("Not implemented.");
+}
+
 std::string FunctionCall::to_string() const
 {
   std::ostringstream os;
@@ -335,6 +384,13 @@ std::string FunctionCall::to_string() const
   }
   os << "])";
   return os.str();
+}
+
+
+std::unique_ptr<llvm::Module> Program::to_llvm() const
+{
+    auto module = llvm::make_unique<llvm::Module>("test-module", AST::context);
+    return module;
 }
 
 }
