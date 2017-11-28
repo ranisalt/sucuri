@@ -103,7 +103,7 @@ yy::parser::symbol_type yylex(
 %type <Node> for_stmt
 %type <std::vector<Node>> expr_list
 %type <FunctionCall> function_call
-/*%type <Program> program*/
+%type <Program> program
 
 %start program
 
@@ -220,7 +220,6 @@ import_as_name
 
 dotted_name
     : identifier {
-      $$ = Name();
       $$.append(std::move($1));
     }
     | dotted_name '.' identifier {
