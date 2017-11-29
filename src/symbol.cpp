@@ -128,5 +128,9 @@ void Compiler::import_module(const std::string& module_name) {
     // return res;
 }
 
+void Compiler::add_function(std::string name, AST::FunctionDecl proto)
+{
+    function_decls.emplace(std::move(name), std::move(proto));
+}
 
 }

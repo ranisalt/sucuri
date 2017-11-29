@@ -16,10 +16,6 @@ class Value;
 
 namespace AST {
 
-static llvm::LLVMContext context;
-static llvm::IRBuilder<> builder{context};
-static std::unique_ptr<llvm::Module> module;
-
 class Node
 {
   public:
@@ -38,8 +34,8 @@ class Node
     Node& operator=(T data)
     { ptr = std::make_shared<model<T>>(std::move(data)); return *this; }
 
-    virtual llvm::Value* to_llvm() const {
-      return ptr ? ptr->to_llvm() : nullptr;
+    virtual llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const {
+      return ptr ? ptr->to_llvm(builder, context) : nullptr;
     }
 
     virtual std::string to_string() const {
@@ -54,7 +50,7 @@ class Node
     struct concept {
       virtual ~concept() = default;
       virtual std::unique_ptr<concept> copy() const = 0;
-      virtual llvm::Value* to_llvm() const = 0;
+      virtual llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const = 0;
       virtual std::string to_string() const = 0;
     };
 
@@ -64,8 +60,8 @@ class Node
         std::unique_ptr<concept> copy() const {
           return std::make_unique<model<T>>(data);
         }
-        llvm::Value* to_llvm() const {
-          return data.to_llvm();
+        llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const {
+          return data.to_llvm(builder, context);
         }
         std::string to_string() const {
           return data.to_string();
@@ -83,7 +79,7 @@ struct Name
 
   Name(std::vector<std::string> path): path{std::move(path)} {}
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -120,7 +116,7 @@ struct Float
     std::cout << to_string() << std::endl;
   }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -133,7 +129,7 @@ struct Integer
     std::cout << to_string() << std::endl;
   }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -146,7 +142,7 @@ struct Bool
     std::cout << to_string() << std::endl;
   }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -159,7 +155,7 @@ struct String
     std::cout << to_string() << std::endl;
   }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -194,7 +190,7 @@ struct AssignmentExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -215,7 +211,7 @@ struct UnaryExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -234,7 +230,7 @@ struct LogicalExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -254,7 +250,7 @@ struct EqualityExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -274,7 +270,7 @@ struct RelationalExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -294,7 +290,7 @@ struct AdditiveExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -316,7 +312,7 @@ struct MultiplicativeExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -332,7 +328,7 @@ struct ExponentialExpr
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -340,11 +336,24 @@ struct ExponentialExpr
   Node rhs;
 };
 
+struct FunctionDecl
+{
+  FunctionDecl(std::string name, std::vector<Node> body):
+    name{std::move(name)}, body{std::move(body)} { std::cout << to_string() << std::endl; }
+
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
+
+  std::string to_string() const;
+
+  std::string name;
+  std::vector<Node> body;
+};
+
 struct VariableDecl
 {
   VariableDecl(Node expr): expr{std::move(expr)} { std::cout << to_string() << std::endl; }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -355,7 +364,7 @@ struct ListExpr
 {
   ListExpr() = default;
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -371,7 +380,7 @@ struct FunctionCall
       std::cout << to_string() << std::endl;
     }
 
-  llvm::Value* to_llvm() const;
+  llvm::Value* to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
   std::string to_string() const;
 
@@ -383,7 +392,7 @@ struct Program
 {
     Program() = default;
 
-    std::unique_ptr<llvm::Module> to_llvm() const;
+    std::unique_ptr<llvm::Module> to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const;
 
     std::string to_string() const;
 };

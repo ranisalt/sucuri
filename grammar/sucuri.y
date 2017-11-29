@@ -48,6 +48,7 @@
 %param {parser::semantic_type& yylval} {parser::location_type& yylloc} {symbol::Compiler& compiler}
 
 %code requires {
+#include <llvm/IR/Module.h>
 
 #include <sstream>
 #include <utility>
@@ -103,7 +104,6 @@ yy::parser::symbol_type yylex(
 %type <Node> for_stmt
 %type <std::vector<Node>> expr_list
 %type <FunctionCall> function_call
-%type <Program> program
 
 %start program
 
@@ -112,13 +112,14 @@ yy::parser::symbol_type yylex(
 program
     :
     {
-        std::cout << "Compiling...\n" << std::string(80, '-') << "\n";
+      std::cout << "Compiling...\n" << std::string(80, '-') << "\n";
     }
     code END
     {
-        auto module = $$.to_llvm();
-        std::cout << std::string(80, '-') << "\n";
-        module->print(llvm::errs(), nullptr);
+      /* compiler.program.reset(std::move($$)); */
+      std::cout << std::string(80, '-') << "\n";
+      /* auto&& module = compiler.module; */
+      /* module.print(llvm::errs()); */
     }
     ;
 
@@ -467,17 +468,17 @@ void yy::parser::error(const yy::location& loc, const std::string& message)
     static const auto bold = "\033[1m";
     static const auto reset = "\033[0m";
 
-    auto filename = "stdin"s;
+auto filename = "stdin"s;
     if (loc.end.filename) {
         filename = *loc.end.filename;
     }
 
-    std::ostringstream os;
-    os << loc.end.line << ":" << loc.end.column;
+std::ostringstream os;
+   os << loc.end.line << ":" << loc.end.column;
     const auto lc = os.str();
 
-    std::cerr << bold << filename << ":" << lc << ": " << red << "error: "
-              << reset
+std::cerr << bold << filename << ":" << lc << ": " << red << "error: "
+   << reset
               << bold << message << reset << '\n';
 }
 

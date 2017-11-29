@@ -1,5 +1,7 @@
 #pragma once
 
+#include <llvm/IR/Module.h>
+
 #include <optional>
 #include <string>
 
@@ -18,7 +20,8 @@ public:
         debug_level{debug_level},
         main_filename{std::move(filename)},
         yylloc{&this->main_filename, 0, 0},
-        parser{yylval, yylloc, *this}
+        parser{yylval, yylloc, *this},
+        module_{main_filename, context_}
     {
         std::cout << "   >>> Compiling \"" << main_filename << '"' << std::endl;
     }
@@ -42,6 +45,11 @@ public:
     void import_module(const std::string&);
     void import_module(const std::vector<std::string>& path);
 
+    void add_function(std::string name, AST::FunctionDecl proto);
+
+    const llvm::IRBuilder<>& builder() const { return builder_; }
+    llvm::Module& module() { return module_; }
+
 private:
     int debug_level{0};
     std::string main_filename;
@@ -49,6 +57,12 @@ private:
     parser_t::semantic_type yylval;
     parser_t::location_type yylloc;
     parser_t parser;
+
+    std::map<std::string, AST::FunctionDecl> function_decls;
+
+    llvm::LLVMContext context_;
+    llvm::IRBuilder<> builder_{context_};
+    llvm::Module module_;
 };
 
 

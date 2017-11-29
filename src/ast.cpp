@@ -14,7 +14,7 @@ auto type_of(const AST::Node& node) {
 
 namespace AST {
 
-llvm::Value* Name::to_llvm() const
+llvm::Value* Name::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     using namespace llvm;
     auto type = type_of(*this);
@@ -32,7 +32,7 @@ std::string Name::to_string() const
   return os.str();
 }
 
-llvm::Value* AssignmentExpr::to_llvm() const
+llvm::Value* AssignmentExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     // TODO
     throw std::runtime_error("Not implemented.");
@@ -45,7 +45,7 @@ std::string AssignmentExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* Float::to_llvm() const
+llvm::Value* Float::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
   return llvm::ConstantFP::get(context, llvm::APFloat(value));
 }
@@ -57,7 +57,7 @@ std::string Float::to_string() const
   return os.str();
 }
 
-llvm::Value* Integer::to_llvm() const
+llvm::Value* Integer::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
   return llvm::ConstantInt::get(context, llvm::APSInt(value));
 }
@@ -70,7 +70,7 @@ std::string Integer::to_string() const
 }
 
 
-llvm::Value* Bool::to_llvm() const
+llvm::Value* Bool::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     return llvm::ConstantInt::get(context, llvm::APSInt(value));
 }
@@ -83,7 +83,7 @@ std::string Bool::to_string() const
 }
 
 
-llvm::Value* String::to_llvm() const
+llvm::Value* String::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     return llvm::ConstantDataArray::getString(context, llvm::StringRef(value));
 }
@@ -95,16 +95,16 @@ std::string String::to_string() const
   return os.str();
 }
 
-llvm::Value* ExponentialExpr::to_llvm() const
+llvm::Value* ExponentialExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
   throw std::runtime_error(__PRETTY_FUNCTION__ + " not implemented."s);
 
-/*   llvm::Value* L = rhs.to_llvm(); */
+/*   llvm::Value* L = rhs.to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context); */
 /*   if (not L) { */
 /*     return nullptr; */
 /*   } */
 
-/*   llvm::Value* R = rhs.to_llvm(); */
+/*   llvm::Value* R = rhs.to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context); */
 /*   if (not R) { */
 /*     return nullptr; */
 /*   } */
@@ -124,9 +124,9 @@ std::string ExponentialExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* UnaryExpr::to_llvm() const
+llvm::Value* UnaryExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
-  llvm::Value* R = rhs.to_llvm();
+  llvm::Value* R = rhs.to_llvm(builder, context);
   if (not R) {
     return nullptr;
   }
@@ -151,14 +151,14 @@ std::string UnaryExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* LogicalExpr::to_llvm() const
+llvm::Value* LogicalExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
-  llvm::Value* L = lhs.to_llvm();
+  llvm::Value* L = lhs.to_llvm(builder, context);
   if (not L) {
     return nullptr;
   }
 
-  llvm::Value* R = rhs.to_llvm();
+  llvm::Value* R = rhs.to_llvm(builder, context);
   if (not R) {
     return nullptr;
   }
@@ -185,7 +185,7 @@ std::string LogicalExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* EqualityExpr::to_llvm() const
+llvm::Value* EqualityExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
   {
     const Integer* L = lhs.as<Integer>();
@@ -193,8 +193,8 @@ llvm::Value* EqualityExpr::to_llvm() const
 
     if (L and R) {
       switch (op) {
-        case EQ: return builder.CreateICmpEQ(L->to_llvm(), R->to_llvm());
-        case NE: return builder.CreateICmpNE(L->to_llvm(), R->to_llvm());
+        case EQ: return builder.CreateICmpEQ(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case NE: return builder.CreateICmpNE(L->to_llvm(builder, context), R->to_llvm(builder, context));
       }
     }
   }
@@ -205,8 +205,8 @@ llvm::Value* EqualityExpr::to_llvm() const
 
     if (L and R) {
       switch (op) {
-        case EQ: return builder.CreateFCmpUEQ(L->to_llvm(), R->to_llvm());
-        case NE: return builder.CreateFCmpUNE(L->to_llvm(), R->to_llvm());
+        case EQ: return builder.CreateFCmpUEQ(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case NE: return builder.CreateFCmpUNE(L->to_llvm(builder, context), R->to_llvm(builder, context));
       }
     }
   }
@@ -226,7 +226,7 @@ std::string EqualityExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* RelationalExpr::to_llvm() const
+llvm::Value* RelationalExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
   {
     const Integer* L = lhs.as<Integer>();
@@ -234,10 +234,10 @@ llvm::Value* RelationalExpr::to_llvm() const
 
     if (L and R) {
       switch (op) {
-        case LT: return builder.CreateICmpSLT(L->to_llvm(), R->to_llvm());
-        case LE: return builder.CreateICmpSLE(L->to_llvm(), R->to_llvm());
-        case GT: return builder.CreateICmpSGT(L->to_llvm(), R->to_llvm());
-        case GE: return builder.CreateICmpSGE(L->to_llvm(), R->to_llvm());
+        case LT: return builder.CreateICmpSLT(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case LE: return builder.CreateICmpSLE(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case GT: return builder.CreateICmpSGT(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case GE: return builder.CreateICmpSGE(L->to_llvm(builder, context), R->to_llvm(builder, context));
       }
     }
   }
@@ -248,10 +248,10 @@ llvm::Value* RelationalExpr::to_llvm() const
 
     if (L and R) {
       switch (op) {
-        case LT: return builder.CreateFCmpULT(L->to_llvm(), R->to_llvm());
-        case LE: return builder.CreateFCmpULE(L->to_llvm(), R->to_llvm());
-        case GT: return builder.CreateFCmpUGT(L->to_llvm(), R->to_llvm());
-        case GE: return builder.CreateFCmpUGE(L->to_llvm(), R->to_llvm());
+        case LT: return builder.CreateFCmpULT(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case LE: return builder.CreateFCmpULE(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case GT: return builder.CreateFCmpUGT(L->to_llvm(builder, context), R->to_llvm(builder, context));
+        case GE: return builder.CreateFCmpUGE(L->to_llvm(builder, context), R->to_llvm(builder, context));
       }
     }
   }
@@ -273,14 +273,14 @@ std::string RelationalExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* AdditiveExpr::to_llvm() const
+llvm::Value* AdditiveExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
-  llvm::Value* L = lhs.to_llvm();
+  llvm::Value* L = lhs.to_llvm(builder, context);
   if (not L) {
     return nullptr;
   }
 
-  llvm::Value* R = rhs.to_llvm();
+  llvm::Value* R = rhs.to_llvm(builder, context);
   if (not R) {
     return nullptr;
   }
@@ -305,14 +305,14 @@ std::string AdditiveExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* MultiplicativeExpr::to_llvm() const
+llvm::Value* MultiplicativeExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
-  llvm::Value* L = lhs.to_llvm();
+  llvm::Value* L = lhs.to_llvm(builder, context);
   if (not L) {
     return nullptr;
   }
 
-  llvm::Value* R = rhs.to_llvm();
+  llvm::Value* R = rhs.to_llvm(builder, context);
   if (not R) {
     return nullptr;
   }
@@ -337,7 +337,7 @@ std::string MultiplicativeExpr::to_string() const
   return os.str();
 }
 
-llvm::Value* VariableDecl::to_llvm() const
+llvm::Value* VariableDecl::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     // TODO
     throw std::runtime_error("Not implemented.");
@@ -351,7 +351,7 @@ std::string VariableDecl::to_string() const
 }
 
 
-llvm::Value* ListExpr::to_llvm() const
+llvm::Value* ListExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     // TODO
     throw std::runtime_error("Not implemented.");
@@ -369,7 +369,7 @@ std::string ListExpr::to_string() const
 }
 
 
-llvm::Value* FunctionCall::to_llvm() const
+llvm::Value* FunctionCall::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     // TODO
     throw std::runtime_error("Not implemented.");
@@ -387,9 +387,9 @@ std::string FunctionCall::to_string() const
 }
 
 
-std::unique_ptr<llvm::Module> Program::to_llvm() const
+std::unique_ptr<llvm::Module> Program::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
-    auto module = llvm::make_unique<llvm::Module>("test-module", AST::context);
+    auto module = llvm::make_unique<llvm::Module>("test-module", context);
     return module;
 }
 
