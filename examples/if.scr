@@ -1,5 +1,5 @@
 let answer = 126 / 3
-
-if answer = 42
-    return 1
-
+#
+#if answer = 42
+#    return 1
+#

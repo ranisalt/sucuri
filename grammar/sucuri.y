@@ -104,6 +104,23 @@ yy::parser::symbol_type yylex(
 %type <Node> for_stmt
 %type <std::vector<Node>> expr_list
 %type <FunctionCall> function_call
+<<<<<<< Updated upstream
+=======
+
+%type <Program> program
+>>>>>>> Stashed changes
+
+%type <Code> code
+%type <StatementList> stmt_list
+%type <Node> import_list
+
+%type <Node> stmt
+
+%type <FunctionDefinition> function_definition
+%type <Node> scope
+%type <Node> definition
+
+%type <std::vector<Name>> identifier_list
 
 %start program
 
@@ -116,16 +133,29 @@ program
     }
     code END
     {
+<<<<<<< Updated upstream
       /* compiler.program.reset(std::move($$)); */
       std::cout << std::string(80, '-') << "\n";
       /* auto&& module = compiler.module; */
       /* module.print(llvm::errs()); */
+=======
+        $$ = Program{std::move($code)};
+        std::cout << std::string(80, '-') << "\nGenerating LLVM...\n\n";
+        auto module = $$.to_llvm();
+        std::cout << std::string(80, '-') << "\n";
+        module->print(llvm::errs(), nullptr);
+>>>>>>> Stashed changes
     }
     ;
 
 code
-    : stmt_list
+    : stmt_list {
+        $$ = Code{$1};
+    }
     | import_list stmt_list
+    {
+        $$ = Code{$2};
+    }
     ;
 
 identifier
@@ -230,21 +260,34 @@ dotted_name
     ;
 
 stmt_list
-    : stmt
-    | stmt_list stmt
+    : stmt {
+        $$.append(std::move($stmt));
+        std::cout << "stmt_list: " << $$.to_string() << "\n";
+    }
+    | stmt_list[LIST] stmt {
+        $$ = std::move($LIST);
+        $$.append(std::move($stmt));
+    }
     ;
 
 stmt
     : variable_declaration
     | assignment_expr
-    | definition
+    | definition {
+        $$ = Statement{$1};
+        std::cout << "stmt: " << $$.to_string() << "\n";
+    }
     | function_call
     | compound_stmt
     | THROW expr
-    | RETURN expr_list;
+    | RETURN expr[EXPR] {
+        $$ = ReturnStatement{std::move($EXPR)};
+        std::cout << "stmt: " << $$.to_string() << "\n";
+    };
 
 variable_declaration
     : LET assignment_expr[EXPR] {
+      std::cout << "\nassign " << $EXPR.to_string() << "\n\n";
       auto name = $EXPR.name;
       $$ = VariableDecl(std::move($EXPR));
       compiler.add_symbol(name);
@@ -266,9 +309,11 @@ literal
 
 atom
     : dotted_name   {
+        /*
         if (not compiler.has_symbol($1)) {
             parser::error(yylloc, "undeclared variable '" + join(".", $1.path) + "'");
         }
+        */
         $$ = std::move($1);
     }
     | literal       { $$ = std::move($1); }
@@ -377,7 +422,10 @@ expr
     : logical_expr[EXPR] { $$ = std::move($EXPR); }
 
 definition
-    : function_definition
+    : function_definition {
+        $$ = Node{std::move($1)};
+        std::cout << "definition: " << $$.to_string() << "\n";
+    }
     /* | class_definition */
     | EXPORT function_definition
     /* | EXPORT class_definition */
@@ -385,16 +433,35 @@ definition
 
 function_definition
     : LET dotted_name LPAREN RPAREN scope
-    | LET dotted_name LPAREN identifier_list RPAREN scope;
+    | LET dotted_name[NAME] LPAREN identifier_list[PARAMS] RPAREN scope[BODY]
+    {
+        $$ = FunctionDefinition($BODY, $NAME, $PARAMS);
+        std::cout << $$.to_string() << std::endl;
+    }
+    ;
 
 identifier_list
-    : identifier
-    | identifier EQ atom
-    | identifier_list COMMA identifier
-    | identifier_list COMMA identifier EQ atom;
+    : identifier[ID] {
+        $$.push_back(Name{{$1}});
+    }
+    | identifier[ID] EQ atom {
+        $$.push_back(Name{{$1}});
+    }
+    | identifier_list COMMA identifier[ID] {
+        $$ = std::move($1);
+        $$.push_back(Name{{$ID}});
+    }
+    | identifier_list COMMA identifier[ID] EQ atom {
+        $$ = std::move($1);
+        $$.push_back(Name{{$ID}});
+    }
+    ;
 
 scope
-    : INDENT { /*open_scope();*/ } stmt_list DEDENT { /*close_scope();*/ };
+    : INDENT { /*open_scope();*/ } stmt_list DEDENT {
+        $$ = StatementList{$stmt_list};
+        /*close_scope();*/
+    };
 
 /* class_definition */
 /*     : CLASS identifier class_scope; */

@@ -17,8 +17,15 @@ namespace AST {
 llvm::Value* Name::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
     using namespace llvm;
-    auto type = type_of(*this);
-    return nullptr;
+    //auto type = type_of(*this);
+
+    auto type = llvm::Type::getPrimitiveType(
+            context,
+            llvm::Type::TypeID::PointerTyID
+    );
+
+    //return type;
+    throw std::runtime_error("Name::to_llvm() not implemented. sry.");
 }
 
 std::string Name::to_string() const
@@ -34,8 +41,22 @@ std::string Name::to_string() const
 
 llvm::Value* AssignmentExpr::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
-    // TODO
-    throw std::runtime_error("Not implemented.");
+    std::cout << "Assign.to_llvm()\n";
+    if (not block) {
+        throw std::runtime_error(
+            "llvm::BasicBlock* not set for "s + name.to_string());
+    }
+
+    /*
+    auto value = this->value.to_llvm();
+    auto type = value->getType();
+    {
+        auto alloc_instr = builder.CreateAlloca(type, nullptr, name.to_string());
+        {
+            return builder.CreateStore(value, alloc_instr);
+        }
+    }
+    */
 }
 
 std::string AssignmentExpr::to_string() const
@@ -339,6 +360,7 @@ std::string MultiplicativeExpr::to_string() const
 
 llvm::Value* VariableDecl::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
+    std::cout << "\n" << to_string() << ".to_llvm()\n\n";
     // TODO
     throw std::runtime_error("Not implemented.");
 }
@@ -371,6 +393,7 @@ std::string ListExpr::to_string() const
 
 llvm::Value* FunctionCall::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
+    std::cout << "Function call -- to_llvm()\n";
     // TODO
     throw std::runtime_error("Not implemented.");
 }
@@ -386,11 +409,137 @@ std::string FunctionCall::to_string() const
   return os.str();
 }
 
+llvm::Value* FunctionDefinition::to_llvm() const
+{
+    std::cout << "to_llvm::" << to_string() << "\n";
+
+    std::cout << to_string() << "::\n    initializing param types..." << std::endl;
+    auto param_types = std::vector<llvm::Type*>{};
+    auto llvm_params = std::vector<llvm::Value*>{};
+    llvm_params.reserve(param_types.size());
+
+    for (auto& param: params) {
+        auto type = llvm::Type::getPrimitiveType(
+                context,
+                llvm::Type::TypeID::PointerTyID
+        );
+
+        param_types.push_back(type);
+    }
+
+    std::cout << "    initializing llvm body... (which is: "
+              << body->to_string() << ")" << std::endl;
+
+    auto llvm_body = body->to_llvm();
+
+    std::cout << "    initializing function type..." << std::endl;
+    auto types = llvm::FunctionType::get(
+        // return type
+        llvm_body->getType(),
+        // params types
+        param_types,
+        // is vararg?
+        false
+    );
+
+    std::cout << "    initializing function itself..." << std::endl;
+    auto function = llvm::Function::Create(
+        types,
+        llvm::GlobalVariable::LinkageTypes::ExternalLinkage,
+        name.to_string(),
+        block->getModule()
+    );
+
+    std::cout << "    done" << std::endl;
+    return function;
+}
+
+std::string FunctionDefinition::to_string() const
+{
+    std::ostringstream os;
+    os << "FunctionDefinition([";
+    for (auto&& p: params) {
+        os << p.to_string() << ", ";
+    }
+    os << "])";
+    return os.str();
+}
+
+
+llvm::Value* Statement::to_llvm() const
+{
+    std::cout << "Statement::to_llvm() (for: " << state.to_string() << ")"
+              << " (with block: " << block << ")\n";
+    auto state = this->state;
+    state.block = block;
+    return state.to_llvm();
+}
+
+std::string Statement::to_string() const
+{
+    return "Statement::to_string()::"s + state.to_string();
+}
+
+
+llvm::Value* ReturnStatement::to_llvm() const
+{
+    std::cout << to_string() << "::to_llvm() (block: " << block << ")" << std::endl;;
+    auto builder = llvm::IRBuilder<>{block};
+    std::cout << "deu?" << std::endl;
+    return builder.CreateRet(expr.to_llvm());
+}
+
+std::string ReturnStatement::to_string() const
+{
+    return "ReturnStatement(" + expr.to_string() + ")";
+}
+
+
+llvm::Value* StatementList::to_llvm() const
+{
+    std::cout << "StatementList::to_llvm()\n";
+    auto block = llvm::BasicBlock::Create(context, to_string());
+    for (auto statement: statements) {
+        statement.block = block;
+        statement.to_llvm();
+    }
+    return block;
+}
+
+std::string StatementList::to_string() const
+{
+    std::ostringstream os;
+    for (auto&& state: statements) {
+        os << "    " << state.to_string();
+    }
+    return "StatementList::to_string()::\n"s + os.str();
+}
+
+
+llvm::Value* Code::to_llvm() const
+{
+    std::cout << "Code::to_llvm()\n";
+    return root.to_llvm();
+}
+
+std::string Code::to_string() const
+{
+    return root.to_string();
+}
+
 
 std::unique_ptr<llvm::Module> Program::to_llvm(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
 {
-    auto module = llvm::make_unique<llvm::Module>("test-module", context);
+    std::cout << to_string() << ".to_llvm()\n";
+    auto module = llvm::make_unique<llvm::Module>("test-module", AST::context);
+    auto block = llvm::BasicBlock::Create(context, "top-level");
+    root.to_llvm();
     return module;
+}
+
+std::string Program::to_string() const
+{
+    return "MainModule";
 }
 
 }
