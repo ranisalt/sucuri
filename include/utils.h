@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "ast.h"
-
 namespace utils {
 
 template <typename Iterable>

@@ -1,3 +1,4 @@
+#include <llvm/IR/Module.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/TargetRegistry.h>
@@ -8,7 +9,7 @@
 #include <iostream>
 #include <string>
 
-#include "symbol.h"
+#include "parser.hxx"
 
 using namespace llvm;
 
@@ -31,9 +32,6 @@ int main(int argc, char** argv)
   if (argc > 1) {
       filename = argv[argc - 1];
   }
-
-  auto compiler = symbol::Compiler{filename, debug_level};
-  auto ret = compiler.compile();
 
   InitializeAllTargetInfos();
   InitializeAllTargets();
@@ -67,10 +65,16 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  auto& module = compiler.module();
-  module.setDataLayout(target_machine->createDataLayout());
-  pass.run(module);
+  yy::parser::semantic_type yylval;
+  yy::parser::location_type yylloc{&filename, 0, 0};
+  yy::parser parser{yylval, yylloc};
+
+  auto ret = parser.parse();
+
+  //module->setDataLayout(target->createDataLayout());
+  //pass.run(*compiler.module());
   output.flush();
+
   /* output << compiler.program->to_llvm(); */
   return ret;
 }

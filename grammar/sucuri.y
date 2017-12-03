@@ -45,82 +45,58 @@
 %token <std::string> IDENTIFIER
 
 %locations
-%param {parser::semantic_type& yylval} {parser::location_type& yylloc} {symbol::Compiler& compiler}
+%param {parser::semantic_type& yylval} {parser::location_type& yylloc}
 
 %code requires {
 #include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <sstream>
 #include <utility>
 
-#include "ast.h"
 #include "utils.h"
 
-using namespace AST;
 using namespace utils;
 
 using namespace std::string_literals;
 
-namespace symbol { class Compiler; }
+static llvm::LLVMContext context{};
+static auto module = llvm::make_unique<llvm::Module>("test-module", context);
+static std::vector<llvm::BasicBlock*> blocks{};
+static std::vector<llvm::Function*> functions{};
+
+inline auto current_block() {
+    return blocks.back();
+}
+
+inline auto current_function() {
+    return functions.back();
+}
+
 }
 
 %code {
-#include "symbol.h"
 
 yy::parser::symbol_type yylex(
-  yy::parser::semantic_type& yylval,
-  yy::parser::location_type& yylloc
+    yy::parser::semantic_type& yylval,
+    yy::parser::location_type& yylloc
 );
 
-yy::parser::symbol_type yylex(
-  yy::parser::semantic_type& yylval,
-  yy::parser::location_type& yylloc,
-  symbol::Compiler&
-) {
-  return yylex(yylval, yylloc);
-}
 }
 
-%type <Node> atom_expr
-%type <AssignmentExpr> assignment_expr
-%type <Node> exponential_expr
-%type <Node> unary_expr
-%type <Node> multiplicative_expr
-%type <Node> additive_expr
-%type <Node> relational_expr
-%type <Node> equality_expr
-%type <Node> logical_expr
-%type <Node> expr
-%type <Node> literal
-%type <Node> variable_declaration
-%type <Name> dotted_name
-%type <ListExpr> list_expr
-%type <Alias> dotted_as_name
-%type <Alias> import_as_name
-%type <std::vector<Alias>> dotted_as_names
-%type <std::vector<Alias>> import_as_names
-%type <std::string> identifier
-%type <Node> atom
-%type <Node> for_stmt
-%type <std::vector<Node>> expr_list
-%type <FunctionCall> function_call
-<<<<<<< Updated upstream
-=======
+/* %type <Node> atom_expr */
 
-%type <Program> program
->>>>>>> Stashed changes
-
-%type <Code> code
-%type <StatementList> stmt_list
-%type <Node> import_list
-
-%type <Node> stmt
-
-%type <FunctionDefinition> function_definition
-%type <Node> scope
-%type <Node> definition
-
-%type <std::vector<Name>> identifier_list
+%type <llvm::Constant*> literal
+%type <llvm::Value*> atom_expr
+%type <llvm::Value*> unary_expr
+%type <llvm::Value*> multiplicative_expr
+%type <llvm::Value*> additive_expr
+%type <llvm::Value*> relational_expr
+%type <llvm::Value*> equality_expr
+%type <llvm::Value*> logical_expr
+%type <llvm::Value*> expr
+%type <std::string> dotted_name
 
 %start program
 
@@ -129,37 +105,48 @@ yy::parser::symbol_type yylex(
 program
     :
     {
-      std::cout << "Compiling...\n" << std::string(80, '-') << "\n";
+        std::cout << std::string(80, '-') << "\nCompiling...\n";
     }
     code END
     {
-<<<<<<< Updated upstream
-      /* compiler.program.reset(std::move($$)); */
-      std::cout << std::string(80, '-') << "\n";
-      /* auto&& module = compiler.module; */
-      /* module.print(llvm::errs()); */
-=======
-        $$ = Program{std::move($code)};
-        std::cout << std::string(80, '-') << "\nGenerating LLVM...\n\n";
-        auto module = $$.to_llvm();
-        std::cout << std::string(80, '-') << "\n";
+        std::cout << std::string(80, '-') << "\nDone.\n";
         module->print(llvm::errs(), nullptr);
->>>>>>> Stashed changes
     }
     ;
 
 code
-    : stmt_list {
-        $$ = Code{$1};
+    :
+    {
+        std::cout << "stmt_list\n";
+
+        auto types = llvm::FunctionType::get(
+            llvm::Type::getInt32Ty(context),
+            false
+        );
+
+        functions.emplace_back(
+            llvm::Function::Create(
+                types,
+                llvm::GlobalVariable::LinkageTypes::ExternalLinkage,
+                module->getName() + "::main",
+                module.get()
+            )
+        );
+
+        blocks.emplace_back(
+            llvm::BasicBlock::Create(context, "first", current_function())
+        );
+    }
+    stmt_list
+    {
+        blocks.pop_back();
+        functions.pop_back();
     }
     | import_list stmt_list
-    {
-        $$ = Code{$2};
-    }
     ;
 
 identifier
-    : IDENTIFIER { $$ = std::move($1); }
+    : IDENTIFIER
     ;
 
 /* module system */
@@ -169,363 +156,220 @@ import_list
     ;
 
 import_stmt
-    : IMPORT dotted_as_names[NAMES] {
-        for (const auto& alias: $NAMES) {
-            try {
-                compiler.import_module(alias.alias.second);
-            } catch (const symbol::import_error& e) {
-                parser::error(yylloc, e.what());
-                YYABORT;
-            }
-        }
-    }
-    | IMPORT LPAREN dotted_as_names[NAMES] RPAREN {
-        for (const auto& alias: $NAMES) {
-            try {
-                compiler.import_module(alias.alias.second);
-            } catch (const symbol::import_error& e) {
-                parser::error(yylloc, e.what());
-                YYABORT;
-            }
-        }
-    }
-    | FROM dotted_name[PATH] IMPORT import_as_names[NAMES] {
-        auto& module = $PATH.path;
-        try {
-            compiler.import_module(module);
-        } catch (const symbol::import_error& e) {
-            parser::error(yylloc, e.what());
-            YYABORT;
-        }
-    }
-    | FROM dotted_name[PATH] IMPORT LPAREN import_as_names[NAMES] RPAREN {
-        auto& module = $PATH.path;
-        try {
-            compiler.import_module(module);
-        } catch (const symbol::import_error& e) {
-            parser::error(yylloc, e.what());
-            YYABORT;
-        }
-    }
+    : IMPORT dotted_as_names[NAMES]
+    | IMPORT LPAREN dotted_as_names[NAMES] RPAREN
+    | FROM dotted_name[PATH] IMPORT import_as_names[NAMES]
+    | FROM dotted_name[PATH] IMPORT LPAREN import_as_names[NAMES] RPAREN
     ;
 
 /* import a.b.c */
 dotted_as_names
-    : dotted_as_name {
-        $$.push_back($1);
-    }
-    | dotted_as_names[L] COMMA dotted_as_name[NAME] {
-        $$ = std::move($L);
-        $$.push_back($NAME);
-    }
+    : dotted_as_name
+    | dotted_as_names[L] COMMA dotted_as_name[NAME]
     ;
 
 dotted_as_name
-    : dotted_name {
-        $$ = {$1};
-    }
-    | dotted_name AS identifier {
-        $$ = Alias({std::move($1), std::move($3)});
-    }
+    : dotted_name
+    | dotted_name AS identifier
     ;
 
 /* from a.b import c */
 import_as_names
-    : import_as_name {
-        $$.push_back($1);
-    }
-    | import_as_names COMMA import_as_name {
-        $$ = std::move($1);
-        $$.push_back($3);
-    }
+    : import_as_name
+    | import_as_names COMMA import_as_name
     ;
 
 import_as_name
-    : identifier {
-        $$ = Alias(Name({$1}));
-    }
-    | identifier AS identifier {
-        $$ = Alias(std::pair(Name{{std::move($1)}}, std::move($3)));
-    }
+    : identifier
+    | identifier AS identifier
     ;
 
 dotted_name
-    : identifier {
-      $$.append(std::move($1));
-    }
-    | dotted_name '.' identifier {
-      $$ = std::move($1);
-      $$.append($3);
-    }
+    : identifier
+    | dotted_name '.' identifier
     ;
 
 stmt_list
-    : stmt {
-        $$.append(std::move($stmt));
-        std::cout << "stmt_list: " << $$.to_string() << "\n";
-    }
-    | stmt_list[LIST] stmt {
-        $$ = std::move($LIST);
-        $$.append(std::move($stmt));
-    }
+    : stmt
+    | stmt_list[LIST] stmt
     ;
 
 stmt
     : variable_declaration
-    | assignment_expr
-    | definition {
-        $$ = Statement{$1};
-        std::cout << "stmt: " << $$.to_string() << "\n";
+    |
+    {
+        std::cout << "assignment_expr\n";
     }
-    | function_call
+    assignment_expr
+    /*| definition*/
+    /*| function_call*/
     | compound_stmt
     | THROW expr
-    | RETURN expr[EXPR] {
-        $$ = ReturnStatement{std::move($EXPR)};
-        std::cout << "stmt: " << $$.to_string() << "\n";
-    };
+    | RETURN expr[EXPR]
+    ;
 
 variable_declaration
-    : LET assignment_expr[EXPR] {
-      std::cout << "\nassign " << $EXPR.to_string() << "\n\n";
-      auto name = $EXPR.name;
-      $$ = VariableDecl(std::move($EXPR));
-      compiler.add_symbol(name);
+    :
+    {
+        std::cout << "variable_declaration\n";
+    }
+    LET IDENTIFIER[NAME] EQ expr[VALUE]
+    {
+        auto layout = llvm::DataLayout(module.get());
+        std::cout << $NAME << ".size: "
+                  << layout.getTypeStoreSize($VALUE->getType()) << "\n";
+        std::cout << $NAME << ".value: " << $VALUE << "\n";
+        auto builder = llvm::IRBuilder<>{current_block()};
+        auto alloca = builder.CreateAlloca($VALUE->getType(), nullptr, $NAME);
+        auto store = builder.CreateStore($VALUE, alloca);
     }
     ;
 
 assignment_expr
-    : dotted_name[NAME] EQ expr[VALUE] {
-      $$ = AssignmentExpr(std::move($NAME), std::move($VALUE));
-    }
+    :
+    dotted_name[NAME] EQ expr[VALUE]
     ;
 
 literal
-    : FLOAT   { $$ = Float($1); }
-    | INTEGER { $$ = Integer($1); }
-    | STRING  { $$ = String($1); }
-    | BOOL    { $$ = Bool($1); }
+    : FLOAT
+    |
+    {
+        std::cout << "integer literal\n";
+    }
+    INTEGER
+    {
+        $$ = llvm::ConstantInt::get(
+            module->getContext(),
+            llvm::APInt(32, $INTEGER, true)
+        );
+        std::cout << "\t>>> value: " << $INTEGER << "\n";
+    }
+    | STRING
+    | BOOL
     ;
 
 atom
-    : dotted_name   {
-        /*
-        if (not compiler.has_symbol($1)) {
-            parser::error(yylloc, "undeclared variable '" + join(".", $1.path) + "'");
-        }
-        */
-        $$ = std::move($1);
-    }
-    | literal       { $$ = std::move($1); }
-    | LPAREN expr RPAREN { $$ = std::move($2); }
-    | LBRACK list_expr RBRACK { $$ = std::move($2); }
+    : dotted_name
+    |
+    literal
+    | LPAREN expr RPAREN
+    | LBRACK list_expr RBRACK
     ;
 
 /* expressions */
 atom_expr
-    : atom { $$ = std::move($1); }
-    | atom trailer;
+    : atom
+    | atom trailer
+    ;
 
 trailer
     : LPAREN RPAREN
-    | LPAREN expr_list RPAREN
-    | LBRACK expr RBRACK;
+    | LBRACK expr RBRACK
+    ;
 
 list_expr
-    : atom {
-      $$ = ListExpr();
-      $$.values.push_back(std::move($1));
-    }
-    | list_expr COMMA atom {
-      $$ = std::move($1);
-      $$.values.push_back(std::move($3));
-    }
+    : atom
+    | list_expr COMMA atom
     ;
 
 exponential_expr
-    : atom_expr { $$ = std::move($1); }
-    | exponential_expr[LHS] POW atom_expr[RHS] {
-      $$ = ExponentialExpr(std::move($LHS), std::move($RHS));
-    }
+    : atom_expr
+    | exponential_expr[LHS] POW atom_expr[RHS]
     ;
 
 unary_expr
-    : exponential_expr { $$ = std::move($1); }
-    | NOT unary_expr[RHS]   {
-      $$ = UnaryExpr(UnaryExpr::NOT, std::move($RHS));
-    }
-    | MINUS unary_expr[RHS] {
-      $$ = UnaryExpr(UnaryExpr::NEG, std::move($RHS));
-    }
+    : exponential_expr
+    | NOT unary_expr[RHS]
+    | MINUS unary_expr[RHS]
     ;
 
 multiplicative_expr
-    : unary_expr { $$ = std::move($1); }
-    | multiplicative_expr[LHS] MUL unary_expr[RHS] {
-      $$ = MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::MUL, std::move($RHS));
+    : unary_expr
+    {
+        $$ = std::move($1);
     }
-    | multiplicative_expr[LHS] DIV unary_expr[RHS] {
-      $$ = MultiplicativeExpr(std::move($LHS), MultiplicativeExpr::DIV, std::move($RHS));
+    | multiplicative_expr[LHS] MUL unary_expr[RHS]
+    | multiplicative_expr[LHS] DIV unary_expr[RHS]
+    {
+        std::cout << "multiplicative_expr (DIV)\n";
+        llvm::IRBuilder<> builder{current_block()};
+        $$ = std::move(builder.CreateFDiv($LHS, $RHS));
+        std::cout << "\t>>> div: " << $$ << "\n";
     }
     ;
 
 additive_expr
-    : multiplicative_expr { $$ = std::move($1); }
-    | additive_expr[LHS] PLUS multiplicative_expr[RHS]  {
-      $$ = AdditiveExpr(std::move($LHS), AdditiveExpr::PLUS, std::move($RHS));
+    : multiplicative_expr
+    {
+        std::cout << "(PASS-ON) additive_expr\n";
+        $$ = std::move($1);
     }
-    | additive_expr[LHS] MINUS multiplicative_expr[RHS] {
-      $$ = AdditiveExpr(std::move($LHS), AdditiveExpr::MINUS, std::move($RHS));
+    | additive_expr[LHS] PLUS multiplicative_expr[RHS]
+    {
+        std::cout << "additive_expr\n";
     }
+    | additive_expr[LHS] MINUS multiplicative_expr[RHS]
     ;
 
 relational_expr
-    : additive_expr { $$ = std::move($1); }
-    | relational_expr[LHS] LT additive_expr[RHS] {
-      $$ = RelationalExpr(std::move($LHS), RelationalExpr::LT, std::move($RHS));
+    : additive_expr
+    {
+        std::cout << "(PASS-ON) relational_expr\n";
+        $$ = std::move($1);
     }
-    | relational_expr[LHS] LE additive_expr[RHS] {
-      $$ = RelationalExpr(std::move($LHS), RelationalExpr::LE, std::move($RHS));
-    }
-    | relational_expr[LHS] GT additive_expr[RHS] {
-      $$ = RelationalExpr(std::move($LHS), RelationalExpr::GT, std::move($RHS));
-    }
-    | relational_expr[LHS] GE additive_expr[RHS] {
-      $$ = RelationalExpr(std::move($LHS), RelationalExpr::GE, std::move($RHS));
-    }
+    | relational_expr[LHS] LT additive_expr[RHS]
+    | relational_expr[LHS] LE additive_expr[RHS]
+    | relational_expr[LHS] GT additive_expr[RHS]
+    | relational_expr[LHS] GE additive_expr[RHS]
     ;
 
 equality_expr
-    : relational_expr { $$ = std::move($1); }
-    | equality_expr[LHS] EQ relational_expr[RHS] {
-      $$ = EqualityExpr(std::move($LHS), EqualityExpr::EQ, std::move($RHS));
+    : relational_expr
+    {
+        std::cout << "(PASS-ON) equality_expr\n";
+        $$ = std::move($1);
     }
-    | equality_expr[LHS] NE relational_expr[RHS] {
-      $$ = EqualityExpr(std::move($LHS), EqualityExpr::NE, std::move($RHS));
-    }
+    | equality_expr[LHS] EQ relational_expr[RHS]
+    | equality_expr[LHS] NE relational_expr[RHS]
     ;
 
 logical_expr
-    : equality_expr { $$ = std::move($1); }
-    | logical_expr[LHS] AND equality_expr[RHS] {
-      $$ = LogicalExpr(std::move($LHS), LogicalExpr::AND, std::move($RHS));
+    : equality_expr
+    {
+        std::cout << "(PASS-ON) logical_expr\n";
+        $$ = std::move($1);
     }
-    | logical_expr[LHS] OR equality_expr[RHS]  {
-      $$ = LogicalExpr(std::move($LHS), LogicalExpr::OR, std::move($RHS));
-    }
-    | logical_expr[LHS] XOR equality_expr[RHS] {
-      $$ = LogicalExpr(std::move($LHS), LogicalExpr::XOR, std::move($RHS));
-    }
+    | logical_expr[LHS] AND equality_expr[RHS]
+    | logical_expr[LHS] OR equality_expr[RHS]
+    | logical_expr[LHS] XOR equality_expr[RHS]
     ;
 
 expr
-    : logical_expr[EXPR] { $$ = std::move($EXPR); }
-
-definition
-    : function_definition {
-        $$ = Node{std::move($1)};
-        std::cout << "definition: " << $$.to_string() << "\n";
-    }
-    /* | class_definition */
-    | EXPORT function_definition
-    /* | EXPORT class_definition */
-    ;
-
-function_definition
-    : LET dotted_name LPAREN RPAREN scope
-    | LET dotted_name[NAME] LPAREN identifier_list[PARAMS] RPAREN scope[BODY]
+    : logical_expr[EXPR]
     {
-        $$ = FunctionDefinition($BODY, $NAME, $PARAMS);
-        std::cout << $$.to_string() << std::endl;
-    }
-    ;
-
-identifier_list
-    : identifier[ID] {
-        $$.push_back(Name{{$1}});
-    }
-    | identifier[ID] EQ atom {
-        $$.push_back(Name{{$1}});
-    }
-    | identifier_list COMMA identifier[ID] {
-        $$ = std::move($1);
-        $$.push_back(Name{{$ID}});
-    }
-    | identifier_list COMMA identifier[ID] EQ atom {
-        $$ = std::move($1);
-        $$.push_back(Name{{$ID}});
+        std::cout << "(PASS-ON) expr\n";
+        $$ = std::move($EXPR);
     }
     ;
 
 scope
-    : INDENT { /*open_scope();*/ } stmt_list DEDENT {
-        $$ = StatementList{$stmt_list};
-        /*close_scope();*/
-    };
-
-/* class_definition */
-/*     : CLASS identifier class_scope; */
-
-/* class_scope */
-/*     : INDENT inner_class_scope DEDENT; */
-
-/* inner_class_scope */
-/*     : variable_declaration */
-/*     | function_definition */
-/*     | inner_class_scope variable_declaration */
-/*     | inner_class_scope function_definition; */
-
-function_call
-    : identifier[ID] LPAREN RPAREN {
-      auto fn = compiler.lookup({{$1}});
-      if (not fn) {
-        parser::error(yylloc, "undeclared function '" + $1 + "'");
-        YYABORT;
-      }
-      $$ = FunctionCall{*fn.value().as<Name>()};
-    }
-    | identifier[ID] LPAREN expr_list[ARGS] RPAREN {
-      auto fn = compiler.lookup({{$1}});
-      if (not fn) {
-        parser::error(yylloc, "undeclared function '" + $1 + "'");
-        YYABORT;
-      }
-      $$ = FunctionCall{*fn.value().as<Name>(), std::move($ARGS)};
-    }
+    : INDENT stmt_list DEDENT
     ;
-
-expr_list
-    : expr[EXPR] {
-      $$.push_back(std::move($EXPR));
-    }
-    | expr_list[L] COMMA expr[EXPR] {
-      $$ = std::move($L);
-      $$.push_back(std::move($EXPR));
-    };
 
 /* flow control */
 compound_stmt
     : if_stmt
-    | while_stmt
-    | for_stmt
-    | try_stmt;
+    ;
 
 if_stmt
     : IF expr scope
-    | IF expr scope else_stmt;
+    | IF expr scope else_stmt
+    ;
 
 else_stmt
     : ELSE if_stmt
-    | ELSE scope;
-
-while_stmt
-    : WHILE expr scope;
-
-for_stmt
-    : FOR expr_list IN expr scope;
-
-try_stmt
-    : TRY scope CATCH dotted_as_name scope;
+    | ELSE scope
+    ;
 
 %%
 
@@ -535,17 +379,17 @@ void yy::parser::error(const yy::location& loc, const std::string& message)
     static const auto bold = "\033[1m";
     static const auto reset = "\033[0m";
 
-auto filename = "stdin"s;
+    auto filename = "stdin"s;
     if (loc.end.filename) {
         filename = *loc.end.filename;
     }
 
-std::ostringstream os;
-   os << loc.end.line << ":" << loc.end.column;
+    std::ostringstream os;
+    os << loc.end.line << ":" << loc.end.column;
     const auto lc = os.str();
 
-std::cerr << bold << filename << ":" << lc << ": " << red << "error: "
-   << reset
+    std::cerr << bold << filename << ":" << lc << ": "
+              << red << "error: " << reset
               << bold << message << reset << '\n';
 }
 
