@@ -1,0 +1,11 @@
+let a = 128 / 6
+let b = 128.0 / 6.0
+let c = 128 / 6.0
+let d = 128.0 / 6
+let e = 6 * 21
+let f = 6.0 * 21.0
+let g = 6 * 21.0
+let h = 6.0 * 21
+
+let square(float x)
+    return x * x
