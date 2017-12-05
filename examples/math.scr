@@ -7,5 +7,18 @@ let f = 6.0 * 21.0
 let g = 6 * 21.0
 let h = 6.0 * 21
 
+let negative = -10
+let sum = 3 + 4
+let f_sum = 3 + 4.3
+
+let less = 3 < 4
+let not_less = not 4 < 3
+
+let f_less = 3.0 < 4
+let f_not_less = 4 < 3.0
+
 let square(float x)
     return x * x
+
+let min(float x, float y)
+    return x < y

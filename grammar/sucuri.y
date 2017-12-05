@@ -58,8 +58,9 @@
 #include "utils.h"
 
 using namespace utils;
-
 using namespace std::string_literals;
+
+using Param = std::pair<llvm::Type*, std::string>;
 
 static llvm::LLVMContext context{};
 static auto module = llvm::make_unique<llvm::Module>("test-module", context);
@@ -123,6 +124,12 @@ inline auto to_type(const std::string& type) -> llvm::Type* {
     return nullptr;
 }
 
+inline auto to_float(llvm::IRBuilder<>& builder, llvm::Value* who) -> llvm::Value* {
+    return who->getType()->isFloatingPointTy()
+        ? who
+        : builder.CreateSIToFP(who, llvm::Type::getDoubleTy(context));
+}
+
 }
 
 %code {
@@ -148,6 +155,9 @@ yy::parser::symbol_type yylex(
 %type <std::string> dotted_name
 
 %type <llvm::Value*> return_stmt
+
+%type <Param> param
+%type <std::vector<Param>> param_list
 
 %start program
 
@@ -276,52 +286,37 @@ variable_decl
 
 function_decl
     :
-    LET IDENTIFIER[NAME] LPAREN IDENTIFIER[TYPE] IDENTIFIER[PARAM]
+    LET IDENTIFIER[NAME] LPAREN param_list[PARAMS]
     {
         std::cout << "\nfunction_decl\n";
         auto f = Function{};
 
-        std::cout << "    param: " << $PARAM << " (" << $TYPE << ")" << std::endl;
+        for (const auto& param: $PARAMS) {
+            f.param_types.push_back(param.first);
+        }
 
         // generate name
-        auto name = std::string{};
-        auto foo = false;
-        for (const auto& function: functions) {
-            if (foo) {
-                name += "::";
-            } else {
-                foo = true;
-            }
-            name += function.f->getName().str();
-        }
-        name += "::" + $NAME;
-        f.name = name;
+        f.name = current_function().name + "::" + $NAME;
 
         // generate types
-        auto return_type = to_type("let");
-        auto param_type = to_type($TYPE);
-
-        f.return_type = return_type;
-        f.param_types.push_back(param_type);
+        f.return_type = to_type("let");
 
         f.make_f();
 
-        std::cout << "    params: " << f.params.size() << std::endl;
-
-        auto& param = *std::begin(f.f->args());
-
-        param.setName($PARAM);
-
+        auto i = 0u;
         for (auto& param: f.f->args()) {
-            std::cout << "    |----- " << param.getName().str() << std::endl;
+            param.setName($PARAMS[i].second);
             f.params.push_back(&param);
+            std::cout << "    |----- " << param.getName().str() << std::endl;
+            ++i;
         }
+        std::cout << "    params: " << f.params.size() << std::endl;
 
         functions.emplace_back(f);
     }
     RPAREN
     {
-        blocks.emplace_back(llvm::BasicBlock::Create(context, "scope-1"));
+        blocks.emplace_back(llvm::BasicBlock::Create(context));
     }
     scope
     {
@@ -340,6 +335,26 @@ function_decl
         f.return_type = last.getType();
         current_block()->insertInto(f.f);
         blocks.pop_back();
+        functions.pop_back();
+    }
+    ;
+
+param_list
+    : param
+    {
+        $$.push_back($param);
+    }
+    | param_list[LIST] "," param
+    {
+        $$ = std::move($LIST);
+        $$.push_back($param);
+    }
+    ;
+
+param
+    : IDENTIFIER[TYPE] IDENTIFIER[NAME]
+    {
+        $$ = std::make_pair(to_type($TYPE), $NAME);
     }
     ;
 
@@ -431,7 +446,17 @@ unary_expr
         $$ = std::move($1);
     }
     | NOT unary_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        $$ = std::move(builder.CreateNot($RHS));
+    }
     | MINUS unary_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        $$ = std::move(builder.CreateNeg($RHS));
+    }
     ;
 
 multiplicative_expr
@@ -441,7 +466,7 @@ multiplicative_expr
     }
     | multiplicative_expr[LHS] MUL unary_expr[RHS]
     {
-        llvm::IRBuilder<> builder{current_block()};
+        auto builder = llvm::IRBuilder<>{current_block()};
 
         auto is_float =
             $LHS->getType()->isFloatingPointTy() or
@@ -450,12 +475,12 @@ multiplicative_expr
         if (is_float) {
             $$ = std::move(builder.CreateFMul($LHS, $RHS));
         } else {
-            $$ = std::move(builder.CreateMul($LHS, $RHS));
+            $$ = std::move(builder.CreateNSWMul($LHS, $RHS));
         }
     }
     | multiplicative_expr[LHS] DIV unary_expr[RHS]
     {
-        llvm::IRBuilder<> builder{current_block()};
+        auto builder = llvm::IRBuilder<>{current_block()};
 
         auto is_float =
             $LHS->getType()->isFloatingPointTy() or
@@ -476,9 +501,32 @@ additive_expr
     }
     | additive_expr[LHS] PLUS multiplicative_expr[RHS]
     {
-        std::cout << "additive_expr\n";
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto is_float =
+            $LHS->getType()->isFloatingPointTy() or
+            $RHS->getType()->isFloatingPointTy();
+
+        if (is_float) {
+            $$ = std::move(builder.CreateFAdd($LHS, $RHS));
+        } else {
+            $$ = std::move(builder.CreateAdd($LHS, $RHS));
+        }
     }
     | additive_expr[LHS] MINUS multiplicative_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto is_float =
+            $LHS->getType()->isFloatingPointTy() or
+            $RHS->getType()->isFloatingPointTy();
+
+        if (is_float) {
+            $$ = std::move(builder.CreateFSub($LHS, $RHS));
+        } else {
+            $$ = std::move(builder.CreateSub($LHS, $RHS));
+        }
+    }
     ;
 
 relational_expr
@@ -487,9 +535,65 @@ relational_expr
         $$ = std::move($1);
     }
     | relational_expr[LHS] LT additive_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto lhs_float = $LHS->getType()->isFloatingPointTy();
+        auto rhs_float = $RHS->getType()->isFloatingPointTy();
+
+        if (lhs_float or rhs_float) {
+            auto lhs = to_float(builder, $LHS);
+            auto rhs = to_float(builder, $RHS);
+            $$ = std::move(builder.CreateFCmpOLT(lhs, rhs));
+        } else {
+            $$ = std::move(builder.CreateICmpSLT($LHS, $RHS));
+        }
+    }
     | relational_expr[LHS] LE additive_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto lhs_float = $LHS->getType()->isFloatingPointTy();
+        auto rhs_float = $RHS->getType()->isFloatingPointTy();
+
+        if (lhs_float or rhs_float) {
+            auto lhs = to_float(builder, $LHS);
+            auto rhs = to_float(builder, $RHS);
+            $$ = std::move(builder.CreateFCmpOLE(lhs, rhs));
+        } else {
+            $$ = std::move(builder.CreateICmpSLE($LHS, $RHS));
+        }
+    }
     | relational_expr[LHS] GT additive_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto lhs_float = $LHS->getType()->isFloatingPointTy();
+        auto rhs_float = $RHS->getType()->isFloatingPointTy();
+
+        if (lhs_float or rhs_float) {
+            auto lhs = to_float(builder, $LHS);
+            auto rhs = to_float(builder, $RHS);
+            $$ = std::move(builder.CreateFCmpOGT(lhs, rhs));
+        } else {
+            $$ = std::move(builder.CreateICmpSGT($LHS, $RHS));
+        }
+    }
     | relational_expr[LHS] GE additive_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto lhs_float = $LHS->getType()->isFloatingPointTy();
+        auto rhs_float = $RHS->getType()->isFloatingPointTy();
+
+        if (lhs_float or rhs_float) {
+            auto lhs = to_float(builder, $LHS);
+            auto rhs = to_float(builder, $RHS);
+            $$ = std::move(builder.CreateFCmpOGE(lhs, rhs));
+        } else {
+            $$ = std::move(builder.CreateICmpSGE($LHS, $RHS));
+        }
+    }
     ;
 
 equality_expr
@@ -498,7 +602,35 @@ equality_expr
         $$ = std::move($1);
     }
     | equality_expr[LHS] EQ relational_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto lhs_float = $LHS->getType()->isFloatingPointTy();
+        auto rhs_float = $RHS->getType()->isFloatingPointTy();
+
+        if (lhs_float or rhs_float) {
+            auto lhs = to_float(builder, $LHS);
+            auto rhs = to_float(builder, $RHS);
+            $$ = std::move(builder.CreateFCmpOEQ(lhs, rhs));
+        } else {
+            $$ = std::move(builder.CreateICmpEQ($LHS, $RHS));
+        }
+    }
     | equality_expr[LHS] NE relational_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto lhs_float = $LHS->getType()->isFloatingPointTy();
+        auto rhs_float = $RHS->getType()->isFloatingPointTy();
+
+        if (lhs_float or rhs_float) {
+            auto lhs = to_float(builder, $LHS);
+            auto rhs = to_float(builder, $RHS);
+            $$ = std::move(builder.CreateFCmpONE(lhs, rhs));
+        } else {
+            $$ = std::move(builder.CreateICmpNE($LHS, $RHS));
+        }
+    }
     ;
 
 logical_expr
@@ -507,8 +639,23 @@ logical_expr
         $$ = std::move($1);
     }
     | logical_expr[LHS] AND equality_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        $$ = std::move(builder.CreateAnd($LHS, $RHS);
+    }
     | logical_expr[LHS] OR equality_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        $$ = std::move(builder.CreateOr($LHS, $RHS);
+    }
     | logical_expr[LHS] XOR equality_expr[RHS]
+    {
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        $$ = std::move(builder.CreateXor($LHS, $RHS);
+    }
     ;
 
 expr
@@ -522,7 +669,7 @@ expr
 scope
     :
     {
-        std::cout << "Scope\n";
+        std::cout << "Scope (level: " << blocks.size() << ")\n";
     }
     INDENT stmt DEDENT
     ;
