@@ -642,19 +642,19 @@ logical_expr
     {
         auto builder = llvm::IRBuilder<>{current_block()};
 
-        $$ = std::move(builder.CreateAnd($LHS, $RHS);
+        $$ = std::move(builder.CreateAnd($LHS, $RHS));
     }
     | logical_expr[LHS] OR equality_expr[RHS]
     {
         auto builder = llvm::IRBuilder<>{current_block()};
 
-        $$ = std::move(builder.CreateOr($LHS, $RHS);
+        $$ = std::move(builder.CreateOr($LHS, $RHS));
     }
     | logical_expr[LHS] XOR equality_expr[RHS]
     {
         auto builder = llvm::IRBuilder<>{current_block()};
 
-        $$ = std::move(builder.CreateXor($LHS, $RHS);
+        $$ = std::move(builder.CreateXor($LHS, $RHS));
     }
     ;
 
@@ -677,6 +677,8 @@ scope
 /* flow control */
 compound_stmt
     : if_stmt
+    {
+    }
     ;
 
 if_stmt
