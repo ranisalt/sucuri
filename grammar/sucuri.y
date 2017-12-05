@@ -130,6 +130,12 @@ inline auto to_float(llvm::IRBuilder<>& builder, llvm::Value* who) -> llvm::Valu
         : builder.CreateSIToFP(who, llvm::Type::getDoubleTy(context));
 }
 
+inline auto to_integer(llvm::IRBuilder<>& builder, llvm::Value* who) -> llvm::Value* {
+    return who->getType()->isIntegerTy()
+        ? who
+        : builder.CreateSIToFP(who, llvm::Type::getInt32Ty(context));
+}
+
 }
 
 %code {
@@ -158,6 +164,11 @@ yy::parser::symbol_type yylex(
 
 %type <Param> param
 %type <std::vector<Param>> param_list
+
+%type <llvm::Value*> arg
+%type <std::vector<llvm::Value*>> arg_list
+
+%type <llvm::Value*> function_call
 
 %start program
 
@@ -193,14 +204,15 @@ code
     }
     stmt_list
     {
+        auto builder = llvm::IRBuilder<>{current_block()};
+        builder.CreateRet(llvm::ConstantInt::get(
+            context,
+            llvm::APInt(32, 0, true)
+        ));
         blocks.pop_back();
         functions.pop_back();
     }
     | import_list stmt_list
-    ;
-
-identifier
-    : IDENTIFIER
     ;
 
 /* module system */
@@ -224,7 +236,7 @@ dotted_as_names
 
 dotted_as_name
     : dotted_name
-    | dotted_name AS identifier
+    | dotted_name AS IDENTIFIER
     ;
 
 /* from a.b import c */
@@ -234,13 +246,13 @@ import_as_names
     ;
 
 import_as_name
-    : identifier
-    | identifier AS identifier
+    : IDENTIFIER
+    | IDENTIFIER AS IDENTIFIER
     ;
 
 dotted_name
-    : identifier
-    | dotted_name '.' identifier
+    : IDENTIFIER
+    | dotted_name '.' IDENTIFIER
     ;
 
 stmt_list
@@ -252,20 +264,16 @@ stmt_list
 stmt
     :
     definition
-    |
-    assignment_expr
-    /*| function_call*/
+    | assignment_expr
+    | function_call
     | compound_stmt
     | THROW expr
-    |
-    return_stmt
+    | return_stmt
     ;
 
 definition
-    :
-    variable_decl
-    |
-    function_decl
+    : variable_decl
+    | function_decl
     ;
 
 variable_decl
@@ -311,7 +319,7 @@ function_decl
     }
     RPAREN
     {
-        blocks.emplace_back(llvm::BasicBlock::Create(context, "begin", current_function().f));
+        blocks.emplace_back(llvm::BasicBlock::Create(context, "top-level", current_function().f));
     }
     scope
     {
@@ -328,7 +336,6 @@ function_decl
         );
 
         f.return_type = last.getType();
-        //current_block()->insertInto(f.f);
         blocks.pop_back();
         functions.pop_back();
     }
@@ -356,6 +363,47 @@ param
 assignment_expr
     :
     dotted_name[NAME] EQ expr[VALUE]
+    ;
+
+function_call
+    : IDENTIFIER[NAME] LPAREN arg_list[ARGS] RPAREN
+    {
+        auto f_name = module->getName().str() + "::" + $NAME;
+        std::cout << "calling " << f_name << std::endl;
+
+        auto f = module->getFunction(f_name);
+        auto builder = llvm::IRBuilder<>{current_block()};
+
+        auto params = std::begin(f->args());
+        for (auto& arg: $ARGS) {
+            if (params->getType()->isDoubleTy()) {
+                arg = to_float(builder, arg);
+            } else if (params->getType()->isIntegerTy()) {
+                arg = to_integer(builder, arg);
+            }
+            ++params;
+        }
+        $$ = builder.CreateCall(f, $ARGS);
+    }
+    ;
+
+arg_list
+    : arg
+    {
+        $$.push_back($arg);
+    }
+    | arg_list[LIST] "," arg
+    {
+        $$ = std::move($LIST);
+        $$.push_back($arg);
+    }
+    ;
+
+arg
+    : expr
+    {
+        $$ = std::move($expr);
+    }
     ;
 
 literal
@@ -394,7 +442,7 @@ atom
             }
         }
         if (not found) {
-            error(yylloc, "|  not found");
+            error(yylloc, "\""s + $1 + "\" not found"s);
         }
     }
     |
@@ -402,9 +450,7 @@ atom
     {
         $$ = std::move($literal);
     }
-    /*
     | LPAREN expr RPAREN
-    */
     | LBRACK list_expr RBRACK
     ;
 
@@ -415,6 +461,11 @@ atom_expr
         $$ = std::move($1);
     }
     | atom trailer
+    |
+    function_call
+    {
+        $$ = std::move($function_call);
+    }
     ;
 
 trailer
@@ -468,7 +519,10 @@ multiplicative_expr
             $RHS->getType()->isFloatingPointTy();
 
         if (is_float) {
-            $$ = std::move(builder.CreateFMul($LHS, $RHS));
+            $$ = std::move(builder.CreateFMul(
+                to_float(builder, $LHS),
+                to_float(builder, $RHS)
+            ));
         } else {
             $$ = std::move(builder.CreateNSWMul($LHS, $RHS));
         }
@@ -482,7 +536,10 @@ multiplicative_expr
             $RHS->getType()->isFloatingPointTy();
 
         if (is_float) {
-            $$ = std::move(builder.CreateFDiv($LHS, $RHS));
+            $$ = std::move(builder.CreateFDiv(
+                to_float(builder, $LHS),
+                to_float(builder, $RHS)
+            ));
         } else {
             $$ = std::move(builder.CreateSDiv($LHS, $RHS));
         }
@@ -503,7 +560,10 @@ additive_expr
             $RHS->getType()->isFloatingPointTy();
 
         if (is_float) {
-            $$ = std::move(builder.CreateFAdd($LHS, $RHS));
+            $$ = std::move(builder.CreateFAdd(
+                to_float(builder, $LHS),
+                to_float(builder, $RHS)
+            ));
         } else {
             $$ = std::move(builder.CreateAdd($LHS, $RHS));
         }
@@ -517,7 +577,10 @@ additive_expr
             $RHS->getType()->isFloatingPointTy();
 
         if (is_float) {
-            $$ = std::move(builder.CreateFSub($LHS, $RHS));
+            $$ = std::move(builder.CreateFSub(
+                to_float(builder, $LHS),
+                to_float(builder, $RHS)
+            ));
         } else {
             $$ = std::move(builder.CreateSub($LHS, $RHS));
         }
@@ -543,8 +606,6 @@ relational_expr
         } else {
             $$ = std::move(builder.CreateICmpSLT($LHS, $RHS));
         }
-
-        std::cout << $LHS->getName().str() << " < " << $RHS->getName().str() << "\n";
     }
     | relational_expr[LHS] LE additive_expr[RHS]
     {
@@ -651,7 +712,10 @@ logical_expr
     {
         auto builder = llvm::IRBuilder<>{current_block()};
 
-        $$ = std::move(builder.CreateXor($LHS, $RHS));
+        $$ = std::move(builder.CreateXor(
+            to_integer(builder, $LHS),
+            to_integer(builder, $RHS)
+        ));
     }
     ;
 
@@ -685,14 +749,14 @@ if_stmt
     : IF expr[COND]
     {
         std::cout << "if " << $COND->getName().str() << ":\n";
-        blocks.emplace_back(llvm::BasicBlock::Create(context, "if-true", current_function().f));
+        blocks.emplace_back(llvm::BasicBlock::Create(context, "if-true"));
     }
     scope
     {
         auto true_block = current_block();
         blocks.pop_back();
         std::cout << "curr_block.name: " << current_block()->getName().str() << std::endl;
-        auto false_block = llvm::BasicBlock::Create(context, "if-false", current_function().f);
+        auto false_block = llvm::BasicBlock::Create(context, "continue");
 
         {
             auto builder = llvm::IRBuilder<>{current_block()};
@@ -701,9 +765,10 @@ if_stmt
 
         auto f = current_function().f;
 
+        blocks.pop_back();
         true_block->insertInto(f);
         false_block->insertInto(f);
-        blocks.emplace_back(llvm::BasicBlock::Create(context, "continue", current_function().f));
+        blocks.emplace_back(false_block);
     }
     /*
     | IF expr scope else_stmt
@@ -746,7 +811,7 @@ void yy::parser::error(const yy::location& loc, const std::string& message)
     }
 
     std::ostringstream os;
-    os << loc.end.line << ":" << loc.end.column;
+    os << (loc.end.line + 1) << ":" << loc.end.column;
     const auto lc = os.str();
 
     std::cerr << bold << filename << ":" << lc << ": "

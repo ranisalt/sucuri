@@ -21,6 +21,13 @@ let square(float x)
     return x * x
 
 let min(float x, float y)
-    if x < y
+    if x <= y
         return x
     return y
+
+let max(float x, float y)
+    if x > y
+        return x
+    return y
+
+let min_value = min(3, 4)
