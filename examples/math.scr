@@ -21,4 +21,6 @@ let square(float x)
     return x * x
 
 let min(float x, float y)
-    return x < y
+    if x < y
+        return x
+    return y

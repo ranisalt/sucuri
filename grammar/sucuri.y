@@ -244,7 +244,8 @@ dotted_name
     ;
 
 stmt_list
-    : stmt
+    :
+    stmt
     | stmt_list[LIST] stmt
     ;
 
@@ -252,17 +253,11 @@ stmt
     :
     definition
     |
-    {
-        std::cout << "assignment_expr\n";
-    }
     assignment_expr
     /*| function_call*/
     | compound_stmt
     | THROW expr
     |
-    {
-        std::cout << "return stmt\n";
-    }
     return_stmt
     ;
 
@@ -316,7 +311,7 @@ function_decl
     }
     RPAREN
     {
-        blocks.emplace_back(llvm::BasicBlock::Create(context));
+        blocks.emplace_back(llvm::BasicBlock::Create(context, "begin", current_function().f));
     }
     scope
     {
@@ -333,7 +328,7 @@ function_decl
         );
 
         f.return_type = last.getType();
-        current_block()->insertInto(f.f);
+        //current_block()->insertInto(f.f);
         blocks.pop_back();
         functions.pop_back();
     }
@@ -548,6 +543,8 @@ relational_expr
         } else {
             $$ = std::move(builder.CreateICmpSLT($LHS, $RHS));
         }
+
+        std::cout << $LHS->getName().str() << " < " << $RHS->getName().str() << "\n";
     }
     | relational_expr[LHS] LE additive_expr[RHS]
     {
@@ -668,22 +665,49 @@ expr
 
 scope
     :
+    INDENT
     {
         std::cout << "Scope (level: " << blocks.size() << ")\n";
     }
-    INDENT stmt DEDENT
+    stmt_list DEDENT
+    {
+        std::cout << "End of scope (level: " << blocks.size() << ")\n";
+    }
     ;
 
 /* flow control */
 compound_stmt
-    : if_stmt
-    {
-    }
+    :
+    if_stmt
     ;
 
 if_stmt
-    : IF expr scope
+    : IF expr[COND]
+    {
+        std::cout << "if " << $COND->getName().str() << ":\n";
+        blocks.emplace_back(llvm::BasicBlock::Create(context, "if-true", current_function().f));
+    }
+    scope
+    {
+        auto true_block = current_block();
+        blocks.pop_back();
+        std::cout << "curr_block.name: " << current_block()->getName().str() << std::endl;
+        auto false_block = llvm::BasicBlock::Create(context, "if-false", current_function().f);
+
+        {
+            auto builder = llvm::IRBuilder<>{current_block()};
+            builder.CreateCondBr($COND, true_block, false_block);
+        }
+
+        auto f = current_function().f;
+
+        true_block->insertInto(f);
+        false_block->insertInto(f);
+        blocks.emplace_back(llvm::BasicBlock::Create(context, "continue", current_function().f));
+    }
+    /*
     | IF expr scope else_stmt
+    */
     ;
 
 else_stmt
