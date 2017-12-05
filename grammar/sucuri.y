@@ -67,6 +67,7 @@ static std::vector<llvm::BasicBlock*> blocks{};
 
 
 struct Function {
+    std::string name = module->getName();
     llvm::Type* return_type = nullptr;
     std::vector<llvm::Type*> param_types = {};
     std::vector<llvm::Value*> params = {};
@@ -94,7 +95,7 @@ struct Function {
                     false
                 ),
                 llvm::GlobalVariable::LinkageTypes::ExternalLinkage,
-                module->getName(),
+                name,
                 module.get()
             );
     }
@@ -108,6 +109,18 @@ inline auto& current_block() {
 
 inline auto& current_function() {
     return functions.back();
+}
+
+
+inline auto to_type(const std::string& type) -> llvm::Type* {
+    if (type == "int") {
+        return llvm::Type::getInt32Ty(context);
+    } else if (type == "float") {
+        return llvm::Type::getDoubleTy(context);
+    } else if (type == "let") {
+        return llvm::Type::getDoubleTy(context);
+    }
+    return nullptr;
 }
 
 }
@@ -265,37 +278,13 @@ function_decl
     :
     LET IDENTIFIER[NAME] LPAREN IDENTIFIER[TYPE] IDENTIFIER[PARAM]
     {
+        std::cout << "\nfunction_decl\n";
         auto f = Function{};
 
-        std::cout << "param: " << $PARAM << " (" << $TYPE << ")" << std::endl;
+        std::cout << "    param: " << $PARAM << " (" << $TYPE << ")" << std::endl;
 
-        if ($TYPE == "int") {
-            f.param_types.emplace_back(
-                std::move(llvm::Type::getInt32Ty(context))
-            );
-        } else if ($TYPE == "float") {
-            f.param_types.emplace_back(
-                std::move(llvm::Type::getDoubleTy(context))
-            );
-        }
-        auto builder = llvm::IRBuilder<>{current_block()};
-        std::cout << "fu?" << std::endl;
-        f.params.emplace_back(llvm::IntegerType::get(32));
-        std::cout << "fu!" << std::endl;
-        builder.CreateLoad(f.param_types[0], f.params[0], $PARAM);
-        std::cout << "fou!" << std::endl;
-
-        functions.emplace_back(f);
-    }
-    RPAREN
-    {
-        blocks.emplace_back(llvm::BasicBlock::Create(context, "scope-1"));
-    }
-    scope
-    {
-        std::cout << "yay?" << std::endl;
+        // generate name
         auto name = std::string{};
-
         auto foo = false;
         for (const auto& function: functions) {
             if (foo) {
@@ -306,27 +295,50 @@ function_decl
             name += function.f->getName().str();
         }
         name += "::" + $NAME;
+        f.name = name;
 
-        std::cout << "function_decl: " << name << "\n";
+        // generate types
+        auto return_type = to_type("let");
+        auto param_type = to_type($TYPE);
+
+        f.return_type = return_type;
+        f.param_types.push_back(param_type);
+
+        f.make_f();
+
+        std::cout << "    params: " << f.params.size() << std::endl;
+
+        auto& param = *std::begin(f.f->args());
+
+        param.setName($PARAM);
+
+        for (auto& param: f.f->args()) {
+            std::cout << "    |----- " << param.getName().str() << std::endl;
+            f.params.push_back(&param);
+        }
+
+        functions.emplace_back(f);
+    }
+    RPAREN
+    {
+        blocks.emplace_back(llvm::BasicBlock::Create(context, "scope-1"));
+    }
+    scope
+    {
+        auto& f = current_function();
+
+        std::cout << "function_decl: " << f.name << "\n";
 
         const auto& last = current_block()->back();
-
-        auto param_types = std::vector<llvm::Type*>{};
-
+        auto& param_types = f.param_types;
         auto types = llvm::FunctionType::get(
             last.getType(),
             param_types,
             false
         );
 
-        auto& f = current_function();
-
         f.return_type = last.getType();
-
-        f.make_f();
-
         current_block()->insertInto(f.f);
-
         blocks.pop_back();
     }
     ;
@@ -363,21 +375,26 @@ atom
     IDENTIFIER
     {
         std::cout << "IDENTIFIER: " << $1 << std::endl;
+        auto found = false;
         for (const auto& param: current_function().params) {
-            std::cout << "searching..." << std::endl;
             if (param->getName() == $1) {
-                std::cout << "MAHOI!" << std::endl;
                 $$ = param;
+                found = true;
+                break;
             }
         }
-        std::cout << "what?" << std::endl;
+        if (not found) {
+            error(yylloc, "|  not found");
+        }
     }
     |
     literal
     {
         $$ = std::move($literal);
     }
+    /*
     | LPAREN expr RPAREN
+    */
     | LBRACK list_expr RBRACK
     ;
 
