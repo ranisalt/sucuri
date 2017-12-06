@@ -62,13 +62,14 @@ using namespace std::string_literals;
 
 using Param = std::pair<llvm::Type*, std::string>;
 
-static llvm::LLVMContext context{};
+static llvm::LLVMContext context;
 static auto module = llvm::make_unique<llvm::Module>("test-module", context);
 static std::vector<llvm::BasicBlock*> blocks{};
 
 
 struct Function {
-    std::string name = module->getName();
+    //std::string name = module->getName();
+    std::string name;
     llvm::Type* return_type = nullptr;
     std::vector<llvm::Type*> param_types = {};
     std::vector<llvm::Value*> params = {};
@@ -191,15 +192,15 @@ code
     {
         std::cout << "stmt_list\n";
 
-        functions.emplace_back(
-            Function(
-                llvm::Type::getInt32Ty(context)
-            )
+        auto main = Function(
+            llvm::Type::getInt32Ty(context)
         );
+        main.name = "main";
+        functions.emplace_back(std::move(main));
         current_function().make_f();
 
         blocks.emplace_back(
-            llvm::BasicBlock::Create(context, "first", current_function().f)
+            llvm::BasicBlock::Create(context, {}, current_function().f)
         );
     }
     stmt_list
@@ -299,7 +300,7 @@ function_decl
         }
 
         // generate name
-        f.name = current_function().name + "::" + $NAME;
+        f.name = $NAME;
 
         // generate types
         f.return_type = to_type("let");
@@ -368,10 +369,15 @@ assignment_expr
 function_call
     : IDENTIFIER[NAME] LPAREN arg_list[ARGS] RPAREN
     {
-        auto f_name = module->getName().str() + "::" + $NAME;
+        auto f_name = $NAME;
         std::cout << "calling " << f_name << std::endl;
 
         auto f = module->getFunction(f_name);
+        if (not f) {
+            std::cerr << "Undefined function " << f_name << std::endl;
+            YYABORT;
+        }
+
         auto builder = llvm::IRBuilder<>{current_block()};
 
         auto params = std::begin(f->args());
@@ -769,15 +775,14 @@ if_stmt
         true_block->insertInto(f);
         false_block->insertInto(f);
         blocks.emplace_back(false_block);
-    }
-    /*
-    | IF expr scope else_stmt
-    */
+    } else_stmt
+    /* | IF expr[COND] scope else_stmt */
     ;
 
 else_stmt
     : ELSE if_stmt
     | ELSE scope
+    |
     ;
 
 return_stmt
